@@ -12,7 +12,7 @@ const TaskItem = ({ task }) => {
   };
 
   return (
-    <div className="flex justify-between items-center bg-white shadow-md p-2 rounded-md mb-2">
+    <div className="flex justify-between items-center bg-white shadow-md p-2 rounded-md">
       <span>{task.taskName}</span>
       <button
         onClick={handleDelete}

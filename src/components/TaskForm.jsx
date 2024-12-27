@@ -17,7 +17,7 @@ const TaskForm = ({ selectedGroup, onTaskAdded }) => {
   };
 
   return (
-    <div className="flex justify-center mt-4">
+    <div className="flex justify-center bg-gray-100 pt-4 pb-1 rounded-md">
       <form onSubmit={handleSubmit} className="task-form">
         <input
           type="text"

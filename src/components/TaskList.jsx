@@ -23,7 +23,7 @@ const TaskList = ({ selectedGroup, refreshFlag }) => {
     : tasks;
 
   return (
-    <div className="border-t-2 divide-y">
+    <div className="space-y-2 bg-gray-200 divide-y shadow-lg rounded-md p-2">
       {filteredTasks.length > 0 ? (
         filteredTasks.map((task) => <TaskItem key={task.taskID} task={task} />)
       ) : (
