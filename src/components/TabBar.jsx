@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { deleteGroup } from '../services/groupService';
 
-const TabBar = ({ groups, selectedGroup, onSelectGroup, onGroupsUpdated }) => {
+const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
   const containerRef = useRef(null); // Ref for the entire tab bar container
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
