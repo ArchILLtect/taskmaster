@@ -1,34 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { getTasks } from '../services/api';
 import TaskItem from './TaskItem';
-import TaskForm from './TaskForm';
 
-const TaskList = () => {
+const TaskList = ({ refreshFlag }) => {
   const [tasks, setTasks] = useState([]);
-  const [error, setError] = useState('');
-
-  const fetchTasks = () => {
-    getTasks()
-      .then((response) => {
-        setTasks(response.data.Items);
-        setError('');
-      })
-      .catch((error) => setError('Failed to fetch tasks. Please try again.'));
-  };
 
   useEffect(() => {
-    fetchTasks(); // Initial fetch
-  }, []);
+    getTasks()
+      .then((response) => setTasks(response.data.Items))
+      .catch((error) => console.error('Error fetching tasks:', error));
+  }, [refreshFlag]);
 
   return (
-    <div>
-      <h2>Your Tasks</h2>
-      {error && <p sytle={{ color: "red" }}>{error}</p>}
-      <TaskForm onTaskAdded={fetchTasks} /> {/* Notify parent to refresh */}
+    <div className="space-y-2">
+      <h2 className="text-2xl font-semibold mb-4 text-gray-800">Your Tasks</h2>
       {tasks && tasks.length > 0 ? (
-        tasks.map((task) => <TaskItem key={task.taskID} task={task} onTaskDeleted={fetchTasks} />)
+        tasks.map((task) => (
+          <TaskItem key={task.taskID} task={task} onTaskDeleted={refreshFlag} />
+        ))
       ) : (
-        !error && <p>No tasks available.</p>
+        <p className="text-gray-600">No tasks available.</p>
       )}
     </div>
   );
