@@ -1,25 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { getTasks } from '../services/api';
-import TaskItem from './TaskItem';
+import { deleteTask } from '../services/api';
 
-const TaskList = ({ refreshFlag }) => {
+const TaskList = ({ group, refreshFlag }) => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
     getTasks()
-      .then((response) => setTasks(response.data.Items))
+      .then((response) => {
+        const allTasks = response.data.Items;
+        setTasks(group === 'All' ? allTasks : allTasks.filter((task) => task.group === group));
+      })
       .catch((error) => console.error('Error fetching tasks:', error));
-  }, [refreshFlag]);
+  }, [group, refreshFlag]); // Refresh when group or refreshFlag changes
 
   return (
-    <div className="space-y-2">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800">Your Tasks</h2>
-      {tasks && tasks.length > 0 ? (
+    <div className="mt-4">
+      {tasks.length > 0 ? (
         tasks.map((task) => (
-          <TaskItem key={task.taskID} task={task} onTaskDeleted={refreshFlag} />
+          <div
+            key={task.taskID}
+            className="flex justify-between items-center p-4 mb-2 bg-gray-100 rounded-md shadow-sm"
+          >
+            <span className="text-gray-700">{task.taskName}</span>
+            <button
+              onClick={() => deleteTask(task.taskID).then(() => setTasks((prev) => prev.filter((t) => t.taskID !== task.taskID)))}
+              className="px-3 py-1 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600"
+            >
+              Delete
+            </button>
+          </div>
         ))
       ) : (
-        <p className="text-gray-600">No tasks available.</p>
+        <p className="text-gray-500">No tasks available in this group.</p>
       )}
     </div>
   );
