@@ -1,50 +1,42 @@
 import React, { useState } from 'react';
 import { addTask } from '../services/api';
 
-const TaskForm = ({ onTaskAdded }) => {
+const TaskForm = ({ selectedGroup, onTaskAdded }) => {
   const [taskName, setTaskName] = useState('');
-  const [group, setGroup] = useState('General');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addTask({ taskName, group })
-      .then(() => {
-        setTaskName('');
-        onTaskAdded(); // Trigger refresh after adding
-      })
-      .catch((error) => console.error('Error adding task:', error));
+  
+    try {
+      await addTask({ taskName, group: selectedGroup });
+      setTaskName(''); // Clear the input field
+      onTaskAdded(); // Notify the parent component
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col items-start space-y-4 bg-white p-4 rounded-md shadow-md"
-    >
-      <input
-        type="text"
-        value={taskName}
-        onChange={(e) => setTaskName(e.target.value)}
-        placeholder="Task name"
-        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      />
-      <select
-        value={group}
-        onChange={(e) => setGroup(e.target.value)}
-        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="General">General</option>
-        <option value="School">School</option>
-        <option value="Home">Home</option>
-        <option value="X-mas Shopping">X-mas Shopping</option>
-      </select>
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 transition"
-      >
-        Add Task
-      </button>
-    </form>
+    <div className="flex justify-center mt-4">
+      <form onSubmit={handleSubmit} className="task-form">
+        <input
+          type="text"
+          value={taskName}
+          onChange={(e) => setTaskName(e.target.value)}
+          placeholder="Enter task name"
+          required
+          className="p-2 border rounded-md"
+        />
+        <button
+          type="submit"
+          className="ml-2 px-4 py-2 bg-green-500 text-white rounded-md"
+          disabled={!selectedGroup}
+        >
+          Add Task
+        </button>
+      </form>
+    </div>
+
   );
 };
 

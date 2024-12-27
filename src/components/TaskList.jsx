@@ -1,38 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { getTasks } from '../services/api';
-import { deleteTask } from '../services/api';
+import TaskItem from './TaskItem';
 
-const TaskList = ({ group, refreshFlag }) => {
+const TaskList = ({ selectedGroup, refreshFlag }) => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    getTasks()
-      .then((response) => {
-        const allTasks = response.data.Items;
-        setTasks(group === 'All' ? allTasks : allTasks.filter((task) => task.group === group));
-      })
-      .catch((error) => console.error('Error fetching tasks:', error));
-  }, [group, refreshFlag]); // Refresh when group or refreshFlag changes
+    fetchTasks();
+  }, [refreshFlag]); // Refetch tasks when the refreshFlag changes
+
+  const fetchTasks = async () => {
+    try {
+      const response = await getTasks();
+      setTasks(response.data.Items || []); // Ensure tasks array is set correctly
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+
+  const filteredTasks = selectedGroup
+    ? tasks.filter((task) => task.group === selectedGroup)
+    : tasks;
 
   return (
-    <div className="mt-4">
-      {tasks.length > 0 ? (
-        tasks.map((task) => (
-          <div
-            key={task.taskID}
-            className="flex justify-between items-center p-4 mb-2 bg-gray-100 rounded-md shadow-sm"
-          >
-            <span className="text-gray-700">{task.taskName}</span>
-            <button
-              onClick={() => deleteTask(task.taskID).then(() => setTasks((prev) => prev.filter((t) => t.taskID !== task.taskID)))}
-              className="px-3 py-1 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600"
-            >
-              Delete
-            </button>
-          </div>
-        ))
+    <div className="border-t-2 divide-y">
+      {filteredTasks.length > 0 ? (
+        filteredTasks.map((task) => <TaskItem key={task.taskID} task={task} />)
       ) : (
-        <p className="text-gray-500">No tasks available in this group.</p>
+        <p>No tasks available.</p>
       )}
     </div>
   );
