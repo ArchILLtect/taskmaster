@@ -9,9 +9,11 @@ import { fetchGroups } from './services/groupService';
 const App = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [refreshFlag, setRefreshFlag] = useState(false); // Used to trigger refresh
 
-  const refreshTasks = () => setRefreshFlag((prev) => !prev);
+  const refreshTasks = () => {
+    // Use the function directly without needing refreshFlag
+    setGroups([...groups]); // This will re-render the component, triggering a refresh
+  };
 
   useEffect(() => {
     const loadGroups = async () => {
