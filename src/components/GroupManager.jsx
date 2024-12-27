@@ -26,20 +26,20 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
     };
 
   return (
-    <div className="bg-gray-200">
+    <div className="bg-gray-300 rounded-t-lg shadow-md">
 
-        <div className="flex w-full justify-between px-4 pt-2">
+        <div className="flex flex-col sm:flex-row w-full gap-1 items-center sm:justify-between sm:px-8 py-1">
             <div className="flex">
                 <input
                 type="text"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
                 placeholder="New Group Name"
-                className="border rounded-md mr-2"
+                className="border rounded-md mr-2 placeholder:text-center"
                 />
                 <button
                 onClick={handleAddGroup}
-                className="px-4 bg-blue-500 text-white rounded-md"
+                className="px-4 bg-blue-400 text-white rounded-md"
                 >
                 Add Group
                 </button>
@@ -48,7 +48,7 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
             {/* Delete Group Button */}
             <button
                 onClick={() => handleDeleteGroup(selectedGroup)}
-                className="ml-2 px-4 bg-red-500 text-white rounded-md"
+                className="ml-2 px-4 bg-red-400 text-white rounded-md max-w-fit"
                 >
                 Delete Group
             </button>

@@ -41,7 +41,7 @@ const App = () => {
   };
 
   return (
-    <div>
+    <div className="mx-auto w-full sm:w-10/12  md:w-9/12 lg:w-8/12 xl:w-7/12">
       <h1 className="text-4xl font-mono font-bold text-center p-5">TaskMaster</h1>
 
       {/* GroupManager handles adding new groups */}

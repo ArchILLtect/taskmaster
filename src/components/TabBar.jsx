@@ -41,11 +41,11 @@ const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
   }, [groups]);
 
   return (
-    <div className="relative">
+    <div className="relative border-t-2 border-gray-400">
       {/* Scrollable Tab Container */}
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 rounded-md shadow-md no-scrollbar text-nowrap"
+        className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 rounded-b-lg shadow-md no-scrollbar text-nowrap"
         onScroll={checkOverflow}
       >
         {groups.map((group) => (
