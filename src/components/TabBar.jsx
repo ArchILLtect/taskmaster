@@ -48,17 +48,17 @@ const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
         className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 rounded-b-lg shadow-md no-scrollbar text-nowrap"
         onScroll={checkOverflow}
       >
-        {groups.map((group) => (
+        {(groups.map)((group) => (
           <button
-            key={group}
+            key={group.groupID}
             onClick={() => onSelectGroup(group)}
             className={`px-4 py-2 rounded-md transition-colors duration-200 ${
-              selectedGroup === group
+              selectedGroup.groupID === group.groupID
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            {group}
+            {group.groupName}
           </button>
         ))}
       </div>

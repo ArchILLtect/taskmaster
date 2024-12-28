@@ -6,11 +6,10 @@ const TaskForm = ({ selectedGroup, onTaskAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
     try {
-      await addTask({ taskName, group: selectedGroup });
+      await addTask({ taskName, group: selectedGroup.groupName });
       setTaskName(''); // Clear the input field
-      onTaskAdded(); // Notify the parent component
+      onTaskAdded(); // Notify parent to refresh tasks
     } catch (error) {
       console.error('Error adding task:', error);
     }
@@ -36,7 +35,6 @@ const TaskForm = ({ selectedGroup, onTaskAdded }) => {
         </button>
       </form>
     </div>
-
   );
 };
 

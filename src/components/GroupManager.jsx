@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { addGroup, deleteGroup } from '../services/groupService';
+import { addGroup, deleteGroup, fetchGroups } from '../services/groupService';
 
 const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
     const [newGroupName, setNewGroupName] = useState('');
@@ -7,7 +7,8 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
     const handleAddGroup = async () => {
         if (newGroupName) {
             try {
-                const updatedGroups = await addGroup(newGroupName); // Add group via service
+                await addGroup(newGroupName); // Add group via service
+                const updatedGroups = await fetchGroups(); // Fetch updated groups
                 onGroupsUpdated(updatedGroups); // Notify parent about updates
                 setNewGroupName(''); // Clear input
             } catch (error) {
@@ -18,12 +19,12 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
 
     const handleDeleteGroup = async (group) => {
         try {
-            const updatedGroups = await deleteGroup(group); // Delete group via service
-            onGroupsUpdated(updatedGroups); // Notify parent about updates
+          const updatedGroups = await deleteGroup(group.groupID); // Use groupID
+          onGroupsUpdated(updatedGroups); // Notify parent about updates
         } catch (error) {
-        console.error('Error deleting group:', error);
+          console.error('Error deleting group:', error);
         }
-    };
+      };
 
   return (
     <div className="bg-gray-300 rounded-t-lg shadow-md">
@@ -35,7 +36,7 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
                 placeholder="New Group Name"
-                className="border rounded-md mr-2 placeholder:text-center"
+                className="border rounded-md mr-2 placeholder:pl-2 pl-2"
                 />
                 <button
                 onClick={handleAddGroup}

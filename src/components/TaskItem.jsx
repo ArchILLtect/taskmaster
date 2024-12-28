@@ -1,14 +1,15 @@
 import React from 'react';
 import { deleteTask } from '../services/api';
 
-const TaskItem = ({ task }) => {
-  const handleDelete = () => {
-    deleteTask(task.taskID)
-      .then(() => {
-        alert('Task deleted successfully');
-        window.location.reload(); // Refresh to fetch updated tasks
-      })
-      .catch((error) => console.error('Error deleting task:', error));
+const TaskItem = ({ task, onTaskDeleted }) => {
+
+  const handleDelete = async () => {
+    try {
+      await deleteTask(task.taskID); // Your API call to delete the task
+      onTaskDeleted(); // Notify parent about task deletion
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
   return (
