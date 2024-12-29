@@ -11,7 +11,6 @@ const TaskList = ({ selectedGroup, refreshFlag }) => {
       try {
         const fetchedTasks = await getTasks();
         setTasks(fetchedTasks); // Update the tasks state
-        console.log('Tasks:', fetchedTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
       }
@@ -25,11 +24,20 @@ const TaskList = ({ selectedGroup, refreshFlag }) => {
     ? tasks.filter((task) => task.group === selectedGroup.groupName)
     : tasks;
 
+    // Handle task deletion
+    const handleTaskDeleted = (deletedTaskID) => {
+      // Remove the deleted task from the tasks state
+      console.log('Deleted')
+      setTasks((prevTasks) =>
+        prevTasks.filter((task) => task.taskID !== deletedTaskID)
+      );
+    };
+
   return (
     <div className="space-y-2 bg-gray-200 divide-y shadow-lg rounded-md p-2">
       {filteredTasks.length > 0 ? (
         filteredTasks.map((task) => (
-          <TaskItem key={task.taskID} task={task} />
+          <TaskItem key={task.taskID} task={task} onTaskDeleted={handleTaskDeleted} />
         ))
       ) : (
         <p>No tasks available.</p>

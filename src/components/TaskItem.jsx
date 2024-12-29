@@ -6,7 +6,7 @@ const TaskItem = ({ task, onTaskDeleted }) => {
   const handleDelete = async () => {
     try {
       await deleteTask(task.taskID); // Your API call to delete the task
-      onTaskDeleted(); // Notify parent about task deletion
+      onTaskDeleted(task.taskID); // Notify parent about task deletion
     } catch (error) {
       console.error('Error deleting task:', error);
     }

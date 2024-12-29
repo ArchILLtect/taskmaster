@@ -4,13 +4,14 @@ import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import TabBar from './components/TabBar';
 import GroupManager from './components/GroupManager';
-import { fetchGroups } from './services/groupService';
+import { addGroup, fetchGroups } from './services/groupService';
 
 const App = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
 
+  /*
   useEffect(() => {
     const loadGroups = async () => {
       try {
@@ -24,6 +25,33 @@ const App = () => {
       }
     };
 
+    loadGroups();
+  }, []);
+  */
+
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const fetchedGroups = await fetchGroups();
+        if (!fetchedGroups.find((group) => group.groupName === 'General')) {
+          await addGroup('General'); // Add "General" if it doesn't exist
+          const updatedGroups = await fetchGroups(); // Fetch updated groups
+          setGroups(updatedGroups);
+        } else {
+          setGroups(fetchedGroups);
+        }
+  
+        if (fetchedGroups.length > 0) {
+          setSelectedGroup(fetchedGroups[0]); // Default to the first group
+        } else {
+          setSelectedGroup(null);
+        }
+      } catch (error) {
+        console.error('Error loading groups:', error);
+        setGroups([]); // Ensure groups state is never undefined
+      }
+    };
+  
     loadGroups();
   }, []);
 

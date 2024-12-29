@@ -3,6 +3,7 @@ import { addGroup, deleteGroup, fetchGroups } from '../services/groupService';
 
 const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
     const [newGroupName, setNewGroupName] = useState('');
+    const [showDialog, setShowDialog] = useState(false);
 
     const handleAddGroup = async () => {
         if (newGroupName) {
@@ -17,18 +18,38 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
         }
     };
 
+    /*
     const handleDeleteGroup = async (group) => {
         try {
           const updatedGroups = await deleteGroup(group.groupID); // Use groupID
           onGroupsUpdated(updatedGroups); // Notify parent about updates
         } catch (error) {
           console.error('Error deleting group:', error);
+        } finally {
+            setShowDialog(false); // Close dialog after action
         }
-      };
+    };
+    */
+    
+    const handleDeleteGroup = async (group) => {
+        if (group.groupName === 'General') {
+            alert('The "General" group cannot be deleted.');
+            setShowDialog(false);
+            return;
+        }
+        
+        try {
+            const updatedGroups = await deleteGroup(group.groupID); // Use groupID
+            onGroupsUpdated(updatedGroups); // Notify parent about updates
+        } catch (error) {
+            console.error('Error deleting group:', error);
+        } finally {
+            setShowDialog(false); // Close dialog after action
+        }
+    };
 
   return (
     <div className="bg-gray-300 rounded-t-lg shadow-md">
-
         <div className="flex flex-col sm:flex-row w-full gap-1 items-center sm:justify-between sm:px-8 py-1">
             <div className="flex">
                 <input
@@ -48,12 +69,42 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
 
             {/* Delete Group Button */}
             <button
-                onClick={() => handleDeleteGroup(selectedGroup)}
-                className="ml-2 px-4 bg-red-400 text-white rounded-md max-w-fit"
-                >
+                onClick={() => selectedGroup && setShowDialog(true)}
+                className={`ml-2 px-4 rounded-md max-w-fit ${
+                        selectedGroup?.groupName === 'General' ? 'bg-gray-300 cursor-not-allowed' : 'bg-red-400 text-white'
+                }`}
+                disabled={!selectedGroup || selectedGroup.groupName === 'General'} // Disable if no group is selected or it's "General"
+            >
                 Delete Group
             </button>
-        </div>
+
+            {/* Warning Dialog */}
+            {showDialog && selectedGroup && ( // Ensure selectedGroup exists
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded shadow-md w-96">
+                        <h2 className="text-lg font-bold mb-4">Confirm Deletion</h2>
+                        <p>
+                            Are you sure you want to delete the group <strong>{selectedGroup.groupName}</strong>? 
+                            All tasks associated with this group will also be deleted.
+                        </p>
+                        <div className="flex justify-end mt-4">
+                        <button
+                            onClick={() => setShowDialog(false)} // Close dialog
+                            className="mr-2 px-4 py-2 bg-gray-300 text-gray-800 rounded-md"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => handleDeleteGroup(selectedGroup)} // Confirm deletion
+                            className="px-4 py-2 bg-red-500 text-white rounded-md"
+                        >
+                            Delete
+                        </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            </div>
     </div>
   );
 };
