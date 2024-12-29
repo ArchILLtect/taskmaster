@@ -11,24 +11,6 @@ const App = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
 
-  /*
-  useEffect(() => {
-    const loadGroups = async () => {
-      try {
-        const fetchedGroups = await fetchGroups();
-        setGroups(fetchedGroups);
-        if (fetchedGroups.length > 0) {
-          setSelectedGroup(fetchedGroups[0]);
-        }
-      } catch (error) {
-        console.error('Error loading groups:', error);
-      }
-    };
-
-    loadGroups();
-  }, []);
-  */
-
   useEffect(() => {
     const loadGroups = async () => {
       try {

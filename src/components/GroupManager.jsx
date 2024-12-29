@@ -17,19 +17,6 @@ const GroupManager = ({ onGroupsUpdated, selectedGroup }) => {
             }
         }
     };
-
-    /*
-    const handleDeleteGroup = async (group) => {
-        try {
-          const updatedGroups = await deleteGroup(group.groupID); // Use groupID
-          onGroupsUpdated(updatedGroups); // Notify parent about updates
-        } catch (error) {
-          console.error('Error deleting group:', error);
-        } finally {
-            setShowDialog(false); // Close dialog after action
-        }
-    };
-    */
     
     const handleDeleteGroup = async (group) => {
         if (group.groupName === 'General') {

@@ -48,19 +48,23 @@ const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
         className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 rounded-b-lg shadow-md no-scrollbar text-nowrap"
         onScroll={checkOverflow}
       >
-        {(groups.map)((group) => (
-          <button
-            key={group.groupID}
-            onClick={() => onSelectGroup(group)}
-            className={`px-4 py-2 rounded-md transition-colors duration-200 ${
-              selectedGroup.groupID === group.groupID
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            {group.groupName}
-          </button>
-        ))}
+        {Array.isArray(groups) && groups.length > 0 ? (
+          groups.map((group) => (
+            <button
+              key={group.groupID}
+              onClick={() => onSelectGroup(group)}
+              className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+                  selectedGroup?.groupID === group.groupID
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {group.groupName}
+            </button>
+          ))
+        ) : (
+            <p className="text-gray-500 px-4">No groups available</p>
+        )}
       </div>
 
       {/* Left Arrow */}
