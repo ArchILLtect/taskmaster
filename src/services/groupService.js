@@ -1,11 +1,6 @@
 import axios from 'axios';
 
 const API_URL = 'https://jvv0skyaw1.execute-api.us-east-2.amazonaws.com/dev/groups';
-/*
-export const fetchGroups = async () => {
-  const response = await axios.get(API_URL);
-  return response.data.map((item) => item.groupName); // Extract group names
-};*/
 
 export const fetchGroups = async () => {
   const response = await axios.get(API_URL);
@@ -19,7 +14,7 @@ export const addGroup = async (groupName) => {
 
 export const deleteGroup = async (groupID) => {
   const response = await axios.delete(API_URL, {
-    data: { groupID }, // Send groupID directly
+    data: { groupID },
   });
   return response.data.groups;
 };

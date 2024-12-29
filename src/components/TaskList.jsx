@@ -27,7 +27,6 @@ const TaskList = ({ selectedGroup, refreshFlag }) => {
     // Handle task deletion
     const handleTaskDeleted = (deletedTaskID) => {
       // Remove the deleted task from the tasks state
-      console.log('Deleted')
       setTasks((prevTasks) =>
         prevTasks.filter((task) => task.taskID !== deletedTaskID)
       );
