@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getTasks } from '../services/api';
 import TaskItem from './TaskItem';
 
-const TaskList = ({ selectedGroup, refreshFlag }) => {
+const TaskList = ({ selectedGroup, refreshFlag, highlightedTaskID, setHighlightedTaskID }) => {
   const [tasks, setTasks] = useState([]);
 
   // Fetch tasks when the component loads or when refreshFlag changes
@@ -24,19 +24,25 @@ const TaskList = ({ selectedGroup, refreshFlag }) => {
     ? tasks.filter((task) => task.group === selectedGroup.groupName)
     : tasks;
 
-    // Handle task deletion
-    const handleTaskDeleted = (deletedTaskID) => {
-      // Remove the deleted task from the tasks state
-      setTasks((prevTasks) =>
-        prevTasks.filter((task) => task.taskID !== deletedTaskID)
-      );
-    };
+  // Handle task deletion
+  const handleTaskDeleted = (deletedTaskID) => {
+    // Remove the deleted task from the tasks state
+    setTasks((prevTasks) =>
+      prevTasks.filter((task) => task.taskID !== deletedTaskID)
+    );
+  };
 
   return (
     <div className="space-y-2 bg-gray-200 divide-y shadow-lg rounded-md p-2">
       {filteredTasks.length > 0 ? (
         filteredTasks.map((task) => (
-          <TaskItem key={task.taskID} task={task} onTaskDeleted={handleTaskDeleted} />
+          <TaskItem
+            key={task.taskID}
+            task={task}
+            isHighlighted={highlightedTaskID === task.taskID} // Pass whether the task is highlighted
+            onTaskDeleted={handleTaskDeleted}
+            onHighlight={setHighlightedTaskID} // Pass function to highlight
+          />
         ))
       ) : (
         <p>No tasks available.</p>

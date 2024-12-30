@@ -10,6 +10,8 @@ const App = () => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
+  const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
+  const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -47,7 +49,12 @@ const App = () => {
         <h1 className="text-4xl font-mono font-bold text-center">TaskMaster</h1>
       </div>
 
-      <GroupManager onGroupsUpdated={setGroups} selectedGroup={selectedGroup} />
+      <GroupManager
+        selectedGroup={selectedGroup}
+        onGroupsUpdated={setGroups}
+        onHighlight={setHighlightedGroupID} // Pass group highlight handler
+        highlightedGroupID={highlightedGroupID} // Highlighted group ID
+      />
 
       <TabBar
         groups={groups}
@@ -57,9 +64,15 @@ const App = () => {
 
       <TaskForm selectedGroup={selectedGroup} onTaskAdded={refreshTasks} />
 
-      <TaskList selectedGroup={selectedGroup} refreshFlag={refreshFlag} />
+      <TaskList
+        selectedGroup={selectedGroup}
+        refreshFlag={refreshFlag}
+        highlightedTaskID={highlightedTaskID} // Pass highlighted task ID
+        setHighlightedTaskID={setHighlightedTaskID} // Pass setter function
+      />
     </div>
   );
 };
+
 
 export default App;

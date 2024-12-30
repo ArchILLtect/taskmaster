@@ -41,7 +41,7 @@ const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
   }, [groups]);
 
   return (
-    <div className="relative border-t-2 border-gray-400">
+    <div className="border-t-2 border-gray-400">
       {/* Scrollable Tab Container */}
       <div
         ref={containerRef}
@@ -53,7 +53,7 @@ const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
             <button
               key={group.groupID}
               onClick={() => onSelectGroup(group)}
-              className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+              className={`relative px-4 py-2 rounded-md transition-colors duration-200 ${
                   selectedGroup?.groupID === group.groupID
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-300'
