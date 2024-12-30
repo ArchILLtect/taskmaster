@@ -1,70 +1,97 @@
-# Getting Started with Create React App
+# TaskMaster
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+    TaskMaster is a modern and intuitive task management web application built using React, TailwindCSS, AWS Lambda, and DynamoDB. It allows users to create, manage, and organize tasks into customizable groups.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+    - **Task Management**: Add, view, and delete tasks.
+    - **Group Management**: Create, delete, and organize tasks within groups.
+    - **Dynamic UI**: Smooth and responsive design with TailwindCSS.
+    - **Scroll Overflow Management**: Interactive arrows for navigating grouped tasks when they overflow.
+    - **Backend Integration**: Serverless API endpoints built with AWS Lambda and DynamoDB.
 
-### `npm start`
+## Technologies Used
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+    - **Frontend**: React, TailwindCSS
+    - **Backend**: AWS Lambda, DynamoDB
+    - **Deployment**: Netlify
+    - **Styling**: TailwindCSS with plugins for scrollbars
+    - **State Management**: React hooks
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Setup
 
-### `npm test`
+### Prerequisites
+    - Node.js and npm installed on your system.
+    - AWS account with permissions to use Lambda and DynamoDB.
+    - Netlify account for deployment.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Installation
 
-### `npm run build`
+    1. Clone the repository:
+        git clone https://github.com/yourusername/taskmaster.git
+        cd taskmaster
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+    2. Install dependencies:
+        npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+    3. Configure AWS Lambda endpoints in api.js: Update the base URLs to your deployed Lambda functions for tasks and groups.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    4. Run the development server:
+        npm start
 
-### `npm run eject`
+    5. Build for production:
+        npm run build
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### TailwindCSS Configuration
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    TailwindCSS is configured in the tailwind.config.js file. Plugins like tailwind-scrollbar are included for enhanced UI styling.
+    Check the file for details:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+    /** @type {import('tailwindcss').Config} */
+    module.exports = {
+        content: [
+            "./src/**/*.{js,jsx,ts,tsx}",
+        ],
+        theme: {
+            extend: {},
+        },
+        plugins: [
+            require('tailwind-scrollbar'),
+        ],
+    };
 
 ### Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+    1. Push your code to GitHub.
+    2. Connect your repository to Netlify.
+    3. Configure environment variables on Netlify if needed.
+    4. Deploy the app.
 
-### `npm run build` fails to minify
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+    - src/components: Contains reusable React components like TaskForm, TaskList, TabBar, and GroupManager.
+    - src/services: API service files (api.js and groupService.js) for interacting with Lambda and DynamoDB.
+    - src/App.js: Main app component that orchestrates the UI and logic.
+    - tailwind.config.js: TailwindCSS configuration.
+
+## Future Enhancements
+    - Add user authentication to secure task and group data.
+    - Enhance UI/UX with additional animations and themes.
+    - Implement drag-and-drop task ordering.
+    - Provide analytics for task completion rates.
+
+    Coming Soon:
+        - Cascade delete tasks on group delete
+        - Priorities
+        - Task dates
+        - Subtasks
+        - Mark tasks as completed
+
+## License
+
+    This project is licensed under the MIT License.
+
+## Contributors
+
+    - Nick Hanson Sr.
+    - ChatGPT 4.0/o1
