@@ -4,9 +4,11 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]); // Manage all tasks
-  const [groups, setGroups] = useState([]); // Manage all groups
-  const [selectedGroup, setSelectedGroup] = useState(null); // Currently selected group
   const [filteredTasks, setFilteredTasks] = useState([]); // Manage all tasks
+  const [groups, setGroups] = useState([]); // Manage all groups
+  const [groupNewName, setGroupNewName] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState(null); // Currently selected group
+
 
   return (
     <AppContext.Provider
@@ -17,6 +19,8 @@ export const AppProvider = ({ children }) => {
         setFilteredTasks,
         groups,
         setGroups,
+        groupNewName,
+        setGroupNewName,
         selectedGroup,
         setSelectedGroup,
       }}

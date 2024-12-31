@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
-import { addGroup, deleteGroup, fetchGroups } from '../services/groupService';
+import { addGroup, deleteGroup, renameGroup } from '../services/groupService';
 import { reassignTasksToGroup, deleteTasksByGroup } from '../services/api';
 import { useApp } from "../contexts/AppContext";
+import RenameGroupDialog from './RenameGroupDialog';
 
 const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupTotal }) => {
-    const { filteredTasks, groups, selectedGroup } = useApp();
+    const { filteredTasks, groups, groupNewName, selectedGroup } = useApp();
     const [newGroupName, setNewGroupName] = useState('');
+    const [showRenameGrpDialog, setShowRenameGrpDialog] = useState(false);
     const [showDialog, setShowDialog] = useState(false);
     const [showReassignDialog, setShowReassignDialog] = useState(false);
-    const [deleteOption, setDeleteOption] = useState("deleteAll"); // Default to delete all tasks
+    const [deleteOption, setDeleteOption] = useState("");
     const [reassignGroup, setReassignGroup] = useState("1735400111111"); // Initially, no group selected
 
     const handleAddGroup = async () => {
+
+        let updatedGroups;
         if (newGroupName) {
             try {
-                await addGroup(newGroupName); // Add group via service
-                const updatedGroups = await fetchGroups(); // Fetch updated groups
+                updatedGroups = await addGroup(newGroupName); // Add group via service
                 onGroupsUpdated(updatedGroups); // Notify parent about updates
                 setNewGroupName(''); // Clear input
             } catch (error) {
@@ -24,8 +27,41 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
         }
     };
 
+    const handleRenameGroup = async (groupNewName, groupID) => {
+
+        let updatedGroups;
+        if (!groupNewName.trim()) {
+            alert("Group name cannot be empty.");
+            return;
+        }
+    
+        if (groups.some((group) => group.groupName.toLowerCase() === groupNewName.toLowerCase())) {
+            alert("A group with this name already exists.");
+            return;
+        }
+
+        if (selectedGroup.groupID === '1735400111111') {
+            alert('The "General" group cannot be renamed.');
+            setShowRenameGrpDialog(false);
+            return;
+        }
+
+        if (groupNewName) {
+            try {
+                updatedGroups = await renameGroup(groupNewName, groupID); // Add group via service
+                setNewGroupName(''); // Clear input
+            } catch (error) {
+                console.error('Error adding group:', error);
+            }
+        }
+        onGroupsUpdated(updatedGroups); // Notify parent about updates
+        setShowRenameGrpDialog(false);
+        onHighlight(null);
+    };
+
     const handleDeleteGroup = async (group) => {
 
+        let response;
         let updatedGroups;
         if (group.groupID === '1735400111111') {
             alert('The "General" group cannot be deleted.');
@@ -34,7 +70,7 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
         }
 
         if (deleteOption === "deleteAll") {
-            let response;
+
             try {
                 // Delete group and its tasks
                 updatedGroups = await deleteGroup(group.groupID); // Use groupID
@@ -46,22 +82,30 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
                 console.log('All tasks deleted successfully:', response);
             }
         } else if (deleteOption === "reassign") {
-            let response;
             if (!reassignGroup) {
                 alert("Please select a group to reassign tasks.");
                 return; // Prevent proceeding without a selection
             }
             try {
-                response = await reassignTasksToGroup(group.groupID, reassignGroup); // API call to reassign tasks = (FROM GROUP, TO GROUP)
-                await deleteGroup(group.groupID); // Delete the original group
-
+                await reassignTasksToGroup(group.groupID, reassignGroup); // API call to reassign tasks = (FROM GROUP, TO GROUP)
+                response = await deleteGroup(group.groupID); // Delete the original group
             } catch (error) {
                 console.error("Error reassigning tasks:", error);
             } finally {
                 setShowDialog(false); // Close the dialog
                 console.log('Tasks reassigned successfully:', response);
             }
+        } else {
+            try {
+                updatedGroups = await deleteGroup(group.groupID); // Delete the original group
+            } catch (error) {
+                console.error("Error deleting group:", error);
+            } finally {
+                setShowDialog(false); // Close the dialog
+                console.log('Group deleted successfully:', updatedGroups);
+            }
         }
+        setDeleteOption("");
         onGroupsUpdated(updatedGroups); // Refresh groups
         onHighlight(null)
     };
@@ -69,6 +113,7 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
   return (
     <div className="bg-gray-300 rounded-t-lg shadow-md">
         <div className="flex flex-col sm:flex-row w-full gap-1 items-center sm:justify-between sm:px-8 py-1">
+            {/* Add Group Input/Button */}
             <div className="flex">
                 <input
                 type="text"
@@ -84,7 +129,25 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
                 Add Group
                 </button>
             </div>
-
+            {/* Rename Group Button */}
+            <button
+                onClick={() => {
+                    setShowRenameGrpDialog(true);
+                    onHighlight(selectedGroup.groupID) // Highlight group being deleted
+                }}
+                className={`ml-2 px-4 rounded-md max-w-fit ${
+                    selectedGroup?.groupID === highlightedGroupID
+                    ? 'bg-yellow-200' // Highlighted group styling
+                    : selectedGroup?.groupID === '1735400111111'
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-blue-400 text-white'
+                }`}
+                disabled={
+                    !selectedGroup || selectedGroup.groupID === '1735400111111'
+                }
+            >
+                Rename Group
+            </button>
             {/* Delete Group Button */}
             <button
                 onClick={() => {
@@ -104,8 +167,15 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
             >
                 Delete Group
             </button>
+            {/* Rename Confirm Dialog */}
+            {showRenameGrpDialog && (
+                <RenameGroupDialog
+                    onClose={() => setShowRenameGrpDialog(false)}
+                    onRename={() => handleRenameGroup(groupNewName, selectedGroup.groupID)}
+                />
+            )}
 
-            {/* Warning Dialog */}
+            {/* Delete Confirm Dialog */}
             {showDialog && selectedGroup && ( // Ensure selectedGroup exists
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-6 rounded shadow-md w-5/12">

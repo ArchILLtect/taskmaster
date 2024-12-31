@@ -21,6 +21,24 @@ export const addGroup = async (groupName) => {
   }
 };
 
+export const renameGroup = async (groupNewName, groupID) => {
+  if (!groupID || !groupNewName) {
+    throw new Error('Both groupID and groupNewName are required to rename a group.');
+  }
+
+  try {
+    const response = await axios.put(API_URL, {
+      groupID,
+      groupNewName
+    });
+
+    return response.data.groups; // Return the updated groups list
+  } catch (err) {
+    console.error("Error renaming group:", err.response?.data?.error || err.message);
+    throw new Error(err.response?.data?.error || 'An error occurred while renaming the group.');
+  }
+};
+
 export const deleteGroup = async (groupID) => {
   const response = await axios.delete(API_URL, {
     data: { groupID },
