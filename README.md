@@ -81,8 +81,7 @@
     - Provide analytics for task completion rates.
 
     Coming Soon:
-        - Get add/delete task/group refreshing fixed
-        - Priorities
+        - Priorities (Starring)
         - Task dates
         - Subtasks
         - Mark tasks as completed

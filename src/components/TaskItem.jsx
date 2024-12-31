@@ -22,8 +22,8 @@ const TaskItem = ({ task, onTaskDeleted, onHighlight, isHighlighted }) => {
                 isHighlighted ? 'bg-red-100' : ''
             }`}
         >
-            <div className="flex gap-3 w-full">
-                <span className="w-48 whitespace-nowrap overflow-hidden text-ellipsis">{task.taskName}</span>
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <span className="w-full sm:w-48 whitespace-nowrap overflow-hidden text-ellipsis">{task.taskName}</span>
                 <p className="w-full">{task.taskDescription}</p>
             </div>
             <div className="flex gap-3">
