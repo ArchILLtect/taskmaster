@@ -170,7 +170,10 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
             {/* Rename Confirm Dialog */}
             {showRenameGrpDialog && (
                 <RenameGroupDialog
-                    onClose={() => setShowRenameGrpDialog(false)}
+                    onClose={() => {
+                        setShowRenameGrpDialog(false);
+                        onHighlight(null);
+                    }}
                     onRename={() => handleRenameGroup(groupNewName, selectedGroup.groupID)}
                 />
             )}
