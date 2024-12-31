@@ -81,11 +81,18 @@
     - Provide analytics for task completion rates.
 
     Coming Soon:
+        - User Feedback for Dialog Actions: When users perform actions like saving a task or renaming a group,
+            consider providing a small notification or feedback (e.g., a toast message) confirming success.
+        - Form Validations: Validate task or group inputs in the dialogs to ensure no blank or duplicate entries are allowed.
         - Priorities (Starring)
-        - Task dates
+        - Task dates (created on)
         - Subtasks
-        - Mark tasks as completed
+        - Task status = Mark tasks as completed
         - Fix error reporting for trying to add a group named General
+
+    Accessibility:
+        - TabBar Overflow Arrows: Ensure that the arrows for scrolling the TabBar are accessible via keyboard
+            navigation for users who rely on it.
 
 ## License
 
