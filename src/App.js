@@ -7,13 +7,16 @@ import GroupManager from './components/GroupManager';
 import { addGroup, fetchGroups } from './services/groupService';
 import TaskGroupTotaler from './components/TaskGroupTotaler';
 import { useApp } from "./contexts/AppContext";
+import AppSettingsDialog from './components/AppSettingsDialog';
 
 const App = () => {
-    const { setGroups, setSelectedGroup } = useApp();
+    const { setGroups, selectedGroup, setSelectedGroup } = useApp();
     const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
     const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
     const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
     const [groupTotal, setGroupTotal] = useState(null);
+    const [showAppSettingsDialog, setShowAppSettingsDialog] = useState();
+    const [showTaskFormDialog, setShowTaskFormDialog] = useState();
 
     useEffect(() => {
         const loadGroups = async () => {
@@ -55,9 +58,17 @@ const App = () => {
     };
 
     return (
-        <div className="sm:p-10 mx-auto bg-gray-100 w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12 2xl:w-1/2">
-            <div className="p-5 bg-white">
-                <h1 className="text-4xl font-mono font-bold text-center">&lt;TaskMaster /&gt;</h1>
+        <div className="sm:p-10 mx-auto bg-gray-100 dark:bg-gray-900 w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12 2xl:w-1/2">
+            <div className="flex justify-between p-5 bg-white dark:bg-gray-600">
+                <div className="w-full text-center">
+                    <h1 className="text-4xl font-mono font-bold dark:text-white text-center">&lt;TaskMaster /&gt;</h1>
+                </div>
+                <button
+                    onClick={() => setShowAppSettingsDialog(true)}
+                    className="px-4 bg-blue-400 text-white text-nowrap rounded-md"
+                >
+                    . . .
+                </button>
             </div>
 
             <GroupManager
@@ -71,7 +82,15 @@ const App = () => {
 
             <TaskGroupTotaler groupTotal={groupTotal} />
 
-            <TaskForm onTaskAdded={refreshTasks} />
+            <div className="flex justify-center bg-gray-100 dark:bg-gray-800 pt-4 pb-1 rounded-md mt-6">
+                <button
+                    onClick={() => setShowTaskFormDialog(true)}
+                    className="ml-2 px-4 py-2 bg-green-500 text-white rounded-md"
+                    disabled={!selectedGroup}
+                >
+                    Add Task
+                </button>
+            </div>
 
             <TaskList
                 refreshFlag={refreshFlag}
@@ -79,6 +98,27 @@ const App = () => {
                 setHighlightedTaskID={setHighlightedTaskID} // Pass setter function
                 setGroupTotal={setGroupTotal}
             />
+
+            {/* Task Form Dialog */}
+            {showTaskFormDialog && (
+                <TaskForm
+                    onClose={() => {
+                        setShowTaskFormDialog(false);
+                        //onHighlight(null);
+                    }}
+                    onTaskAdded={refreshTasks}
+                />
+            )}
+
+            {/* App Settings Dialog */}
+            {showAppSettingsDialog && (
+                <AppSettingsDialog
+                    onClose={() => {
+                        setShowAppSettingsDialog(false);
+                        //onHighlight(null);
+                    }}
+                />
+            )}
 
         </div>
     );

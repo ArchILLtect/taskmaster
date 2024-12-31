@@ -44,11 +44,11 @@ const TabBar = ({ onSelectGroup }) => {
     }, [groups]);
 
     return (
-        <div className="border-t-2 border-gray-400">
+        <div className="border-t-2 border-gray-400 dark:border-gray-600">
             {/* Scrollable Tab Container */}
             <div
                 ref={containerRef}
-                className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 shadow-md no-scrollbar text-nowrap"
+                className="flex overflow-x-auto space-x-4 bg-gray-200 dark:bg-gray-800 p-2 shadow-md no-scrollbar text-nowrap"
                 onScroll={checkOverflow}
             >
                 {Array.isArray(groups) && groups.length > 0 ? (
@@ -59,7 +59,7 @@ const TabBar = ({ onSelectGroup }) => {
                             className={`relative px-4 py-2 rounded-md transition-colors duration-200 ${
                                 selectedGroup?.groupID === group.groupID
                                     ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-300'
+                                    : 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300'
                             }`}
                         >
                             {group.groupName}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AppContext = createContext();
 
@@ -8,7 +8,16 @@ export const AppProvider = ({ children }) => {
   const [groups, setGroups] = useState([]); // Manage all groups
   const [groupNewName, setGroupNewName] = useState('');
   const [selectedGroup, setSelectedGroup] = useState(null); // Currently selected group
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
+  useEffect(() => {
+    // Check localStorage for dark mode preference
+    const storedDarkMode = localStorage.getItem("darkMode") === "true";
+    setIsDarkMode(storedDarkMode);
+    if (storedDarkMode) {
+        document.documentElement.classList.add("dark");
+    }
+}, []);
 
   return (
     <AppContext.Provider
@@ -23,6 +32,8 @@ export const AppProvider = ({ children }) => {
         setGroupNewName,
         selectedGroup,
         setSelectedGroup,
+        isDarkMode,
+        setIsDarkMode,
       }}
     >
       {children}

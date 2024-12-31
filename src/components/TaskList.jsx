@@ -39,7 +39,7 @@ const TaskList = ({ refreshFlag, highlightedTaskID, setHighlightedTaskID, setGro
     };
 
     return (
-        <div className="space-y-2 bg-gray-200 divide-y shadow-lg rounded-md p-2">
+        <div className="space-y-2 bg-gray-200 dark:bg-gray-700 divide-y shadow-lg rounded-md p-2">
             {filteredTasks.length > 0 ? (
                 filteredTasks.map((task) => (
                     <TaskItem
