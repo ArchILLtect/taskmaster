@@ -27,7 +27,7 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
     const handleDeleteGroup = async (group) => {
 
         let updatedGroups;
-        if (group.groupName === 'General') {
+        if (group.groupID === '1735400111111') {
             alert('The "General" group cannot be deleted.');
             setShowDialog(false);
             return;
@@ -94,12 +94,12 @@ const GroupManager = ({ onGroupsUpdated, onHighlight, highlightedGroupID, groupT
                 className={`ml-2 px-4 rounded-md max-w-fit ${
                     selectedGroup?.groupID === highlightedGroupID
                     ? 'bg-yellow-200' // Highlighted group styling
-                    : selectedGroup?.groupName === 'General'
+                    : selectedGroup?.groupID === '1735400111111'
                     ? 'bg-gray-300 cursor-not-allowed'
                     : 'bg-red-400 text-white'
                 }`}
                 disabled={
-                    !selectedGroup || selectedGroup.groupName === 'General'
+                    !selectedGroup || selectedGroup.groupID === '1735400111111'
                 }
             >
                 Delete Group

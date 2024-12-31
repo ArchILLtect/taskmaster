@@ -81,11 +81,12 @@
     - Provide analytics for task completion rates.
 
     Coming Soon:
-        - Cascade delete tasks on group delete
+        - Get add/delete task/group refreshing fixed
         - Priorities
         - Task dates
         - Subtasks
         - Mark tasks as completed
+        - Fix error reporting for trying to add a group named General
 
 ## License
 

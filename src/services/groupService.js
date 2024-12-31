@@ -1,16 +1,24 @@
 import axios from 'axios';
 
 const API_URL = 'https://jvv0skyaw1.execute-api.us-east-2.amazonaws.com/dev/groups';
+const DEFAULT_GRP_ID = '1735400111111';
 
 export const fetchGroups = async () => {
   const response = await axios.get(API_URL);
-  console.log(response)
   return response.data; // Return full objects (groupID and groupName)
 };
 
 export const addGroup = async (groupName) => {
-  const response = await axios.post(API_URL, { groupName });
-  return response.data.groups;
+  try {
+    const response = await axios.post(API_URL, {
+      groupName,
+      groupID: groupName.toLowerCase() === 'general' ? DEFAULT_GRP_ID : undefined,
+    });
+    return response.data.groups; // Return the updated groups list
+  } catch (err) {
+    console.error("Error adding group:", err.response?.data?.error || err.message);
+    throw new Error(err.response?.data?.error || 'An error occurred while adding the group.');
+  }
 };
 
 export const deleteGroup = async (groupID) => {

@@ -19,7 +19,7 @@ const App = () => {
     const loadGroups = async () => {
       try {
         const fetchedGroups = await fetchGroups();
-        if (!fetchedGroups.find((group) => group.groupName === 'General')) {
+        if (!fetchedGroups.find((group) => group.groupID === '1735400111111')) {
           await addGroup('General'); // Add "General" if it doesn't exist
           const updatedGroups = await fetchGroups(); // Fetch updated groups
           setGroups(updatedGroups);

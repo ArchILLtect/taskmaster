@@ -17,8 +17,6 @@ const TabBar = ({ onSelectGroup }) => {
     }
   };
 
-  console.log(groups)
-
   // Scroll to the left or right
   const scroll = (direction) => {
     if (containerRef.current) {
