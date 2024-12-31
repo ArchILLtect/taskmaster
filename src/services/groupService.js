@@ -4,6 +4,7 @@ const API_URL = 'https://jvv0skyaw1.execute-api.us-east-2.amazonaws.com/dev/grou
 
 export const fetchGroups = async () => {
   const response = await axios.get(API_URL);
+  console.log(response)
   return response.data; // Return full objects (groupID and groupName)
 };
 
