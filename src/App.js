@@ -5,13 +5,15 @@ import TaskList from './components/TaskList';
 import TabBar from './components/TabBar';
 import GroupManager from './components/GroupManager';
 import { addGroup, fetchGroups } from './services/groupService';
+import TaskGroupTotaler from './components/TaskGroupTotaler';
+import { useApp } from "./contexts/AppContext";
 
 const App = () => {
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  const { setGroups, setSelectedGroup } = useApp();
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
   const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
   const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
+  const [groupTotal, setGroupTotal] = useState(null);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -37,7 +39,7 @@ const App = () => {
     };
   
     loadGroups();
-  }, []);
+  }, [setGroups, setSelectedGroup]);
 
   const refreshTasks = () => {
     setRefreshFlag((prev) => !prev); // Toggle refreshFlag to trigger updates in TaskList
@@ -50,26 +52,27 @@ const App = () => {
       </div>
 
       <GroupManager
-        selectedGroup={selectedGroup}
         onGroupsUpdated={setGroups}
         onHighlight={setHighlightedGroupID} // Pass group highlight handler
         highlightedGroupID={highlightedGroupID} // Highlighted group ID
+        groupTotal={groupTotal}
       />
 
       <TabBar
-        groups={groups}
-        selectedGroup={selectedGroup}
         onSelectGroup={setSelectedGroup}
       />
 
-      <TaskForm selectedGroup={selectedGroup} onTaskAdded={refreshTasks} />
+      <TaskGroupTotaler groupTotal={groupTotal} />
+
+      <TaskForm onTaskAdded={refreshTasks} />
 
       <TaskList
-        selectedGroup={selectedGroup}
         refreshFlag={refreshFlag}
         highlightedTaskID={highlightedTaskID} // Pass highlighted task ID
         setHighlightedTaskID={setHighlightedTaskID} // Pass setter function
+        setGroupTotal={setGroupTotal}
       />
+
     </div>
   );
 };
