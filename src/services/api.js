@@ -14,3 +14,28 @@ export const deleteTask = (taskID) =>
         'Content-Type': 'application/json',
       },
     });
+export const reassignTasksToGroup = async (fromGroupID, toGroupID) => {
+  try {
+    // Make the API call to the PATCH endpoint
+    const response = await axios.patch(`${API_BASE_URL}/tasks/reAssign`, {
+      fromGroupID,
+      toGroupID,
+    });
+    // Return success response
+    return response.data;
+  } catch (error) {
+    console.error('Error reassigning tasks:', error);
+    throw error; // Rethrow error to be handled by the calling code
+  }
+};
+export const deleteTasksByGroup = async (groupID) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/tasks/deleteByGroup`, {
+      data: { groupID }, // Axios allows sending a body with DELETE requests
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting tasks by group:", error);
+    throw error;
+  }
+};

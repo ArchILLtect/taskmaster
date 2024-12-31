@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useApp } from "../contexts/AppContext";
 
-const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
+const TabBar = ({ onSelectGroup }) => {
+  const { groups, selectedGroup } = useApp();
   const containerRef = useRef(null); // Ref for the entire tab bar container
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
 
   // Check if scrolling is possible
   const checkOverflow = () => {
@@ -45,7 +48,7 @@ const TabBar = ({ groups, selectedGroup, onSelectGroup }) => {
       {/* Scrollable Tab Container */}
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 rounded-b-lg shadow-md no-scrollbar text-nowrap"
+        className="flex overflow-x-auto space-x-4 bg-gray-200 p-2 shadow-md no-scrollbar text-nowrap"
         onScroll={checkOverflow}
       >
         {Array.isArray(groups) && groups.length > 0 ? (

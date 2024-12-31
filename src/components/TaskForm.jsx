@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { addTask } from '../services/api';
+import { useApp } from "../contexts/AppContext";
 
-const TaskForm = ({ selectedGroup, onTaskAdded }) => {
+const TaskForm = ({ onTaskAdded }) => {
+  const { selectedGroup } = useApp();
   const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskStatus, setTaskStatus] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await addTask({ taskName, group: selectedGroup.groupName });
+      await addTask({ taskName, groupID: selectedGroup.groupID, taskDescription: taskDescription, taskStatus: taskStatus });
       setTaskName(''); // Clear the input field
+      setTaskDescription(''); // Clear the input field
+      setTaskStatus(''); // Clear the input field
       onTaskAdded(); // Notify parent to refresh tasks
     } catch (error) {
       console.error('Error adding task:', error);
@@ -23,6 +29,22 @@ const TaskForm = ({ selectedGroup, onTaskAdded }) => {
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
           placeholder="Enter task name"
+          required
+          className="p-2 border rounded-md"
+        />
+        <input
+          type="text"
+          value={taskDescription}
+          onChange={(e) => setTaskDescription(e.target.value)}
+          placeholder="Enter task description"
+          required
+          className="p-2 border rounded-md"
+        />
+        <input
+          type="text"
+          value={taskStatus}
+          onChange={(e) => setTaskStatus(e.target.value)}
+          placeholder="Enter task status"
           required
           className="p-2 border rounded-md"
         />

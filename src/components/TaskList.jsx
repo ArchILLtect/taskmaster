@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { getTasks } from '../services/api';
 import TaskItem from './TaskItem';
+import { useApp } from "../contexts/AppContext";
 
-const TaskList = ({ selectedGroup, refreshFlag, highlightedTaskID, setHighlightedTaskID }) => {
-  const [tasks, setTasks] = useState([]);
+const TaskList = ({ refreshFlag, highlightedTaskID, setHighlightedTaskID, setGroupTotal }) => {
+  const { tasks, setTasks, filteredTasks, setFilteredTasks, selectedGroup } = useApp();
 
   // Fetch tasks when the component loads or when refreshFlag changes
   useEffect(() => {
@@ -17,12 +18,17 @@ const TaskList = ({ selectedGroup, refreshFlag, highlightedTaskID, setHighlighte
     };
 
     fetchTasks();
-  }, [refreshFlag]); // Refetch tasks when refreshFlag changes
+  }, [setTasks, refreshFlag]); // Refetch tasks when refreshFlag changes
 
-  // Filter tasks by selected group
-  const filteredTasks = selectedGroup
-    ? tasks.filter((task) => task.group === selectedGroup.groupName)
-    : tasks;
+  useEffect(() => {
+    // Filter tasks by selected group
+    const filterTasks = selectedGroup
+      ? tasks.filter((task) => task.groupID === selectedGroup.groupID)
+      : tasks;
+  
+    setFilteredTasks(filterTasks); // From context
+    setGroupTotal(filterTasks.length); // From prop or context
+  }, [tasks, selectedGroup, setFilteredTasks, setGroupTotal]); // Re-run when filteredTasks changes
 
   // Handle task deletion
   const handleTaskDeleted = (deletedTaskID) => {
@@ -42,6 +48,7 @@ const TaskList = ({ selectedGroup, refreshFlag, highlightedTaskID, setHighlighte
             isHighlighted={highlightedTaskID === task.taskID} // Pass whether the task is highlighted
             onTaskDeleted={handleTaskDeleted}
             onHighlight={setHighlightedTaskID} // Pass function to highlight
+            
           />
         ))
       ) : (

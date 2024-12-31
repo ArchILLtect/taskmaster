@@ -23,6 +23,8 @@ const TaskItem = ({ task, onTaskDeleted, onHighlight, isHighlighted }) => {
             }`}
         >
         <span>{task.taskName}</span>
+        <span>{task.taskDescription}</span>
+        <span>{task.taskStatus}</span>
         <button
           onClick={() => {
             setShowDialog(true);
