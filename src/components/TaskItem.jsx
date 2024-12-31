@@ -18,7 +18,7 @@ const TaskItem = ({ task, onTaskDeleted, onHighlight, isHighlighted }) => {
   
     return (
         <div
-            className={`flex justify-between items-center bg-white shadow-md p-2 rounded-md ${
+            className={`flex flex-col sm:flex-row justify-between items-center bg-white shadow-md p-2 rounded-md ${
                 isHighlighted ? 'bg-red-100' : ''
             }`}
         >

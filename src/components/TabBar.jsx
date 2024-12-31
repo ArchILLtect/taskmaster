@@ -76,7 +76,7 @@ const TabBar = ({ onSelectGroup }) => {
       {canScrollLeft && (
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
+          className="absolute left-0 top-[172px] sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
         >
           &lt;
         </button>
@@ -86,7 +86,7 @@ const TabBar = ({ onSelectGroup }) => {
       {canScrollRight && (
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
+          className="absolute right-0 top-[172px] sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
         >
           &gt;
         </button>
