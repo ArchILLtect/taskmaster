@@ -8,6 +8,7 @@ import { addGroup, fetchGroups } from './services/groupService';
 import TaskGroupTotaler from './components/TaskGroupTotaler';
 import { useApp } from "./contexts/AppContext";
 import AppSettingsDialog from './components/AppSettingsDialog';
+import Header from './components/Header';
 
 const App = () => {
     const { setGroups, selectedGroup, setSelectedGroup } = useApp();
@@ -59,17 +60,8 @@ const App = () => {
 
     return (
         <div className="sm:p-10 mx-auto bg-gray-100 dark:bg-gray-900 w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12 2xl:w-1/2">
-            <div className="flex justify-between p-5 bg-white dark:bg-gray-600">
-                <div className="w-full text-center">
-                    <h1 className="text-4xl font-mono font-bold dark:text-white text-center">&lt;TaskMaster /&gt;</h1>
-                </div>
-                <button
-                    onClick={() => setShowAppSettingsDialog(true)}
-                    className="px-4 bg-blue-400 text-white text-nowrap rounded-md"
-                >
-                    . . .
-                </button>
-            </div>
+
+            <Header onSettingsOpen={setShowAppSettingsDialog} />
 
             <GroupManager
                 onGroupsUpdated={setGroups}
