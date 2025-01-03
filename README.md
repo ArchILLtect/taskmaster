@@ -80,19 +80,32 @@
     - Implement drag-and-drop task ordering.
     - Provide analytics for task completion rates.
 
-    Coming Soon:
-        - User Feedback for Dialog Actions: When users perform actions like saving a task or renaming a group,
-            consider providing a small notification or feedback (e.g., a toast message) confirming success.
-        - Form Validations: Validate task or group inputs in the dialogs to ensure no blank or duplicate entries are allowed.
-        - Priorities (Starring)
-        - Task dates (created on)
-        - Subtasks
-        - Task status = Mark tasks as completed
-        - Fix error reporting for trying to add a group named General
+# Coming Soon:
+    - User Feedback for Dialog Actions: When users perform actions like saving a task or renaming a group,
+        consider providing a small notification or feedback (e.g., a toast message) confirming success.
+    - Form Validations: Validate task or group inputs in the dialogs to ensure no blank or duplicate entries are allowed.
+    - Priorities (Starring)
+    - Task dates (created on)
+    - Subtasks
+    - Task status = Mark tasks as completed
+    - Fix error reporting for trying to add a group named General
 
-    Accessibility:
-        - TabBar Overflow Arrows: Ensure that the arrows for scrolling the TabBar are accessible via keyboard
-            navigation for users who rely on it.
+# Accessibility:
+    - TabBar Overflow Arrows: Ensure that the arrows for scrolling the TabBar are accessible via keyboard
+        navigation for users who rely on it.
+
+# SubTasks:
+    - Cascading Operations: Ensure that subtasks are deleted or reassigned when their parent task is deleted.
+        When completing a parent task, automatically mark subtasks as complete (if desired).
+
+    - Subtask Ordering: Add an order or position field to subtasks to allow manual reordering.
+        Use drag-and-drop UI components for arranging subtasks.
+
+    - Nested Subtasks (Optional): Add support for multilevel nesting by allowing subtasks to also act as parents.
+        Use a recursive function to render tasks and subtasks dynamically in the UI.
+
+    - Custom Subtask Views: Provide different views for tasks and subtasks (e.g., a collapsible tree, Kanban board).
+    - Performance Optimizations: Group tasks and subtasks in the backend if you expect performance bottlenecks in the frontend.
 
 ## License
 
