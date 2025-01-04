@@ -9,11 +9,14 @@ import TaskGroupTotaler from './components/TaskGroupTotaler';
 import { useApp } from "./contexts/AppContext";
 import AppSettingsDialog from './components/AppSettingsDialog';
 import Header from './components/Header';
+import { useSessionMonitor } from './services/authHelper';
+import SessionExpiredModal from './components/SessionExpiredModal';
 //import { useUser } from './contexts/UserContext';
 
 const App = () => {
     const { setGroups, selectedGroup, setSelectedGroup, setRefreshFlag, refreshFlag } = useApp();
     //const { loadUser, currentUser } = useUser();
+    const { isSessionExpired, reauthenticate } = useSessionMonitor();
     const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
     const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
     const [groupTotal, setGroupTotal] = useState(null);
@@ -63,6 +66,12 @@ const App = () => {
 
     return (
         <div className="sm:p-10 mx-auto bg-gray-100 dark:bg-gray-900 w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12 2xl:w-1/2">
+            {isSessionExpired && (
+                <SessionExpiredModal
+                    onLogin={reauthenticate}
+                    onClose={() => console.log("User dismissed the modal")} // Optional
+                />
+            )}
 
             <Header onSettingsOpen={setShowAppSettingsDialog} />
 
