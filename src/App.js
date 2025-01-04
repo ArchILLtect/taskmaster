@@ -9,15 +9,18 @@ import TaskGroupTotaler from './components/TaskGroupTotaler';
 import { useApp } from "./contexts/AppContext";
 import AppSettingsDialog from './components/AppSettingsDialog';
 import Header from './components/Header';
+//import { useUser } from './contexts/UserContext';
 
 const App = () => {
-    const { setGroups, selectedGroup, setSelectedGroup } = useApp();
-    const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
+    const { setGroups, selectedGroup, setSelectedGroup, setRefreshFlag, refreshFlag } = useApp();
+    //const { loadUser, currentUser } = useUser();
     const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
     const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
     const [groupTotal, setGroupTotal] = useState(null);
     const [showAppSettingsDialog, setShowAppSettingsDialog] = useState();
     const [showTaskFormDialog, setShowTaskFormDialog] = useState();
+
+
 
     useEffect(() => {
         const loadGroups = async () => {

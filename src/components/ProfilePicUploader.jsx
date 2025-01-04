@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { getUploadUrl } from "../services/apiHelpers";
 import { useAuth0 } from "@auth0/auth0-react";
+import { getConfig } from "../services/config";
 
 const ProfilePicUploader = () => {
     const [file, setFile] = useState(null);
@@ -8,6 +9,7 @@ const ProfilePicUploader = () => {
     const [isUploading, setIsUploading] = useState(false);
 
     const { getAccessTokenSilently } = useAuth0();
+    const { audience } = getConfig();
   
     const handleFileChange = (event) => {
       const selectedFile = event.target.files[0];
@@ -29,7 +31,6 @@ const ProfilePicUploader = () => {
         setIsUploading(true);
   
         try {
-            console.log(token)
             const uploadUrl = await getUploadUrl(file.name, file.type, token);
     
             // Upload the file to S3 using the signed URL

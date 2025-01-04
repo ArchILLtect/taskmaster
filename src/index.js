@@ -1,9 +1,34 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client'; // Use 'react-dom/client' instead of 'react-dom'
-import App from './App';
+// import App from './App';
 import './index.css';
 import { AppProvider } from "./contexts/AppContext";
 import { Auth0Provider } from '@auth0/auth0-react';
+import AppRouter from './AppRouter';
+import { BrowserRouter } from 'react-router-dom';
+import { UserProvider } from './contexts/UserContext';
+import history from "./services/history";
+import { getConfig } from "./services/config";
+
+const onRedirectCallback = (appState) => {
+    history.push(
+      appState && appState.returnTo ? appState.returnTo : window.location.pathname
+    );
+  };
+  
+  // Please see https://auth0.github.io/auth0-react/interfaces/Auth0ProviderOptions.html
+  // for a full list of the available properties on the provider
+  const config = getConfig();
+  
+  const providerConfig = {
+    domain: config.domain,
+    clientId: config.clientId,
+    onRedirectCallback,
+    authorizationParams: {
+      redirect_uri: window.location.origin,
+      ...(config.audience ? { audience: config.audience } : null),
+    },
+  };
 
 const awsConfig = {
     accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
@@ -14,20 +39,18 @@ const awsConfig = {
     clientId: process.env.REACT_APP_AUTH0_CLIENT_ID // Auth0 Client ID
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root')); // Updated syntax
+const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
         <Auth0Provider
-            domain={awsConfig.domain}
-            clientId={awsConfig.clientId}
-            authorizationParams={{
-                redirect_uri: window.location.origin,
-                audience: "https://dev-cmwqc1e84xjkhk78.us.auth0.com/api/v2/",
-                scope: "read:current_user update:current_user_metadata"
-            }}
+            {...providerConfig}
         >
             <AppProvider>
-                <App />
+                <UserProvider>
+                    <BrowserRouter>
+                        <AppRouter />
+                    </BrowserRouter>
+                </UserProvider>
             </AppProvider>
         </Auth0Provider>
     </React.StrictMode>

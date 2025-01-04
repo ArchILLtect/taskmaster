@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "../contexts/UserContext";
+import DEFAULT_PIC from '../logo192.png';
 
 const AuthPortal = ({ onSettingsOpen }) => {
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { loginWithRedirect, logout, isLoading, isAuthenticated, user } = useAuth0();
+  const { currentUser } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
@@ -17,6 +20,8 @@ const AuthPortal = ({ onSettingsOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  //if (isLoading) return <p>Loading...</p>;
+
   return (
     <div className="relative flex flex-col items-center auth-dropdown bg-white dark:bg-gray-600 p-1 rounded-lg shadow-md">
       {isAuthenticated ? (
@@ -27,13 +32,11 @@ const AuthPortal = ({ onSettingsOpen }) => {
           >
             <div className="flex gap-1 items-center">
             <p className="text-md font-semibold text-gray-700 max-w-[12rem]">
-              <span className="text-blue-600">{user.name}</span>
+              <span className="text-blue-600">{user?.name}</span>
             </p>
-            <img src={user?.picture} alt="Profile pic" className="w-8 h-8 rounded-full" />
+            <img src={user?.picture || DEFAULT_PIC } alt="Profile pic" className="w-8 h-8 rounded-full" />
             </div>
           </button>
-          <button onClick={() => console.log(user.name)}>Username</button>
-          <button onClick={() => console.log(user.picture)}>User Pic</button>
 
           {/* Dropdown Menu */}
           {showDropdown && (
@@ -65,7 +68,10 @@ const AuthPortal = ({ onSettingsOpen }) => {
         </>
       ) : (
         <button
-          onClick={() => loginWithRedirect()}
+          onClick={() => loginWithRedirect({
+            appState: { returnTo: "/external-api" },
+          })
+          }
           className="px-6 py-3 bg-blue-500 text-white text-nowrap rounded-md hover:bg-blue-600 transition duration-200"
         >
           Log In

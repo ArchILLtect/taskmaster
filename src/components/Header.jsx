@@ -9,7 +9,7 @@ const Header = ({ onSettingsOpen }) => {
                 <AuthPortal onSettingsOpen={onSettingsOpen} />
             </div>
             <div className="w-full text-center">
-                <h1 className="text-4xl font-mono font-bold dark:text-white text-center">&lt;TaskMaster /&gt;</h1>
+                <h1 className="text-4xl font-mono font-bold dark:bg-gray-900 text-gray-800 dark:text-white text-center">&lt;TaskMaster /&gt;</h1>
             </div>
         </div>
     )

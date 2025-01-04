@@ -9,6 +9,7 @@ export const AppProvider = ({ children }) => {
   const [groupNewName, setGroupNewName] = useState('');
   const [selectedGroup, setSelectedGroup] = useState(null); // Currently selected group
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
 
   useEffect(() => {
     // Check localStorage for dark mode preference
@@ -34,6 +35,8 @@ export const AppProvider = ({ children }) => {
         setSelectedGroup,
         isDarkMode,
         setIsDarkMode,
+        refreshFlag,
+        setRefreshFlag,
       }}
     >
       {children}
