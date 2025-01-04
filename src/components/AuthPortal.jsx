@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useUser } from "../contexts/UserContext";
-import DEFAULT_PIC from '../logo192.png';
+import DEFAULT_PIC from '../assets/logo.svg';
 
 const AuthPortal = ({ onSettingsOpen }) => {
-  const { loginWithRedirect, logout, isLoading, isAuthenticated, user } = useAuth0();
-  const { currentUser } = useUser();
+  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
@@ -68,9 +66,7 @@ const AuthPortal = ({ onSettingsOpen }) => {
         </>
       ) : (
         <button
-          onClick={() => loginWithRedirect({
-            appState: { returnTo: "/external-api" },
-          })
+          onClick={() => loginWithRedirect()
           }
           className="px-6 py-3 bg-blue-500 text-white text-nowrap rounded-md hover:bg-blue-600 transition duration-200"
         >
