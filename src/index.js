@@ -4,11 +4,11 @@ import ReactDOM from 'react-dom/client'; // Use 'react-dom/client' instead of 'r
 import './index.css';
 import { AppProvider } from "./contexts/AppContext";
 import { Auth0Provider } from '@auth0/auth0-react';
-import AppRouter from './AppRouter';
 import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from './contexts/UserContext';
 import history from "./services/history";
 import { getConfig } from "./services/config";
+import App from './App';
 
 const onRedirectCallback = (appState) => {
     history.push(
@@ -40,7 +40,7 @@ root.render(
             <AppProvider>
                 <UserProvider>
                     <BrowserRouter>
-                        <AppRouter />
+                        <App />
                     </BrowserRouter>
                 </UserProvider>
             </AppProvider>
