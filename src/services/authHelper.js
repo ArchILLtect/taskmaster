@@ -28,18 +28,25 @@ export const useSessionMonitor = () => {
   
     // Define checkSession with useCallback
     const checkSession = useCallback(async () => {
+      const now = new Date();
       try {
-        await getAccessTokenSilently();
-        setIsSessionExpired(false); // Session is valid
+          console.log(`Checking session: ${now}`);
+          await getAccessTokenSilently();
+          setIsSessionExpired(false); // Session is valid
+          console.log(`Session still active: ${now}`);
       } catch (error) {
-        if (error.error === "login_required") {
-          setIsSessionExpired(true); // Session has expired
-        }
+          if (error.error === "login_required") {
+              setIsSessionExpired(true); // Session has expired
+              console.log(`Session no longer active: ${now}`);
+          } else {
+              console.error("Unexpected error during session check:", error);
+          }
       }
-    }, [getAccessTokenSilently]);
+  }, [getAccessTokenSilently]);
   
     // Use useEffect with checkSession as a dependency
     useEffect(() => {
+      checkSession(); // Initial check
       const interval = setInterval(() => {
         checkSession();
       }, 5 * 60 * 1000); // Check every 5 minutes
