@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../contexts/AppContext";
+import InlineLoader from "./InlineLoader";
 
-const TabBar = ({ onSelectGroup }) => {
+const TabBar = ({ onSelectGroup, isLoading }) => {
     const { groups, selectedGroup } = useApp();
     const containerRef = useRef(null); // Ref for the entire tab bar container
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -45,49 +46,58 @@ const TabBar = ({ onSelectGroup }) => {
 
     return (
         <div className="border-t-2 border-gray-400 dark:border-gray-600">
-            {/* Scrollable Tab Container */}
-            <div
-                ref={containerRef}
-                className="flex overflow-x-auto space-x-4 bg-gray-200 dark:bg-gray-800 p-2 shadow-md no-scrollbar text-nowrap"
-                onScroll={checkOverflow}
-            >
-                {Array.isArray(groups) && groups.length > 0 ? (
-                    groups.map((group) => (
+            {isLoading ? (
+                <div className="flex items-center justify-center">
+                    <InlineLoader message="Fetching data..." />
+                </div>
+            ) : (
+                <>
+                    {/* Scrollable Tab Container */}
+                    <div
+                        ref={containerRef}
+                        className="flex overflow-x-auto space-x-4 bg-gray-200 dark:bg-gray-800 p-2 shadow-md no-scrollbar text-nowrap"
+                        onScroll={checkOverflow}
+                    >
+                        {Array.isArray(groups) && groups.length > 0 ? (
+                            groups.map((group) => (
+                                <button
+                                    key={group.groupID}
+                                    onClick={() => onSelectGroup(group)}
+                                    className={`relative px-4 py-2 rounded-md transition-colors duration-200 ${
+                                        selectedGroup?.groupID === group.groupID
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    {group.groupName}
+                                </button>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 px-4">No groups available</p>
+                        )}
+                    </div>
+
+                    {/* Left Arrow */}
+                    {canScrollLeft && (
                         <button
-                            key={group.groupID}
-                            onClick={() => onSelectGroup(group)}
-                            className={`relative px-4 py-2 rounded-md transition-colors duration-200 ${
-                                selectedGroup?.groupID === group.groupID
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-300'
-                            }`}
+                            onClick={() => scroll("left")}
+                            className="absolute left-0 top-[172px] sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
                         >
-                            {group.groupName}
+                            &lt;
                         </button>
-                    ))
-                ) : (
-                    <p className="text-gray-500 px-4">No groups available</p>
-                )}
-            </div>
+                    )}
 
-            {/* Left Arrow */}
-            {canScrollLeft && (
-                <button
-                    onClick={() => scroll("left")}
-                    className="absolute left-0 top-[172px] sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
-                >
-                    &lt;
-                </button>
-            )}
+                    {/* Right Arrow */}
+                    {canScrollRight && (
+                        <button
+                            onClick={() => scroll("right")}
+                            className="absolute right-0 top-[172px] sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
+                        >
+                            &gt;
+                        </button>
+                    )}
+                </>
 
-            {/* Right Arrow */}
-            {canScrollRight && (
-                <button
-                    onClick={() => scroll("right")}
-                    className="absolute right-0 top-[172px] sm:top-1/3 transform -translate-y-1/2 bg-gray-300 hover:bg-gray-400 text-gray-700 p-2 rounded-full z-10"
-                >
-                    &gt;
-                </button>
             )}
         </div>
     );
