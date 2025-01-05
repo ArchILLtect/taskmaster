@@ -15,6 +15,27 @@ class User {
         this.username = newUsername;
     }
 
+    // Save the user to localStorage
+    saveToLocalStorage() {
+        const serializedUser = JSON.stringify(this);
+        localStorage.setItem('user', serializedUser);
+    }
+
+    // Load the user from localStorage
+    static loadFromLocalStorage() {
+        const serializedUser = localStorage.getItem('user');
+        if (serializedUser) {
+            const userData = JSON.parse(serializedUser);
+            return new User(userData);
+        }
+        return null; // Return null if no user data is found
+    }
+
+    // Remove the user from localStorage
+    static clearLocalStorage() {
+        localStorage.removeItem('user');
+    }
+
     toJSON() {
         return {
             id: this.id,
