@@ -11,9 +11,10 @@ import Header from '../components/Header';
 import { useSessionMonitor } from '../services/authHelper';
 import SessionExpiredModal from '../components/SessionExpiredModal';
 import useLoadGroups from '../hooks/useLoadGroups';
+import ProfileModal from '../components/ProfileModal';
 
 const MainView = () => {
-    const { setGroups, selectedGroup, setSelectedGroup, setRefreshFlag, refreshFlag } = useApp();
+    const { setGroups, selectedGroup, setSelectedGroup, setRefreshFlag, refreshFlag, currentUser, setShowProfile, showProfile } = useApp();
     const { isSessionExpired, reauthenticate } = useSessionMonitor();
     const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
     const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
@@ -89,6 +90,17 @@ const MainView = () => {
                         setShowAppSettingsDialog(false);
                         //onHighlight(null);
                     }}
+                />
+            )}
+
+            {/* App Settings Dialog */}
+            {showProfile && (
+                <ProfileModal
+                    onClose={() => {
+                        setShowProfile(false);
+                        //onHighlight(null);
+                    }}
+                    user={currentUser}                    
                 />
             )}
         </div>
