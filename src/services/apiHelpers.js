@@ -1,6 +1,6 @@
 // API Helper for user info stuffs
 
-import User from "../models/User";
+//import User from "../models/User";
 
 
 const API_BASE_URL = 'https://amxpsay0hd.execute-api.us-east-2.amazonaws.com/Dev';
