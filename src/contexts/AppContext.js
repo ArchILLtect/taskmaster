@@ -11,6 +11,7 @@ export const AppProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
   const [currentUser, setCurrentUser] = useState(null); // Holds User instance
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     // Check localStorage for dark mode preference
@@ -51,6 +52,8 @@ export const AppProvider = ({ children }) => {
         currentUser,
         setUser,
         clearUser,
+        showProfile,
+        setShowProfile,
       }}
     >
       {children}
