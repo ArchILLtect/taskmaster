@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import DEFAULT_PIC from '../assets/logo.svg';
+import { useApp } from "../contexts/AppContext";
 
 const AuthPortal = ({ onSettingsOpen }) => {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { setShowProfile } = useApp();
   const [showDropdown, setShowDropdown] = useState(false);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -44,7 +47,7 @@ const AuthPortal = ({ onSettingsOpen }) => {
               <ul className="flex flex-col text-left">
                 <li
                     className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
-                    onClick={() => alert("My Profile - Coming Soon!")}
+                    onClick={() => setShowProfile(true)}
                     >
                     My Profile
                 </li>
