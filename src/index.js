@@ -5,7 +5,6 @@ import './index.css';
 import { AppProvider } from "./contexts/AppContext";
 import { Auth0Provider } from '@auth0/auth0-react';
 import { BrowserRouter } from 'react-router-dom';
-import { UserProvider } from './contexts/UserContext';
 import history from "./services/history";
 import { getConfig } from "./services/config";
 import App from './App';
@@ -38,11 +37,9 @@ root.render(
             {...providerConfig}
         >
             <AppProvider>
-                <UserProvider>
-                    <BrowserRouter>
-                        <App />
-                    </BrowserRouter>
-                </UserProvider>
+                  <BrowserRouter>
+                      <App />
+                  </BrowserRouter>
             </AppProvider>
         </Auth0Provider>
     </React.StrictMode>

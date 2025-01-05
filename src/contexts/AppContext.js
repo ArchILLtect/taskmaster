@@ -10,6 +10,7 @@ export const AppProvider = ({ children }) => {
   const [selectedGroup, setSelectedGroup] = useState(null); // Currently selected group
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
+  const [currentUser, setCurrentUser] = useState(null); // Holds User instance
 
   useEffect(() => {
     // Check localStorage for dark mode preference
@@ -18,7 +19,17 @@ export const AppProvider = ({ children }) => {
     if (storedDarkMode) {
         document.documentElement.classList.add("dark");
     }
-}, []);
+  }, []);
+
+  const setUser = (user) => {
+    // Clear user data on logout
+    setCurrentUser(user);
+  };
+
+  const clearUser = () => {
+    // Clear user data on logout
+    setCurrentUser(null);
+  };
 
   return (
     <AppContext.Provider
@@ -37,6 +48,9 @@ export const AppProvider = ({ children }) => {
         setIsDarkMode,
         refreshFlag,
         setRefreshFlag,
+        currentUser,
+        setUser,
+        clearUser,
       }}
     >
       {children}
