@@ -1,5 +1,5 @@
 import { useApp } from "../contexts/AppContext";
-import ProfilePicUploader from "./ProfilePicUploader";
+
 
 const AppSettingsDialog = ({ onClose }) => {
     const { isDarkMode, setIsDarkMode } = useApp(); // Use dark mode state from context
@@ -16,9 +16,6 @@ const AppSettingsDialog = ({ onClose }) => {
             <div className="bg-gray-200 dark:bg-gray-800 p-6 rounded shadow-md w-5/12">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">App Settings</h2>
                 <p className="text-gray-800 dark:text-gray-200">Make changes and click save.</p>
-                <div>
-                    <ProfilePicUploader />
-                </div>
                 <div className="flex items-center dark:text-gray-200 justify-between mb-4">
                         <label htmlFor="darkModeToggle" className="text-md font-medium">
                             Dark Mode
@@ -31,6 +28,8 @@ const AppSettingsDialog = ({ onClose }) => {
                             className="toggle-checkbox"
                         />
                     </div>
+                    {/* Language option */}
+                    {/* Notifications option */}
                 <div className="flex justify-end mt-4">
 
                     <button
