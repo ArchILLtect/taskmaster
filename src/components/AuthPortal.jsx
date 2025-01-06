@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import DEFAULT_PIC from '../assets/logo.svg';
 import { useApp } from "../contexts/AppContext";
+import useInitializeUser from "../hooks/useInitializeUser";
+import InlineLoader from "./InlineLoader";
 
 const AuthPortal = ({ onSettingsOpen }) => {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
   const { setShowProfile, currentUser } = useApp();
   const [showDropdown, setShowDropdown] = useState(false);
-
+  // Reinitialize user if not already set
+  const { isLoading, error } = useInitializeUser(!currentUser);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -21,11 +24,18 @@ const AuthPortal = ({ onSettingsOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  //if (isLoading) return <p>Loading...</p>;
+  if (error) {
+    return <div className="text-red-500">An error occurred. Please try refreshing the page.</div>;
+  }
 
   return (
     <div className="relative flex flex-col items-center auth-dropdown bg-white dark:bg-gray-600 p-1 rounded-lg shadow-md">
-      {isAuthenticated ? (
+      {/* While loading run the inline loader spinner */}
+      {isLoading || !user ? (
+        <div className="flex items-center justify-center">
+            <InlineLoader message="Fetching data..." />
+        </div>
+      ) : isAuthenticated ? (
         <>
           <button
             onClick={() => setShowDropdown((prev) => !prev)}
@@ -33,7 +43,7 @@ const AuthPortal = ({ onSettingsOpen }) => {
           >
             <div className="flex gap-1 items-center">
             <p className="text-md font-semibold text-gray-700 max-w-[12rem]">
-              <span className="text-blue-600 ml-2">{currentUser.nickname || user?.name}</span>
+              <span className="text-blue-600 ml-2">{currentUser?.nickname || user?.name}</span>
             </p>
             <img src={user?.picture || DEFAULT_PIC } alt="Profile pic" className="w-8 h-8 rounded-full" />
             </div>
@@ -41,9 +51,10 @@ const AuthPortal = ({ onSettingsOpen }) => {
 
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className={`absolute top-10 right-0 bg-white rounded-md shadow-lg w-40 z-50 transition-transform duration-200 ${
-                showDropdown ? "scale-100 opacity-100" : "scale-95 opacity-0"
-              }`}>
+            <div
+              className="px-1 py-0 bg-gray-50 rounded-md hover:bg-gray-200 transition duration-200"
+                  aria-expanded={showDropdown}
+            >
               <ul className="flex flex-col text-left">
                 <li
                     className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
