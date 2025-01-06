@@ -46,6 +46,7 @@ const TabBar = ({ onSelectGroup, isLoading }) => {
 
     return (
         <div className="border-t-2 border-gray-400 dark:border-gray-600">
+            {/* While loading run the inline loader spinner */}
             {isLoading ? (
                 <div className="flex items-center justify-center">
                     <InlineLoader message="Fetching data..." />

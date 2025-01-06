@@ -47,7 +47,7 @@ const TaskList = ({ refreshFlag, highlightedTaskID, setHighlightedTaskID, setGro
         <div className="space-y-2 bg-gray-200 dark:bg-gray-700 divide-y shadow-lg rounded-md p-2">
         {isLoading ? (
             <InlineLoader message="Fetching data..." />
-        ) : filteredTasks.length > 0 ? ( // Remove the unnecessary wrapping {}
+        ) : filteredTasks.length > 0 ? (
             filteredTasks.map((task) => (
                 <TaskItem
                     key={task.taskID}
