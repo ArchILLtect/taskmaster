@@ -5,7 +5,7 @@ import { useApp } from "../contexts/AppContext";
 
 const AuthPortal = ({ onSettingsOpen }) => {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
-  const { setShowProfile } = useApp();
+  const { setShowProfile, currentUser } = useApp();
   const [showDropdown, setShowDropdown] = useState(false);
 
 
@@ -33,7 +33,7 @@ const AuthPortal = ({ onSettingsOpen }) => {
           >
             <div className="flex gap-1 items-center">
             <p className="text-md font-semibold text-gray-700 max-w-[12rem]">
-              <span className="text-blue-600">{user?.name}</span>
+              <span className="text-blue-600 ml-2">{currentUser.nickname || user?.name}</span>
             </p>
             <img src={user?.picture || DEFAULT_PIC } alt="Profile pic" className="w-8 h-8 rounded-full" />
             </div>
