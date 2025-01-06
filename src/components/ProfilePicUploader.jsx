@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { getUploadUrl } from "../services/apiHelpers";
 import { useAuth0 } from "@auth0/auth0-react";
-import { getConfig } from "../services/config";
 
-const ProfilePicUploader = () => {
+
+const ProfilePicUploader = ({ onClose }) => {
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
 
     const { getAccessTokenSilently } = useAuth0();
-    const { audience } = getConfig();
+
   
     const handleFileChange = (event) => {
       const selectedFile = event.target.files[0];
@@ -56,32 +56,50 @@ const ProfilePicUploader = () => {
         };
   
     return (
-        <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">Upload Your Profile Picture</h2>
-            <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mb-4"
-            />
-            {preview && (
-                <div className="mb-4">
-                    <img
-                        src={preview}
-                        alt="Profile Preview"
-                        className="h-32 w-32 object-cover rounded-full"
-                    />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="relative bg-white rounded-lg p-6 shadow-lg w-96">
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-2 right-3 text-gray-500 hover:text-gray-700"
+                >
+                    X
+                </button>
+                <h2 className="text-lg font-semibold mb-4">Update Profile Picture</h2>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="mb-4"
+                />
+                {preview && (
+                    <div className="mb-4">
+                        <img
+                            src={preview}
+                            alt="Profile Preview"
+                            className="h-32 w-32 object-cover rounded-full"
+                        />
+                    </div>
+                )}
+                <div className="flex justify-between">
+                    <button
+                        onClick={handleUpload}
+                        disabled={isUploading}
+                        className={`px-4 py-2 rounded-md text-white ${
+                            isUploading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+                        }`}
+                    >
+                        {isUploading ? "Uploading..." : "Upload"}
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 rounded-md text-white bg-blue-500 hover:bg-blue-600"
+                    >
+                        Close
+                    </button>
                 </div>
-            )}
-            <button
-                onClick={handleUpload}
-                disabled={isUploading}
-                className={`px-4 py-2 rounded-md text-white ${
-                    isUploading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-            >
-                {isUploading ? "Uploading..." : "Upload"}
-            </button>
+
+            </div>
         </div>
     );
   };
