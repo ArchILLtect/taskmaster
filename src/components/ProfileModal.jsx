@@ -69,7 +69,7 @@ const ProfileModal = ({ onClose, user }) => {
                     </button>
                 </div>
             </div>
-            {/* Pic Uploader Dialog */}
+            {/* Change Pic Dialog - Preview, Options: Choose Pic, Restore Default */}
             {showPicUploader && (
                 <ProfilePicUploader
                     onClose={() => {
