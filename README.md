@@ -81,8 +81,10 @@
     - Offline mode! Will leverage indexedDB (and a library like Dexie.js to make IndexedDB easier to use?)
 
 ### Coming Soon:
-    - User Feedback for Dialog Actions: When users perform actions like saving a task or renaming a group,
-        provide a small notification or feedback (e.g., a toast message) confirming success.
+    - Important bug fix: need a check for currentUser (local storage) against logged in user
+        (Auth0User.sub). No match = clear and reinitialize.
+    - User Feedback for Dialog Actions: When users perform actions like saving a task or renaming
+        a group, provide a small notification or feedback (e.g., a toast message) confirming success.
     - Form Validations: Validate task or group inputs in the dialogs to ensure no blank or duplicate entries are allowed.
     - Priorities (Starring)
     - Task dates (created on)
