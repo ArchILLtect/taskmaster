@@ -93,7 +93,7 @@ const MainView = () => {
                 />
             )}
 
-            {/* App Settings Dialog */}
+            {/* My Profile Dialog */}
             {showProfile && (
                 <ProfileModal
                     onClose={() => {
