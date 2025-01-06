@@ -1,9 +1,19 @@
 class User {
     constructor(data) {
-        console.log("User class constructor data:", data);
         this.id = data.userID || null;
-        this.username = data.userName || '';
-        this.email = data.email || '';
+        this.username = data.userName || "";
+        this.nickname = data.nickname || ""; // Nickname
+        this.email = data.email || "";
+        this.picture = data.picture || ""; // Profile picture
+        this.createdAt = data.createdAt || ""; // Account creation date
+        this.lastLogin = data.lastLogin || ""; // Last login
+        this.role = data.role || "user"; // User role
+        this.website = data.website || ""; // Custom field
+        this.company = data.company || ""; // Custom field
+        this.theme = data.theme || "light"; // Settings
+        this.status = data.status || "offline"; // Settings
+        this.language = data.language || "en"; // Settings
+        this.notifications = data.notifications !== undefined ? data.notifications : true; // Settings
     }
 
     isUsernameSet() {
