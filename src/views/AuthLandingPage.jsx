@@ -8,7 +8,7 @@ const AuthLandingPage = () => {
     const { currentUser } = useApp();
     const navigate = useNavigate();
 
-    useInitializeUser(!currentUser, true); // Skip redirect in the hook
+    useInitializeUser(!currentUser); // Skip redirect in the hook
 
     useEffect(() => {
         if (currentUser) {

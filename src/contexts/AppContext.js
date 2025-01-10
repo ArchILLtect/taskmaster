@@ -12,6 +12,8 @@ export const AppProvider = ({ children }) => {
   const [refreshFlag, setRefreshFlag] = useState(false); // Track refresh triggers
   const [currentUser, setCurrentUser] = useState(null); // Holds User instance
   const [showProfile, setShowProfile] = useState(false);
+  const [showPicUploader, setShowPicUploader] = useState(false);
+  const [status, setStatus] = useState("online"); // Default to online
 
   useEffect(() => {
     // Check localStorage for dark mode preference
@@ -23,12 +25,10 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const setUser = (user) => {
-    // Clear user data on logout
     setCurrentUser(user);
   };
 
   const clearUser = () => {
-    // Clear user data on logout
     setCurrentUser(null);
   };
 
@@ -54,6 +54,10 @@ export const AppProvider = ({ children }) => {
         clearUser,
         showProfile,
         setShowProfile,
+        showPicUploader,
+        setShowPicUploader,
+        status,
+        setStatus,
       }}
     >
       {children}

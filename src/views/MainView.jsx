@@ -11,24 +11,33 @@ import Header from '../components/Header';
 import { useSessionMonitor } from '../services/authHelper';
 import SessionExpiredModal from '../components/SessionExpiredModal';
 import useLoadGroups from '../hooks/useLoadGroups';
-import ProfileModal from '../components/ProfileModal';
+import { ProfileModal } from '../components/profile';
 
 const MainView = () => {
-    const { setGroups, selectedGroup, setSelectedGroup, setRefreshFlag, refreshFlag, currentUser, setShowProfile, showProfile } = useApp();
+    const { setGroups, selectedGroup, setSelectedGroup, setRefreshFlag, refreshFlag, setShowProfile, showProfile } = useApp();
     const { isSessionExpired, reauthenticate } = useSessionMonitor();
     const [highlightedTaskID, setHighlightedTaskID] = useState(null); // Track highlighted task
     const [highlightedGroupID, setHighlightedGroupID] = useState(null); // Track highlighted group
     const [groupTotal, setGroupTotal] = useState(null);
     const [showAppSettingsDialog, setShowAppSettingsDialog] = useState();
     const [showTaskFormDialog, setShowTaskFormDialog] = useState();
+    // This line can be removed after useLoadGroups-Refactor-ing
     const [isLoading, setIsLoading] = useState(true);
 
     useLoadGroups(setGroups, setSelectedGroup, setIsLoading);
 
+    /* TODO Requires useLoadGroups-Refactor-ing.
+
+    // Add this to top ^
+    const { groups, selectedGroup, isLoading, setSelectedGroup } = useLoadGroups(); // Load groups
+
+    useEffect(() => {
+        setGroups(groups); // Update global state with loaded groups
+    }, [groups, setGroups]);*/
 
     const refreshTasks = () => {
         setRefreshFlag((prev) => !prev); // Toggle refreshFlag to trigger updates in TaskList
-    };
+    }; 
 
     return (
         <div className="sm:p-10 mx-auto bg-gray-100 dark:bg-gray-900 w-full sm:w-11/12 md:w-10/12 lg:w-9/12 xl:w-8/12 2xl:w-1/2">
@@ -77,7 +86,6 @@ const MainView = () => {
                 <TaskForm
                     onClose={() => {
                         setShowTaskFormDialog(false);
-                        //onHighlight(null);
                     }}
                     onTaskAdded={refreshTasks}
                 />
@@ -88,7 +96,6 @@ const MainView = () => {
                 <AppSettingsDialog
                     onClose={() => {
                         setShowAppSettingsDialog(false);
-                        //onHighlight(null);
                     }}
                 />
             )}
@@ -98,9 +105,7 @@ const MainView = () => {
                 <ProfileModal
                     onClose={() => {
                         setShowProfile(false);
-                        //onHighlight(null);
                     }}
-                    user={currentUser}                    
                 />
             )}
         </div>

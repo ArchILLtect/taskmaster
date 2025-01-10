@@ -81,7 +81,8 @@
     - Offline mode! Will leverage indexedDB (and a library like Dexie.js to make IndexedDB easier to use?)
 
 ### Coming Soon:
-    - Important bug fix: need a check for currentUser (local storage) against logged in user
+    - After profile updating functionality is finished, clean up struture/naming.
+    - Important bug fix: (In MainView?) need a check for currentUser (local storage) against logged in user
         (Auth0User.sub). No match = clear and reinitialize.
     - User Feedback for Dialog Actions: When users perform actions like saving a task or renaming
         a group, provide a small notification or feedback (e.g., a toast message) confirming success.
@@ -97,6 +98,7 @@
         or invalid inputs from being submitted.
     - Consider visual feedback for long-running tasks, such as showing a spinner or disabling buttons during
         uploads or API calls.
+    - Add pagination to loaded pics from user's upload bucket (ProfilePicSelectModal.jsx)
 
 ### Accessibility:
     - TabBar Overflow Arrows: Ensure that the arrows for scrolling the TabBar are accessible via keyboard

@@ -1,80 +1,103 @@
 // API Helper for user info stuffs
 
-//import User from "../models/User";
-
-
 const API_BASE_URL = 'https://amxpsay0hd.execute-api.us-east-2.amazonaws.com/Dev';
-//const AUTH0_DOMAIN = process.env.REACT_APP_AUTH0_DOMAIN;
-//const AUTH0_USERS = 'http://' + AUTH0_DOMAIN + '/users'
 const API_FILES = '/files';
-const API_USERS = '/users/metadata'
 const API_GENRERATE_URL = "/generate-upload-url"
-//const TEMP_USERS = 'https://amxpsay0hd.execute-api.us-east-2.amazonaws.com/Dev/users/metadata'
-
 
 export const getUploadUrl = async (fileName, fileType, token) => {
-    const response = await fetch(
-      API_BASE_URL + API_FILES + API_GENRERATE_URL,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          fileName,
-          fileType,
-          folderName: "profile-pics", // Ensure it matches the S3 folder name
-        }),
-      }
-    );
-  
-    if (!response.ok) {
-      throw new Error("Failed to get upload URL");
-    }
-  
-    const data = await response.json();
-    return data.uploadUrl;
-  };
+  try {
+      const response = await fetch(
+        API_BASE_URL + API_FILES + API_GENRERATE_URL,
+          {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                  fileName,
+                  fileType,
+                  folderName: "profile-pics", // Ensure it matches the S3 folder name
+              }),
+          }
+      );
 
-
-export const getUserInfo = async (token) => {
-  try{
-    const response = await fetch(
-      API_BASE_URL + API_USERS,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        }
+      // Check if response is not ok
+      if (!response.ok) {
+          const errorData = await response.json(); // Parse the response body
+          throw new Error(errorData.message || "Failed to get upload URL");
       }
-    );
-    if (!response.ok) {
-      const errorMessage = await response.text();
-      throw new Error(`Failed to get user info: ${errorMessage}`);
-  }
-    const data = await response.json();
-    console.log(data)
-    return data; // Return a User instance
+
+      const data = await response.json();
+      return data;
   } catch (error) {
-    console.error("Error fetching user info:", error);
-    throw error; // Re-throw the error for the caller to handle
+      console.error("Error in getUploadUrl:", error);
+      throw error; // Re-throw the error for the caller
   }
 };
 
-export const updateUserInfo = async (user) => {
-    const response = await fetch(`/api/users/update`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user.toJSON()), // Convert User instance to JSON
+export const getUserPictures = async (userId) => {
+
+  const encodedUserId = encodeURIComponent(userId);
+  //console.log(`${API_BASE_URL}/users/${encodedUserId}/pictures`)
+
+  try {
+    const response = await fetch(`https://amxpsay0hd.execute-api.us-east-2.amazonaws.com/Dev/users/${encodedUserId}/pictures`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (!response.ok) {
-        throw new Error('Failed to update user info.');
+      throw new Error("Failed to fetch user pictures.");
     }
 
-    return response.json();
+    const pictures = await response.json();
+    return pictures;
+  } catch (error) {
+    console.error("Error fetching pictures:", error);
+    throw error;
+  }
+};
+
+export const saveProfilePicture = async (userId, profilePicKey) => {
+
+  const encodedUserId = encodeURIComponent(userId);
+
+  const response = await fetch(`${API_BASE_URL}/users/${encodedUserId}/metadata`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ profilePicKey }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to save profile picture");
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+export const updateUserProfile = async (userId, updatedFields, target) => {
+  const encodedUserId = encodeURIComponent(userId);
+
+  const response = await fetch(`${API_BASE_URL}/users/${encodedUserId}/metadata`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ updatedFields, target }), // Pass updated fields directly
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to update user profile");
+  }
+
+  const data = await response.json();
+  return data;
 };

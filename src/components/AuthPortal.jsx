@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import DEFAULT_PIC from '../assets/logo.svg';
+//import DEFAULT_PIC from '../assets/logo.svg';
 import { useApp } from "../contexts/AppContext";
 import useInitializeUser from "../hooks/useInitializeUser";
 import InlineLoader from "./InlineLoader";
 
 const AuthPortal = ({ onSettingsOpen }) => {
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, user: auth0User } = useAuth0();
   const { setShowProfile, currentUser } = useApp();
   const [showDropdown, setShowDropdown] = useState(false);
   // Reinitialize user if not already set
@@ -31,7 +31,7 @@ const AuthPortal = ({ onSettingsOpen }) => {
   return (
     <div className="relative flex flex-col items-center auth-dropdown bg-white dark:bg-gray-600 p-1 rounded-lg shadow-md">
       {/* While loading run the inline loader spinner */}
-      {isLoading || !user ? (
+      {isLoading || !auth0User ? (
         <div className="flex items-center justify-center">
             <InlineLoader message="Fetching data..." />
         </div>
@@ -43,16 +43,16 @@ const AuthPortal = ({ onSettingsOpen }) => {
           >
             <div className="flex gap-1 items-center">
             <p className="text-md font-semibold text-gray-700 max-w-[12rem]">
-              <span className="text-blue-600 ml-2">{currentUser?.nickname || user?.name}</span>
+              <span className="text-blue-600 ml-2">{currentUser?.nickname || auth0User?.name}</span>
             </p>
-            <img src={user?.picture || DEFAULT_PIC } alt="Profile pic" className="w-8 h-8 rounded-full" />
+            <img src={currentUser?.picture || auth0User?.picture} alt="Profile pic" className="w-8 h-8 rounded-full" />
             </div>
           </button>
 
           {/* Dropdown Menu */}
           {showDropdown && (
             <div
-              className="px-1 py-0 bg-gray-50 rounded-md hover:bg-gray-200 transition duration-200"
+              className="absolute top-9 right-0 px-1 py-0 bg-gray-50 rounded-md hover:bg-gray-200 text-nowrap transition duration-200"
                   aria-expanded={showDropdown}
             >
               <ul className="flex flex-col text-left">

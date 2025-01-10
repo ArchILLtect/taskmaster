@@ -1,5 +1,7 @@
 import React from "react";
 
+// TODO Find out why the login is never expiring - especially considering I changed the exipre time to 18000 seconds...
+
 const SessionExpiredModal = ({ onLogin, onClose }) => {
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
