@@ -8,6 +8,8 @@ export const fetchGroups = async () => {
   return response.data; // Return full objects (groupID and groupName)
 };
 
+// TODO: Add arg userId and add to header??
+// TODO: Update Lambda function to add groups by userId if userId included or how it is if not.
 export const addGroup = async (groupName) => {
   try {
     const response = await axios.post(API_URL, {
@@ -21,6 +23,8 @@ export const addGroup = async (groupName) => {
   }
 };
 
+// TODO: Add arg userId and add to header??
+// TODO: Update Lambda function to rename groups by userId if userId included or how it is if not.
 export const renameGroup = async (groupNewName, groupID) => {
   if (!groupID || !groupNewName) {
     throw new Error('Both groupID and groupNewName are required to rename a group.');
@@ -39,6 +43,8 @@ export const renameGroup = async (groupNewName, groupID) => {
   }
 };
 
+// TODO: Add arg userId and add to header??
+// TODO: Update Lambda function to delete groups by userId if userId included or how it is if not.
 export const deleteGroup = async (groupID) => {
   const response = await axios.delete(API_URL, {
     data: { groupID },

@@ -53,7 +53,7 @@ const StatusIndicator = ({ type = "dot" }) => {
         >
             {showDot && (
                 <div
-                    className={`status-indicator border-[1.5px] border-gray-800 ${statusClass}`}
+                    className={`status-indicator border-[1.5px] border-gray-400 dark:border-gray-800 ${statusClass}`}
                 />
             )}
             {showText && (
