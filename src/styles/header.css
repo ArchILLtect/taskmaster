@@ -1,0 +1,27 @@
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 8px;
+  }
+  
+  .status-online {
+    background-color: #4caf50; /* Green */
+    box-shadow: 0 0 8px #4caf50;
+  }
+  
+  .status-away {
+    background-color: #ffeb3b; /* Yellow */
+    box-shadow: 0 0 8px #ffeb3b;
+  }
+  
+  .status-offline {
+    background-color: #f44336; /* Red */
+    box-shadow: 0 0 8px #f44336;
+  }
+  
+  .status-container:hover {
+    cursor: pointer;
+    scale: 110%;
+  }
