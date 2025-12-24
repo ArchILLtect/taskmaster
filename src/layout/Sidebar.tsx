@@ -7,9 +7,7 @@ const mockLists = [
   { id: "work", name: "Work" },
 ];
 
-function SidebarNavItem(props: { to: string; label: string }) {
-  const { to, label } = props;
-
+function SidebarItem({ to, label }: { to: string; label: string }) {
   return (
     <RouterLink to={to}>
       {({ isActive }) => (
@@ -36,9 +34,9 @@ export function Sidebar() {
       </Text>
 
       <VStack align="stretch" gap={1} mb={3}>
-        <SidebarNavItem to="/today" label="Today" />
-        <SidebarNavItem to="/week" label="Week" />
-        <SidebarNavItem to="/month" label="Month" />
+        <SidebarItem to="/today" label="Today" />
+        <SidebarItem to="/week" label="Week" />
+        <SidebarItem to="/month" label="Month" />
       </VStack>
 
       <Separator my={3} />
@@ -49,7 +47,7 @@ export function Sidebar() {
 
       <VStack align="stretch" gap={1}>
         {mockLists.map((l) => (
-          <SidebarNavItem key={l.id} to={`/lists/${l.id}`} label={l.name} />
+          <SidebarItem key={l.id} to={`/lists/${l.id}`} label={l.name} />
         ))}
       </VStack>
     </Box>

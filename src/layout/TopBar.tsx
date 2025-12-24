@@ -1,20 +1,20 @@
 import { HStack, Heading, Spacer, Badge, Button, Box } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
+import type { User } from "../types";
 
 type TopBarProps = {
-  username?: string | null;
-  roleLabel?: "Admin" | "User" | null;
+  user?: User | null;
   onSignOut?: () => void;
 };
 
-export function TopBar({ username, roleLabel, onSignOut }: TopBarProps) {
+export function TopBar({ user, onSignOut }: TopBarProps) {
   return (
     <HStack px={4} py={3} borderBottomWidth="1px">
-      <Heading size="md">TaskMaster</Heading>
+      <Heading size="lg">{"< TaskMaster />"}</Heading>
       <Spacer />
 
       <HStack gap={3}>
-        {username ? (
+        {user ? (
           <>
             {/* Username link to Profile */}
             <RouterLink to="/profile">
@@ -27,13 +27,13 @@ export function TopBar({ username, roleLabel, onSignOut }: TopBarProps) {
                     bg={isActive ? "blackAlpha.100" : "transparent"}
                     _hover={{ bg: "blackAlpha.100" }}
                 >
-                    {username}
+                    {user.username}
                 </Box>
             )}
             </RouterLink>
 
             {/* Role indicator (Badge is simplest/most stable) */}
-            {roleLabel ? <Badge rounded="md">{roleLabel}</Badge> : null}
+            {user.role ? <Badge rounded="md">{user.role}</Badge> : null}
 
             {/* Optional sign out later */}
             {onSignOut ? (
