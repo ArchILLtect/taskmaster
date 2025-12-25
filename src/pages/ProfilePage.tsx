@@ -6,7 +6,7 @@ export function ProfilePage() {
 
   if (!signedIn) {
     return (
-      <VStack align="start" gap={2}>
+      <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
         <Text>No user is currently logged in.</Text>
       </VStack>

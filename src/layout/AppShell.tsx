@@ -8,7 +8,7 @@ export function AppShell() {
   // TEMP: mocked user until Amplify Auth is wired
   const user = currentUser;
   return (
-    <Flex direction="column" minH="100vh">
+    <Flex direction="column" minH="100vh" bg="gray.50">
       <TopBar user={user} />
       <Flex flex="1" minH={0}>
         <Sidebar />
