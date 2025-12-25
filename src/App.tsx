@@ -10,6 +10,7 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { TasksPage } from "./pages/TasksPage";
 import { UpdatesPage } from "./pages/UpdatesPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { FavoritesPage } from "./pages/FavoritesPage";
 
 export default function App() {
   return (
@@ -20,10 +21,12 @@ export default function App() {
         <Route path="/today" element={<TodayPage />} />
         <Route path="/week" element={<WeekPage />} />
         <Route path="/month" element={<MonthPage />} />
-        <Route path="/lists" element={<ListPage />} />
+
         <Route path="/updates" element={<UpdatesPage />} />
+        <Route path="/lists" element={<ListPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/lists/:listId" element={<ListPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
 
