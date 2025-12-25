@@ -1,6 +1,7 @@
 import { Box, Separator } from "@chakra-ui/react";
 import { SidebarCollapse } from "../components/SidebarCollapse";
 import { SidebarItem } from "../components/SidebarItem";
+import { viewLinks, favoriteLinks } from "../config/sidebar";
 
 export function Sidebar() {
   return (
@@ -10,7 +11,7 @@ export function Sidebar() {
 
       <Separator my={3} />
 
-      <SidebarCollapse to="/views" label="Views" main />
+      <SidebarCollapse to="/views" label="Views" items={viewLinks} defaultOpen />
 
       <Separator my={3} />
 
@@ -22,7 +23,11 @@ export function Sidebar() {
 
       <Separator my={3} />
 
-      <SidebarCollapse to="/lists" label="Lists" main />
+      <SidebarItem to="/lists" label="Lists" main />
+      
+      <Separator my={3} />
+
+      <SidebarCollapse to="/favorites" label="Favorites" items={favoriteLinks} defaultOpen />
 
       <Separator my={3} />
 
