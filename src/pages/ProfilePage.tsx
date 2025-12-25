@@ -1,14 +1,25 @@
 import { Heading, Text, VStack } from "@chakra-ui/react";
-import { mockUser } from "../mocks/user";
+import { currentUser } from "../mocks/currentUser";
 
 export function ProfilePage() {
-  return (
-    <VStack align="start" gap={2}>
-      <Heading size="md">Profile</Heading>
-      <Text>{mockUser.id}</Text>
-      <Text>{mockUser.username}</Text>
-      <Text>{mockUser.email}</Text>
-      <Text>{mockUser.role}</Text>
-    </VStack>
-  );
+  const signedIn = Boolean(currentUser);
+
+  if (!signedIn) {
+    return (
+      <VStack align="start" gap={2}>
+        <Heading size="md">Profile</Heading>
+        <Text>No user is currently logged in.</Text>
+      </VStack>
+    );
+  } else {
+    return (
+      <VStack align="start" gap={2}>
+        <Heading size="md">Profile</Heading>
+        <Text>{currentUser?.id}</Text>
+        <Text>{currentUser?.username}</Text>
+        <Text>{currentUser?.email}</Text>
+        <Text>{currentUser?.role}</Text>
+      </VStack>
+    )
+  }
 }
