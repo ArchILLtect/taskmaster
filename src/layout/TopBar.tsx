@@ -1,6 +1,7 @@
 import { HStack, Heading, Spacer, Badge, Button, Box } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
 import type { User } from "../types";
+import { IoSettingsSharp } from "react-icons/io5";
 
 type TopBarProps = {
   user?: User | null;
@@ -47,6 +48,23 @@ export function TopBar({ user, onSignOut }: TopBarProps) {
             Sign in
           </Button>
         )}
+        <RouterLink to={"/settings"}>
+          {({ isActive }) => (
+            <Button
+              as="span"
+              variant="ghost"
+              justifyContent="flex-start"
+              width="100%"
+              paddingX={2}
+              fontWeight="700"
+              color="black"
+              bg={isActive ? "blackAlpha.100" : "transparent"}
+              _hover={{ bg: "blackAlpha.100" }}
+            >
+              <IoSettingsSharp />
+            </Button>
+          )}
+        </RouterLink>
       </HStack>
     </HStack>
   );

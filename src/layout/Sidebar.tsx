@@ -1,55 +1,31 @@
-import { Box, Separator, Text, VStack, Button } from "@chakra-ui/react";
-import { RouterLink } from "../components/RouterLink";
-
-const mockLists = [
-  { id: "inbox", name: "Inbox" },
-  { id: "school", name: "School" },
-  { id: "work", name: "Work" },
-];
-
-function SidebarItem({ to, label }: { to: string; label: string }) {
-  return (
-    <RouterLink to={to}>
-      {({ isActive }) => (
-        <Button
-          as="span"
-          variant="ghost"
-          justifyContent="flex-start"
-          width="100%"
-          bg={isActive ? "blackAlpha.100" : "transparent"}
-          _hover={{ bg: "blackAlpha.100" }}
-        >
-          {label}
-        </Button>
-      )}
-    </RouterLink>
-  );
-}
+import { Box, Separator } from "@chakra-ui/react";
+import { SidebarCollapse } from "../components/SidebarCollapse";
+import { SidebarItem } from "../components/SidebarItem";
 
 export function Sidebar() {
   return (
     <Box w="260px" borderRightWidth="1px" p={3} overflow="auto">
-      <Text fontSize="sm" fontWeight="700" mb={2}>
-        Views
-      </Text>
 
-      <VStack align="stretch" gap={1} mb={3}>
-        <SidebarItem to="/today" label="Today" />
-        <SidebarItem to="/week" label="Week" />
-        <SidebarItem to="/month" label="Month" />
-      </VStack>
+      <SidebarItem to="/inbox" label="Inbox" main />
 
       <Separator my={3} />
 
-      <Text fontSize="sm" fontWeight="700" mb={2}>
-        Lists
-      </Text>
+      <SidebarCollapse to="/views" label="Views" main />
 
-      <VStack align="stretch" gap={1}>
-        {mockLists.map((l) => (
-          <SidebarItem key={l.id} to={`/lists/${l.id}`} label={l.name} />
-        ))}
-      </VStack>
+      <Separator my={3} />
+
+      <SidebarItem to="/tasks" label="Tasks" main />
+
+      <Separator my={3} />
+
+      <SidebarItem to="/updates" label="Updates" main />
+
+      <Separator my={3} />
+
+      <SidebarCollapse to="/lists" label="Lists" main />
+
+      <Separator my={3} />
+
     </Box>
   );
 }
