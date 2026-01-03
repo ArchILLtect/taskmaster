@@ -1,6 +1,6 @@
 import { mockAdminUser, mockUser, noUser } from "./user";
 
-let chooseUser = "user";
+const chooseUser = "user";
 let chosenUser;
 
 if (chooseUser === "user") {
