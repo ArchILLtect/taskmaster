@@ -71,5 +71,4 @@ Auth integration entry point (when you wire Cognito claims → app user):
 - [src/auth/mapUserFromClaims.ts](src/auth/mapUserFromClaims.ts)
 
 ## Known issues (current repo state)
-- `npm run build` fails because [src/types/index.ts](src/types/index.ts) re-exports a `SubTask` type that is not defined/exported.
-- `npm run lint` may flag generated Amplify typings under [amplify/backend](amplify/backend).
+
