@@ -12,6 +12,10 @@ export type Assignee = {
     name: string;
 };
 
+export type SubTask = {
+    id: string;
+};
+
 export type Task = {
     id: string;
     listId: string;
