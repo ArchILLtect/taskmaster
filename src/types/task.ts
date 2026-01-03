@@ -12,13 +12,6 @@ export type Assignee = {
     name: string;
 };
 
-export type SubTask = {
-    id: string;
-    title: string;
-    done: boolean;
-    sortOrder: number; // lower = higher in list (stable ordering)
-};
-
 export type Task = {
     id: string;
     listId: string;
@@ -33,7 +26,8 @@ export type Task = {
     assigneeId?: string | null; // User ID or null = unassigned
     priority: Priority;
     tagIds: string[]; // Points to Tag objects
-    subtasks: SubTask[];
+    parentTaskId?: string | null; // Points to parent Task ID or null = no parent
+    subtasks: string[];
 
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
