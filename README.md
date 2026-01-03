@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# TaskMaster (WIP)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+TaskMaster is a Vite + React + TypeScript task app prototype using Chakra UI. The app currently uses mocked data (no backend wired yet) and focuses on navigation + list/task browsing patterns.
 
-Currently, two official plugins are available:
+## Tech stack
+- React 19 + TypeScript + Vite
+- Chakra UI (all UI primitives)
+- React Router v7 (`react-router-dom`)
+- AWS Amplify scaffolding is present, but not yet integrated into runtime auth/data flows
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Entry points:
+- App bootstrapping: [src/main.tsx](src/main.tsx)
+- Route table: [src/App.tsx](src/App.tsx)
+- Shared layout shell (top bar + sidebar): [src/layout/AppShell.tsx](src/layout/AppShell.tsx)
 
-## React Compiler
+## What’s implemented
+- App shell with persistent sidebar + top bar
+- Views/pages (mostly placeholders today): Inbox/Today/Week/Month/Updates/Settings/Profile
+- Tasks index page that renders all mock tasks
+- Lists page with an “infinite pane stack” details UI for drilling into tasks
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Routing model
+Routes are defined in [src/App.tsx](src/App.tsx).
 
-## Expanding the ESLint configuration
+Key patterns:
+- Base list views: `/lists` and `/lists/:listId` render the same page component.
+- “Pane stack” list details: `/lists/:listId/tasks/*`
+  - The `*` splat encodes a stack of selected task IDs as path segments.
+  - Example: `/lists/inbox/tasks/t1/t3` opens a details pane for `t1`, then another for `t3`.
+  - Implementation lives in [src/pages/ListPage.tsx](src/pages/ListPage.tsx) (`buildStackUrl`, `stackIds`, `pushTask`, `popTo`).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Data model (mocked)
+All data is currently local mock data.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Types live in [src/types](src/types) (notably [src/types/task.ts](src/types/task.ts)).
+- Mocks live in [src/mocks](src/mocks):
+  - Lists: [src/mocks/lists.ts](src/mocks/lists.ts)
+  - Tasks: [src/mocks/tasks.ts](src/mocks/tasks.ts)
+  - Current user (temporary): [src/mocks/currentUser.ts](src/mocks/currentUser.ts)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+UI components typically consume these mocks directly (no services layer yet).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## UI conventions
+- Use Chakra layout primitives (`VStack`, `HStack`, `Flex`, `Box`). Many pages use a consistent “card” container: `p={4} bg="white" rounded="md" boxShadow="sm"` (example: [src/pages/TodayPage.tsx](src/pages/TodayPage.tsx)).
+- Use [src/components/RouterLink.tsx](src/components/RouterLink.tsx) (wrapper over `NavLink`) when you need active-state styling.
+- Sidebar main items are declared in [src/layout/Sidebar.tsx](src/layout/Sidebar.tsx). Collapsible sections pull items from [src/config/sidebar.ts](src/config/sidebar.ts).
+
+## Getting started
+Install deps:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Run dev server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+## Scripts
+- `npm run dev` — start Vite dev server
+- `npm run build` — typecheck (`tsc -b`) then build (`vite build`)
+- `npm run lint` — run ESLint
+- `npm run preview` — preview production build
+
+## Amplify notes
+The [amplify](amplify) folder is Amplify CLI output/scaffolding. Until the app is wired up to Amplify Auth/API, treat it as generated config (see [amplify/README.md](amplify/README.md)).
+
+Auth integration entry point (when you wire Cognito claims → app user):
+- [src/auth/mapUserFromClaims.ts](src/auth/mapUserFromClaims.ts)
+
+## Known issues (current repo state)
+- `npm run build` fails because [src/types/index.ts](src/types/index.ts) re-exports a `SubTask` type that is not defined/exported.
+- `npm run lint` may flag generated Amplify typings under [amplify/backend](amplify/backend).
