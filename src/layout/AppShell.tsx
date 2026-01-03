@@ -10,9 +10,9 @@ export function AppShell() {
   return (
     <Flex direction="column" minH="100vh" bg="gray.50">
       <TopBar user={user} />
-      <Flex flex="1" minH={0}>
+      <Flex flex="1" minH={0} w="fit-content">
         <Sidebar />
-        <Box flex="1" p={4} overflow="auto">
+        <Box flex="1" p={4}>
           <Outlet />
         </Box>
       </Flex>
