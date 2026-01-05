@@ -5,32 +5,24 @@ import {
   Text,
   VStack,
   HStack,
-  Badge,
-  Button,
+  Badge
 } from "@chakra-ui/react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { buildTaskStackPath, nextStackOnClick, parseTaskStackFromPath } from "../routes/taskStack";
 import { SidebarItem } from "../components/SidebarItem";
+import { TaskDetailsPane } from "../components/TaskDetailsPane";
 
 import { TaskRow } from "../components/TaskRow";
 import { mockTasks } from "../mocks/tasks";
 import { mockLists } from "../mocks/lists";
 
-function buildStackUrl(listId: string, stack: string[]) {
-  return stack.length === 0
-    ? `/lists/${listId}`
-    : `/lists/${listId}/tasks/${stack.join("/")}`;
-}
-
 export function ListPage() {
+
+  const { listId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const params = useParams();
 
-  const listId = params.listId;
-  const taskPath = params["*"]; // React Router splat param for /tasks/*
-
-  const stackIds = (taskPath ?? "")
-    .split("/")
-    .filter(Boolean); // ["a","b","c"]
+  const { stack } = parseTaskStackFromPath(location.pathname);
 
   if (!listId) {
     return (
@@ -51,17 +43,15 @@ export function ListPage() {
     );
   }
 
-  const tasks = mockTasks.filter((t) => t.listId === listId);
+  const tasksInList = mockTasks.filter((t) => t.listId === listId);
 
-  // Helper for clicking a task (push to stack)
-  const pushTask = (taskId: string) => {
-    navigate(buildStackUrl(listId, [...stackIds, taskId]));
-  };
+  // (recommended) only top-level tasks in main list:
+  const topLevelTasks = tasksInList
+    .filter((t) => t.parentTaskId == null)
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
-  // Helper for closing (pop from stack)
-  const popTo = (index: number) => {
-    navigate(buildStackUrl(listId, stackIds.slice(0, index)));
-  };
+  const closeAll = () => navigate(buildTaskStackPath(listId, []));
 
   return (
     <Flex align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
@@ -74,16 +64,15 @@ export function ListPage() {
           </HStack>
           <Text color="gray.600">Tasks for this list (including “someday” tasks).</Text>
 
-          {tasks.length === 0 ? (
+          {topLevelTasks.length === 0 ? (
             <Text>No tasks yet. Add your first one ✍️</Text>
           ) : (
             <VStack align="stretch" gap={2} w="100%" mt={2}>
-              {tasks.map((task) => (
+              {topLevelTasks.map((task) => (
                 <Box key={task.id}>
-                  {/* Keep your TaskRow, but route to stack */}
                   <TaskRow
                     task={task}
-                    to={buildStackUrl(listId, [...stackIds, task.id])}
+                    to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
                     showLists={false}
                   />
                 </Box>
@@ -94,81 +83,16 @@ export function ListPage() {
       </Box>
 
       {/* Right: stacked panes */}
-      {stackIds.map((id, idx) => {
-        const selected = mockTasks.find((t) => t.id === id && t.listId === listId);
-
-        return (
-          <Box
-            key={`${id}-${idx}`}
-            w="30vw"
-            borderWidth="1px"
-            rounded="md"
-            p={4}
-            bg="white"
-            minH="85vh"
-            flexShrink={0}
-          >
-            <HStack justify="space-between" mb={2}>
-              <Heading size="md">Details</Heading>
-
-              {/* Close this pane and everything to its right */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => popTo(idx)}
-              >
-                Close
-              </Button>
-            </HStack>
-
-            {!selected ? (
-              <Text color="gray.600">Task not found.</Text>
-            ) : (
-              <>
-                <VStack align="start" gap={2}>
-                  <Text fontWeight="700" fontSize="lg">{selected.title}</Text>
-                  {selected.description ? <Text>{selected.description}</Text> : null}
-
-                  <HStack>
-                    <Badge>{selected.priority}</Badge>
-                    <Badge variant="outline">{selected.status}</Badge>
-                  </HStack>
-
-                  <Text color="gray.600" fontSize="sm">
-                    Due: {selected.dueAt ?? "Someday"}
-                  </Text>
-                </VStack>
-
-                <VStack align="start" gap={2} mt={4}>
-                  <Heading size="sm">Subtasks</Heading>
-
-                  {/* NOTE: Your current model has subtasks as inline objects,
-                      not real Tasks. We'll upgrade that next. */}
-                  {selected.subtasks?.length ? (
-                    <VStack align="start" gap={1} w="100%">
-                      {selected.subtasks.map((st) => (
-                        <Box
-                          key={st}
-                          borderWidth="1px"
-                          rounded="md"
-                          p={2}
-                          w="100%"
-                          cursor="pointer"
-                          onClick={() => pushTask(st)} // will show “Task not found” until model update
-                        >
-                          <Text>{st}</Text>
-                        </Box>
-                      ))}
-                    </VStack>
-                  ) : (
-                    <Text color="gray.600">No subtasks.</Text>
-                  )}
-                </VStack>
-              </>
-            )}
-          </Box>
-        );
-      })}
+      {stack.map((taskId) => (
+        <TaskDetailsPane
+          key={taskId}
+          listId={listId}
+          taskId={taskId}
+          stack={stack}
+          tasksInList={tasksInList}
+          onCloseAll={closeAll}
+        />
+      ))}
     </Flex>
   );
 }
