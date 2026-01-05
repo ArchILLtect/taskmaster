@@ -13,7 +13,7 @@ export function ProfilePage() {
     );
   } else {
     return (
-      <VStack align="start" gap={2}>
+      <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
         <Text>{currentUser?.id}</Text>
         <Text>{currentUser?.username}</Text>
