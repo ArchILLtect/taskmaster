@@ -31,7 +31,6 @@ export type Task = {
     priority: Priority;
     tagIds: string[]; // Points to Tag objects
     parentTaskId?: string | null; // Points to parent Task ID or null = no parent
-    subtasks: string[];
 
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
