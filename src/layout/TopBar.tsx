@@ -10,7 +10,7 @@ type TopBarProps = {
 
 export function TopBar({ user, onSignOut }: TopBarProps) {
   return (
-    <HStack px={4} py={3} borderBottomWidth="1px" bg="white" boxShadow="sm">
+    <HStack px={4} py={3} borderBottomWidth="1px" bg="white" position={"sticky"} minW="400px">
       <Heading size="lg">{"< TaskMaster />"}</Heading>
       <Spacer />
 
