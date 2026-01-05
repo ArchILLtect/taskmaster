@@ -1,17 +1,26 @@
 import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import { RouterLink } from "./RouterLink";
 import { buildTaskStackPath, nextStackOnClick } from "../routes/taskStack";
 import type { Task } from "../types/task";
+
+const pulse = keyframes`
+  0%   { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
+  30%  { box-shadow: 0 0 0 4px rgba(66,153,225,0.35); transform: translateY(-1px); }
+  100% { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
+`;
 
 type Props = {
   listId: string;
   taskId: string;
   stack: string[];
   tasksInList: Task[];
+  ref?: React.Ref<HTMLDivElement>;
   onCloseAll: () => void;
+  isPulsing?: boolean;
 };
 
-export function TaskDetailsPane({ listId, taskId, stack, tasksInList, onCloseAll }: Props) {
+export function TaskDetailsPane({ listId, taskId, stack, tasksInList, ref, onCloseAll, isPulsing }: Props) {
   const selected = tasksInList.find((t) => t.id === taskId);
 
   const children = selected
@@ -23,13 +32,14 @@ export function TaskDetailsPane({ listId, taskId, stack, tasksInList, onCloseAll
 
   return (
     <Box
-      w="30vw"
+      w="40vw"
       borderWidth="1px"
       rounded="md"
+      ref={ref}
       p={4}
-      bg="white"
       minH="85vh"
       flexShrink={0}
+      animation={isPulsing ? `${pulse} 1s ease-out` : undefined}
     >
       <HStack justify="space-between" mb={2}>
         <Heading size="md">Details</Heading>
