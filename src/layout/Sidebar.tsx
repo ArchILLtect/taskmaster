@@ -5,7 +5,7 @@ import { viewLinks, favoriteLinks } from "../config/sidebar";
 
 export function Sidebar() {
   return (
-    <Box minW="150px" borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
+    <Box minW="18vw" borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
 
       <SidebarItem to="/inbox" label="Inbox" main />
 

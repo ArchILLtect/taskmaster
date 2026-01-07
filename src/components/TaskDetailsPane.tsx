@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { RouterLink } from "./RouterLink";
@@ -15,12 +16,12 @@ type Props = {
   taskId: string;
   stack: string[];
   tasksInList: Task[];
-  ref?: React.Ref<HTMLDivElement>;
   onCloseAll: () => void;
   isPulsing?: boolean;
 };
 
-export function TaskDetailsPane({ listId, taskId, stack, tasksInList, ref, onCloseAll, isPulsing }: Props) {
+export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
+  function TaskDetailsPane({ listId, taskId, stack, tasksInList, onCloseAll, isPulsing }, ref) {
   const selected = tasksInList.find((t) => t.id === taskId);
 
   const children = selected
@@ -32,12 +33,12 @@ export function TaskDetailsPane({ listId, taskId, stack, tasksInList, ref, onClo
 
   return (
     <Box
-      w="40vw"
       borderWidth="1px"
       rounded="md"
       ref={ref}
       p={4}
       minH="85vh"
+      w="38.5vw"
       flexShrink={0}
       animation={isPulsing ? `${pulse} 1s ease-out` : undefined}
     >
@@ -95,4 +96,6 @@ export function TaskDetailsPane({ listId, taskId, stack, tasksInList, ref, onClo
       )}
     </Box>
   );
-}
+});
+
+TaskDetailsPane.displayName = "TaskDetailsPane";
