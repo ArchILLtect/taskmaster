@@ -1,52 +1,29 @@
 import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center } from "@chakra-ui/react";
 import { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { buildTaskStackPath, nextStackOnClick, parseTaskStackFromPath } from "../routes/taskStack";
-import { SidebarItem } from "../components/SidebarItem";
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 
 import { TaskRow } from "../components/TaskRow";
-import { mockTasks } from "../mocks/tasks";
-import { mockLists } from "../mocks/lists";
+import { taskService } from "../services/taskService";
 
 export function ListPage() {
 
-  const { listId } = useParams();
+  const { listId } = useParams<{ listId: string }>();
+
   const location = useLocation();
   const navigate = useNavigate();
-
   const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
+  const lastPaneRef = useRef<HTMLDivElement | null>(null);
+
+  // This is not possible, but TypeScript doesn't know that
+  if (!listId) return <Navigate to="/lists" replace />;
 
   const { stack } = parseTaskStackFromPath(location.pathname);
   const activeTaskId = stack.at(-1);
 
-  if (!listId) {
-    return (
-      <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-        <Heading size="lg">Lists</Heading>
-        <Text>Select a list to view its tasks.</Text>
-
-        {mockLists.length > 0 ? (
-          <VStack align="stretch" gap={1}>
-            {mockLists.map((l) => (
-              <SidebarItem key={l.id} to={`/lists/${l.id}`} label={l.name} />
-            ))}
-          </VStack>
-        ) : (
-          <Text>No lists available. Create a new list to get started.</Text>
-        )}
-      </VStack>
-    );
-  }
-
-  const tasksInList = mockTasks.filter((t) => t.listId === listId);
-  const lastPaneRef = useRef<HTMLDivElement | null>(null);
-
-  // (recommended) only top-level tasks in main list:
-  const topLevelTasks = tasksInList
-    .filter((t) => t.parentTaskId == null)
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const tasksInList = taskService.getByListId(listId);
+  const topLevelTasks = taskService.getTopLevel(tasksInList);
 
   const closeAll = () => navigate(buildTaskStackPath(listId, []));
 
@@ -60,16 +37,15 @@ export function ListPage() {
 
   useEffect(() => {
     if (!activeTaskId) return;
-
     setPulseTaskId(activeTaskId);
     const t = window.setTimeout(() => setPulseTaskId(null), 500);
     return () => window.clearTimeout(t);
   }, [activeTaskId]);
 
   return (
-    <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm">
+    <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
       {/* Left: task list */}
-      <Box flex="1" minW={"300px"}>
+      <Box width="40vw">
         <VStack align="start" gap={2}>
           <HStack gap={10}>
           <Heading size="lg">List:</Heading>
@@ -80,7 +56,7 @@ export function ListPage() {
           {topLevelTasks.length === 0 ? (
             <Text>No tasks yet. Add your first one ✍️</Text>
           ) : (
-            <VStack align="stretch" gap={2} w="100%" h="100%" mt={2}>
+            <VStack align="stretch" gap={2} mt={2}>
               {topLevelTasks.map((task) => (
                 <Box key={task.id}>
                   <TaskRow
@@ -97,7 +73,7 @@ export function ListPage() {
 
       {/* Right: stacked panes */}
       {stack.length === 0 && (
-        <Box w="40vw" h="89.5vh" bg="gray.200" rounded="md" flexShrink={0}>
+        <Box h="89.5vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
           <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
         </Box>
       )}
