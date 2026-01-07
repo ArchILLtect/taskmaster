@@ -11,6 +11,7 @@ import { TasksPage } from "./pages/TasksPage";
 import { UpdatesPage } from "./pages/UpdatesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
+import { ListSelectorPage } from "./pages/ListSelectorPage";
 
 export default function App() {
   return (
@@ -22,11 +23,11 @@ export default function App() {
         <Route path="/week" element={<WeekPage />} />
         <Route path="/month" element={<MonthPage />} />
         <Route path="/updates" element={<UpdatesPage />} />
-        <Route path="/lists" element={<ListPage />} />
+        <Route path="/lists" element={<ListSelectorPage />} />
         <Route path="/lists/:listId" element={<ListPage />} />
 
         {/* Optional focus route (single pane), if you want it later */}
-        <Route path="/lists/:listId/tasks/:taskId/*" element={<ListPage />} />
+        <Route path="/lists/:listId/tasks/*" element={<ListPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/profile" element={<ProfilePage />} />
