@@ -3,7 +3,7 @@ import { Box, Flex } from "@chakra-ui/react";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
 import { currentUser } from "../mocks/currentUser.ts";
-import { ErrorBoundary } from "../components/ErrorBoundary.tsx";
+import { ErrorBoundary } from "./ErrorBoundary.tsx";
 
 const TOPBAR_H = "64px";
 
