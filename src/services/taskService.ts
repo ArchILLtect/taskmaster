@@ -1,17 +1,18 @@
 import type { Task } from "../types/task";
 import { mockTasks } from "../mocks/tasks";
+import { taskPatchStore } from "./taskPatchStore";
 
 export const taskService = {
   getAll(): Task[] {
-    return mockTasks;
+    return taskPatchStore.applyAll(mockTasks);
   },
 
   getByListId(listId: string): Task[] {
-    return mockTasks.filter((t) => t.listId === listId);
+    return this.getAll().filter((t) => t.listId === listId);
   },
 
   getById(taskId: string): Task | undefined {
-    return mockTasks.find((t) => t.id === taskId);
+    return this.getAll().find((t) => t.id === taskId);
   },
 
   getChildren(tasks: Task[], parentId: string): Task[] {
@@ -26,5 +27,9 @@ export const taskService = {
       .filter((t) => t.parentTaskId == null)
       .slice()
       .sort((a, b) => a.sortOrder - b.sortOrder);
+  },
+
+  setStatus(taskId: string, status: Task["status"]) {
+    taskPatchStore.setStatus(taskId, status);
   },
 };
