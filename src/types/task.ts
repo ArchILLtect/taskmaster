@@ -36,3 +36,10 @@ export type Task = {
     updatedAt: string; // ISO string
     completedAt?: string | null; // ISO string or null
 };
+
+export type TaskRowProps = {
+  task: Task;
+  to: string;
+  showLists?: boolean;
+  onChanged?: () => void;
+};

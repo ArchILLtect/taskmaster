@@ -1,5 +1,6 @@
 export type {
     Task,
+    TaskRowProps,
     Priority,
     TaskStatus,
     Tag,
