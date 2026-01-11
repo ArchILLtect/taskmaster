@@ -34,4 +34,5 @@ export type Task = {
 
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
+    completedAt?: string | null; // ISO string or null
 };
