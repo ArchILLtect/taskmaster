@@ -72,7 +72,15 @@ export function ListPage() {
                     />
                   </Box>
                 ) : (
+                  <>
                   <Text>All tasks completed</Text>
+                  <TaskRow
+                    task={task}
+                    to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
+                    showLists={false}
+                    onChanged={refresh}
+                  />
+                  </>
                 )
               ))}
             </VStack>
@@ -96,6 +104,7 @@ export function ListPage() {
           tasksInList={tasksInList}
           onCloseAll={closeAll}
           isPulsing={pulseTaskId === taskId}
+          onChanged={refresh}
         />
       ))}
     </Flex>
