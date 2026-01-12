@@ -6,7 +6,7 @@ import type { TaskRowProps } from "../types";
 import { mockLists } from "../mocks/lists";
 import { taskService } from "../services/taskService";
 
-export const TaskRow = ({ task, to, showLists, onChanged }: TaskRowProps) => {
+export const TaskRow = ({ task, to, showLists, onChanged, onDelete }: TaskRowProps) => {
 
   const onComplete = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -15,6 +15,13 @@ export const TaskRow = ({ task, to, showLists, onChanged }: TaskRowProps) => {
     onChanged?.();
   };
 
+  const onDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onChanged?.();
+    onDelete?.(task.id);
+  };
+  
   return (
     <RouterLink key={task.id} to={to}>
       {({ isActive }) => (
@@ -65,7 +72,7 @@ export const TaskRow = ({ task, to, showLists, onChanged }: TaskRowProps) => {
                       </Button>
                     </Tooltip>
                     <Tooltip content="Delete task">
-                    <Button bg={"red.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={() => {/* Add delete functionality here */}} variant={"ghost"}>
+                    <Button bg={"red.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={onDeleteClick} variant={"ghost"}>
                         <IoTrash size="24px" color="red" />
                     </Button>
                     </Tooltip>
