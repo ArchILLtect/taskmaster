@@ -66,7 +66,7 @@ export function UpdatesPage() {
 
                 {task ? (
                   <Box mt={2}>
-                    <TaskRow task={task} to={linkToTask(task.listId, task.id)} showLists />
+                    <TaskRow task={task} to={linkToTask(task.listId, task.id)} showLists onChanged={refresh} />
                   </Box>
                 ) : null}
               </Box>
