@@ -1,11 +1,19 @@
-import { Box, HStack, VStack, Text, Badge } from "@chakra-ui/react";
+import { Box, HStack, VStack, Text, Badge, Button } from "@chakra-ui/react";
 import { RouterLink } from "./RouterLink";
-import type { Task } from "../types";
+import { Tooltip } from "./Tooltip";
+import type { TaskRowProps } from "../types";
 import { mockLists } from "../mocks/lists";
+import { taskService } from "../services/taskService";
 
+export const TaskRow = ({ task, to, showLists, onChanged }: TaskRowProps) => {
 
+  const onComplete = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    taskService.setStatus(task.id, task.status === "Done" ? "Open" : "Done");
+    onChanged?.();
+  };
 
-export const TaskRow = ({ task, to, showLists }: { task: Task; to: string; showLists?: boolean }) => {
   return (
     <RouterLink key={task.id} to={to}>
       {({ isActive }) => (
@@ -41,6 +49,17 @@ export const TaskRow = ({ task, to, showLists }: { task: Task; to: string; showL
                 <Badge>{task.priority}</Badge>
                 <Badge variant="outline">{task.status}</Badge>
               </VStack>
+              <Button onClick={onComplete} variant="outline" border="none" minHeight="50px" minWidth="50px" padding="0">
+                {task.status === "Done" ? (
+                  <Tooltip content="Mark as incomplete">
+                    <Text fontSize="2xl" color="gray.400">🔃</Text>
+                  </Tooltip>
+                ) : (
+                  <Tooltip content="Mark as complete">
+                    <Text fontSize="2xl" >✅</Text>
+                  </Tooltip>
+                )}
+              </Button>
             </HStack>
           </HStack>
         </Box>
