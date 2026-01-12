@@ -32,4 +32,20 @@ export const taskService = {
   setStatus(taskId: string, status: Task["status"]) {
     taskPatchStore.setStatus(taskId, status);
   },
+
+  delete(taskId: string) {
+    const all = this.getAll();
+
+    const toDelete = new Set<string>();
+    const visit = (id: string) => {
+      if (toDelete.has(id)) return;
+      toDelete.add(id);
+      for (const child of all.filter(t => t.parentTaskId === id)) {
+        visit(child.id);
+      }
+    };
+
+    visit(taskId);
+    taskPatchStore.deleteIds([...toDelete]);
+  },
 };
