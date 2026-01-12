@@ -20,7 +20,13 @@ export function ListPage() {
   
   const lastPaneRef = useRef<HTMLDivElement | null>(null);
 
+  let showCompletedTasks = true;
+  const children = useMemo(() => taskService.getByListId(listId || ""), [listId, tick]);
+  const completedCount = children.filter(task => task.status === "Done").length;
+  let taskMessage: string;
+
   // This is not possible, but TypeScript doesn't know that
+  if (!listId) throw new Error("List ID is required");
   if (!listId) return <Navigate to="/lists" replace />;
 
   const { stack } = parseTaskStackFromPath(location.pathname);
@@ -28,6 +34,15 @@ export function ListPage() {
 
   const tasksInList = useMemo(() => taskService.getByListId(listId), [listId, tick]);
   const topLevelTasks = useMemo(() => taskService.getTopLevel(tasksInList), [tasksInList]);
+
+  //if a task is completed, re-render with different message
+  const allTasksCompleted = topLevelTasks.every(task => task.status === "Done");
+  allTasksCompleted ? taskMessage = "All tasks completed! 🎉" : taskMessage = "Here are your tasks.";
+
+  // Show or hide completed tasks
+  const visibleTasks = showCompletedTasks
+  ? topLevelTasks
+  : topLevelTasks.filter(t => t.status !== "Done");
 
   const closeAll = () => navigate(buildTaskStackPath(listId, []));
 
@@ -46,6 +61,17 @@ export function ListPage() {
     return () => window.clearTimeout(t);
   }, [activeTaskId]);
 
+  const handleDeleteTask = (taskId: string) => {
+  taskService.delete(taskId);
+  refresh();
+
+  // If the deleted task is in the open stack, remove it (and anything after it if you want)
+  if (stack.includes(taskId)) {
+    const nextStack = stack.filter(id => id !== taskId);
+    navigate(buildTaskStackPath(listId, nextStack), { replace: true });
+  }
+};
+
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
       {/* Left: task list */}
@@ -60,30 +86,27 @@ export function ListPage() {
           {topLevelTasks.length === 0 ? (
             <Text>No tasks yet. Add your first one ✍️</Text>
           ) : (
-            <VStack align="stretch" gap={2} mt={2} width="100%">
-              {topLevelTasks.map((task) => (
-                task.status !== "Done" ? (
-                  <Box key={task.id}>
+            <>
+            <Flex justify="space-between" align="center" width="100%" mt={2}>
+              <Text>{taskMessage}</Text>
+              <Text color="gray.600" fontSize="sm">
+                {completedCount} of {children.length} total completed.
+              </Text>
+              </Flex>
+              <VStack align="stretch" gap={2} mt={2} width="100%">
+                {visibleTasks.map(task => (
+                  <Box key={task.id} w="100%">
                     <TaskRow
                       task={task}
                       to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
                       showLists={false}
                       onChanged={refresh}
+                      onDelete={handleDeleteTask}
                     />
                   </Box>
-                ) : (
-                  <>
-                  <Text>All tasks completed</Text>
-                  <TaskRow
-                    task={task}
-                    to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
-                    showLists={false}
-                    onChanged={refresh}
-                  />
-                  </>
-                )
-              ))}
-            </VStack>
+                ))}
+              </VStack>
+            </>
           )}
         </VStack>
       </Box>
