@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center } from "@chakra-ui/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { buildTaskStackPath, nextStackOnClick, parseTaskStackFromPath } from "../routes/taskStack";
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
@@ -9,11 +9,15 @@ import { taskService } from "../services/taskService";
 
 export function ListPage() {
 
+  const [tick, setTick] = useState(0);
+  const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
+
   const { listId } = useParams<{ listId: string }>();
 
   const location = useLocation();
   const navigate = useNavigate();
-  const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
+  const refresh = () => setTick(t => t + 1);
+  
   const lastPaneRef = useRef<HTMLDivElement | null>(null);
 
   // This is not possible, but TypeScript doesn't know that
@@ -22,8 +26,8 @@ export function ListPage() {
   const { stack } = parseTaskStackFromPath(location.pathname);
   const activeTaskId = stack.at(-1);
 
-  const tasksInList = taskService.getByListId(listId);
-  const topLevelTasks = taskService.getTopLevel(tasksInList);
+  const tasksInList = useMemo(() => taskService.getByListId(listId), [listId, tick]);
+  const topLevelTasks = useMemo(() => taskService.getTopLevel(tasksInList), [tasksInList]);
 
   const closeAll = () => navigate(buildTaskStackPath(listId, []));
 
@@ -48,23 +52,28 @@ export function ListPage() {
       <Box width="40vw">
         <VStack align="start" gap={2}>
           <HStack gap={10}>
-          <Heading size="lg">List:</Heading>
-          <Badge variant="outline" size={"lg"}>{listId}</Badge>
+            <Heading size="lg">List:</Heading>
+            <Badge variant="outline" size={"lg"}>{listId}</Badge>
           </HStack>
           <Text color="gray.600">Tasks for this list (including “someday” tasks).</Text>
 
           {topLevelTasks.length === 0 ? (
             <Text>No tasks yet. Add your first one ✍️</Text>
           ) : (
-            <VStack align="stretch" gap={2} mt={2}>
+            <VStack align="stretch" gap={2} mt={2} width="100%">
               {topLevelTasks.map((task) => (
-                <Box key={task.id}>
-                  <TaskRow
-                    task={task}
-                    to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
-                    showLists={false}
-                  />
-                </Box>
+                task.status !== "Done" ? (
+                  <Box key={task.id}>
+                    <TaskRow
+                      task={task}
+                      to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
+                      showLists={false}
+                      onChanged={refresh}
+                    />
+                  </Box>
+                ) : (
+                  <Text>All tasks completed</Text>
+                )
               ))}
             </VStack>
           )}
