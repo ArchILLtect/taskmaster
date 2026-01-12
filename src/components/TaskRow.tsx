@@ -1,4 +1,5 @@
-import { Box, HStack, VStack, Text, Badge, Button } from "@chakra-ui/react";
+import { Box, HStack, VStack, Text, Badge, Button, Flex } from "@chakra-ui/react";
+import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react-icons/io5";
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./Tooltip";
 import type { TaskRowProps } from "../types";
@@ -49,17 +50,28 @@ export const TaskRow = ({ task, to, showLists, onChanged }: TaskRowProps) => {
                 <Badge>{task.priority}</Badge>
                 <Badge variant="outline">{task.status}</Badge>
               </VStack>
-              <Button onClick={onComplete} variant="outline" border="none" minHeight="50px" minWidth="50px" padding="0">
+              <Box border="none" padding="0">
                 {task.status === "Done" ? (
-                  <Tooltip content="Mark as incomplete">
-                    <Text fontSize="2xl" color="gray.400">🔃</Text>
+                  <Tooltip content="Revive task">
+                    <Button bg={"blue.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={onComplete} variant="outline">
+                        <IoRefreshCircleOutline size="24px" color="blue" />
+                    </Button>
                   </Tooltip>
                 ) : (
-                  <Tooltip content="Mark as complete">
-                    <Text fontSize="2xl" >✅</Text>
-                  </Tooltip>
+                  <Flex gap={1} w="50px" flexDirection={"column"} alignItems={"end"}>
+                    <Tooltip content="Mark as complete">
+                      <Button bg={"green.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={onComplete} variant={"ghost"}>
+                            <IoCheckmarkCircleOutline size="30px" color="green" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Delete task">
+                    <Button bg={"red.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={() => {/* Add delete functionality here */}} variant={"ghost"}>
+                        <IoTrash size="24px" color="red" />
+                    </Button>
+                    </Tooltip>
+                  </Flex>
                 )}
-              </Button>
+              </Box>
             </HStack>
           </HStack>
         </Box>
