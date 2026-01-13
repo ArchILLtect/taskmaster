@@ -50,6 +50,8 @@ export function ListPage() {
 
   const completedCount = topLevelTasks.filter(t => t.status === "Done").length;
 
+  const dueAtIso = newTaskDueDate ? new Date(`${newTaskDueDate}T00:00:00`).toISOString() : null;
+
   const options: Option[] = [
     { label: "Low", value: "Low" },
     { label: "Medium", value: "Medium" },
@@ -130,7 +132,7 @@ export function ListPage() {
       listId,
       title: newTaskTitle,
       description: newTaskDescription,
-      dueAt: newTaskDueDate || null,
+      dueAt: dueAtIso || null,
       priority: (newTaskPriority as "Low" | "Medium" | "High") || "Medium",
     });
     refresh();
