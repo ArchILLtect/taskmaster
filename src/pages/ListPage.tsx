@@ -6,6 +6,7 @@ import { buildTaskStackPath, nextStackOnClick, parseTaskStackFromPath } from "..
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
 import { taskService } from "../services/taskService";
+import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 
 type Option = { label: string; value: string }
 
@@ -20,6 +21,7 @@ export function ListPage() {
   const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const [showAddListItemForm, setShowAddListItemForm] = useState(false);
+  const [showCompletedTasks, setShowCompletedTasks] = useState(true); // Add toggle button later
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
@@ -34,9 +36,6 @@ export function ListPage() {
   
   const lastPaneRef = useRef<HTMLDivElement | null>(null);
 
-  let showCompletedTasks = true;
-  const children = useMemo(() => taskService.getByListId(listId || ""), [listId, tick]);
-  const completedCount = children.filter(task => task.status === "Done").length;
   let taskMessage: string;
 
   // This is not possible, but TypeScript doesn't know that
@@ -48,6 +47,8 @@ export function ListPage() {
 
   const tasksInList = useMemo(() => taskService.getByListId(listId), [listId, tick]);
   const topLevelTasks = useMemo(() => taskService.getTopLevel(tasksInList), [tasksInList]);
+
+  const completedCount = topLevelTasks.filter(t => t.status === "Done").length;
 
   const options: Option[] = [
     { label: "Low", value: "Low" },
@@ -141,10 +142,13 @@ export function ListPage() {
       {/* Left: task list */}
       <Box width="40vw">
         <VStack align="start" gap={2}>
-          <HStack gap={10}>
-            <Heading size="lg">List:</Heading>
-            <Badge variant="outline" size={"lg"}>{listId}</Badge>
-          </HStack>
+          <Flex justify="space-between" align="center" width="100%">
+            <HStack gap={10}>
+              <Heading size="lg">List:</Heading>
+              <Badge variant="outline" size={"lg"}>{listId}</Badge>
+            </HStack>
+            <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
+          </Flex>
           <Text color="gray.600">Tasks for this list (including “someday” tasks).</Text>
 
           {topLevelTasks.length === 0 ? (
@@ -154,7 +158,7 @@ export function ListPage() {
             <Flex justify="space-between" align="center" width="100%" mt={2}>
               <Text>{taskMessage}</Text>
               <Text color="gray.600" fontSize="sm">
-                {completedCount} of {children.length} total completed.
+                {completedCount} of {topLevelTasks.length} total completed.
               </Text>
               </Flex>
               <VStack align="stretch" gap={2} mt={2} width="100%">
@@ -252,7 +256,7 @@ export function ListPage() {
                       />
                       </Flex>
                     </FormControl>
-                    <Select.Root collection={collection}>
+                    <Select.Root collection={collection} value={[newTaskPriority]} onValueChange={(e) => { setNewTaskPriority(e.value[0] ?? "Medium"); }}>
                       <Flex justify="space-between" align="center" width="100%">
                       <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-priority">Priority</Select.Label>
 
@@ -270,12 +274,7 @@ export function ListPage() {
                             {collection.items.map((item) => (
                               <Select.Item
                                 item={item}
-                                defaultValue={newTaskPriority}
                                 key={item.value}
-                                onChange={(value) => {
-                                  setNewTaskPriority(item.value);
-                                  console.log("Selected priority:", value);
-                                }}
                               >
                                 <Select.ItemText>{item.label}</Select.ItemText>
                                 <Select.ItemIndicator />

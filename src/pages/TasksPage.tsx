@@ -1,7 +1,8 @@
-import { Box, Heading, HStack, Text, VStack, Button } from "@chakra-ui/react";
+import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { useMemo, useState } from "react";
 import { taskService } from "../services/taskService";
+import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 
 export function TasksPage() {
 
@@ -19,11 +20,7 @@ export function TasksPage() {
             {/* TODO: add icon here */}
             <Text>View, sort, and manage all your tasks in one place.</Text>
           </VStack>
-          <Box>
-            <Button onClick={() => setShowCompletedTasks(!showCompletedTasks)} variant="outline">
-              {showCompletedTasks ? "Hide Completed Tasks" : "Show Completed Tasks"}
-            </Button>
-          </Box>
+          <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
         </HStack>
 
         <HStack gap={2} align="end" justify="space-between" w="100%" px={2}>
