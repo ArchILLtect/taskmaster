@@ -24,7 +24,7 @@ export type Task = {
 
     title: string;
     description?: string;
-    status: TaskStatus;
+    status: TaskStatus | null;
 
     dueAt?: string | null; // ISO string or null = someday
     assigneeId?: string | null; // User ID or null = unassigned
