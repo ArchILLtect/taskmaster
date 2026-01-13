@@ -18,7 +18,6 @@ export const TaskRow = ({ task, to, showLists, onChanged, onDelete }: TaskRowPro
   const onDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    onChanged?.();
     onDelete?.(task.id);
   };
   
