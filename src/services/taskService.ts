@@ -33,6 +33,32 @@ export const taskService = {
     taskPatchStore.setStatus(taskId, status);
   },
 
+  create(data: Partial<Task>): Task {
+    const all = this.getAll();
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      listId: data.listId || "default",
+      parentTaskId: data.parentTaskId || null,
+      title: data.title || "New Task",
+      description: data.description || "",
+      status: data.status || null,
+      priority: data.priority || "Medium",
+      tagIds: data.tagIds || [],
+      dueAt: data.dueAt || null,
+      completedAt: data.completedAt || null,
+      sortOrder: data.sortOrder || all.filter(t => t.listId === (data.listId || "default") && t.parentTaskId === (data.parentTaskId || null)).length,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    taskPatchStore.addPatch({
+      type: "create",
+      task: newTask,
+    });
+
+    return newTask;
+  },
+
   delete(taskId: string) {
     const all = this.getAll();
 

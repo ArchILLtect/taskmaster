@@ -67,6 +67,12 @@ export const taskPatchStore = {
     setStore(store);
   },
 
+  addPatch(patch: { type: "create"; task: Task }) {
+    const store = getStore();
+    store.patches[patch.task.id] = patch.task;
+    setStore(store);
+  },
+
   deleteIds(ids: string[]) {
     const store = getStore();
     const set = new Set(store.deletedIds);
