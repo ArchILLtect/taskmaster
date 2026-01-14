@@ -1,28 +1,10 @@
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex, Select, Portal, useListCollection } from "@chakra-ui/react";
-import { FormControl, FormLabel } from "@chakra-ui/form-control"
+import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { taskService } from "../services/taskService";
 import { buildTaskStackPath } from "../routes/taskStack";
+import type { AddTaskFormProps } from "../types/task";
 
 type Option = { label: string; value: string }
-
-type AddTaskFormProps = {
-  parentTaskId?: string | null;
-  listId: string;
-  stack: string[];
-  navigate: (path: string) => void;
-  setShowAddTaskForm?: (show: boolean) => void;
-  newTaskTitle: string;
-  setNewTaskTitle: (title: string) => void;
-  newTaskDescription: string;
-  setNewTaskDescription: (description: string) => void;
-  newTaskDueDate: string;
-  setNewTaskDueDate: (dueDate: string) => void;
-  newTaskPriority: string;
-  setNewTaskPriority: (priority: string) => void;
-  refresh: () => void;
-  onChanged?: () => void;
-  onDelete?: (taskId: string) => void;
-};
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

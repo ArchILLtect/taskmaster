@@ -2,9 +2,9 @@ import { forwardRef, useState } from "react";
 import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { buildTaskStackPath, nextStackOnClick } from "../routes/taskStack";
-import type { Task } from "../types/task";
 import { AddTaskForm } from "./AddTaskForm";
 import { TaskRowDetails } from "./TaskRowDetails";
+import type { TaskDetailsPaneProps } from "../types/task";
 
 const pulse = keyframes`
   0%   { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
@@ -12,33 +12,12 @@ const pulse = keyframes`
   100% { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
 `;
 
-type Props = {
-  listId: string;
-  taskId: string;
-  stack: string[];
-  tasksInList: Task[];
-  isPulsing?: boolean;
-  newTaskTitle: string;
-  newTaskDescription: string;
-  newTaskDueDate: string;
-  newTaskPriority: string;
-  setNewTaskTitle: (title: string) => void;
-  setNewTaskDescription: (description: string) => void;
-  setNewTaskDueDate: (dueDate: string) => void;
-  setNewTaskPriority: (priority: string) => void;
-  refresh: () => void;
-  navigate: (path: string) => void;
-  onCloseAll: () => void;
-  onChanged?: () => void;
-  onDelete?: (taskId: string) => void;
-};
-
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
 
-export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
+export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   function TaskDetailsPane({
     listId,
     taskId,
