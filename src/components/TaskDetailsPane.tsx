@@ -41,6 +41,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const selected = tasksInList.find((t) => t.id === taskId);
+  const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
 
   const children = selected
     ? tasksInList
@@ -80,9 +81,15 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       <HStack justify="space-between" mb={2}>
         <Heading size="md">Details</Heading>
 
-        <Button as="span" size="sm" variant="ghost" onClick={onCloseAll}>
-          Close
-        </Button>
+        <HStack gap={2} align={"center"} fontWeight={"medium"}>
+          <Text fontSize="sm">Close:</Text>
+          <Button as="span" size="xs" variant="ghost" onClick={closeLast}>
+            Last
+          </Button>
+          <Button as="span" size="xs" variant="ghost" onClick={onCloseAll}>
+            All
+          </Button>
+        </HStack>
       </HStack>
 
       {!selected ? (
