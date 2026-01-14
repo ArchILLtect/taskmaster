@@ -204,7 +204,6 @@ export function ListPage() {
               )}
             </Box>
           )}
-          
         </VStack>
       </Box>
 
@@ -235,9 +234,9 @@ export function ListPage() {
           refresh={refresh}
           onCloseAll={closeAll}
           onChanged={refresh}
+          onDelete={handleDeleteTask}
         />
       ))}
     </Flex>
-    
   );
 }
