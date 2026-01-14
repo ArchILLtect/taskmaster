@@ -44,3 +44,11 @@ export type TaskRowProps = {
     onChanged?: () => void;
     onDelete?: (taskId: string) => void;
 };
+
+export type TaskRowDetailsProps = {
+    task: Task;
+    to: string;
+    showLists?: boolean;
+    onChanged?: () => void;
+    onDelete?: (taskId: string) => void;
+};
