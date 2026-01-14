@@ -52,3 +52,43 @@ export type TaskRowDetailsProps = {
     onChanged?: () => void;
     onDelete?: (taskId: string) => void;
 };
+
+export type TaskDetailsPaneProps = {
+  listId: string;
+  taskId: string;
+  stack: string[];
+  tasksInList: Task[];
+  isPulsing?: boolean;
+  newTaskTitle: string;
+  newTaskDescription: string;
+  newTaskDueDate: string;
+  newTaskPriority: string;
+  setNewTaskTitle: (title: string) => void;
+  setNewTaskDescription: (description: string) => void;
+  setNewTaskDueDate: (dueDate: string) => void;
+  setNewTaskPriority: (priority: string) => void;
+  refresh: () => void;
+  navigate: (path: string) => void;
+  onCloseAll: () => void;
+  onChanged?: () => void;
+  onDelete?: (taskId: string) => void;
+};
+
+export type AddTaskFormProps = {
+  parentTaskId?: string | null;
+  listId: string;
+  stack: string[];
+  navigate: (path: string) => void;
+  setShowAddTaskForm?: (show: boolean) => void;
+  newTaskTitle: string;
+  setNewTaskTitle: (title: string) => void;
+  newTaskDescription: string;
+  setNewTaskDescription: (description: string) => void;
+  newTaskDueDate: string;
+  setNewTaskDueDate: (dueDate: string) => void;
+  newTaskPriority: string;
+  setNewTaskPriority: (priority: string) => void;
+  refresh: () => void;
+  onChanged?: () => void;
+  onDelete?: (taskId: string) => void;
+};
