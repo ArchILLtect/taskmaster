@@ -1,9 +1,10 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { buildTaskStackPath, nextStackOnClick } from "../routes/taskStack";
 import type { Task } from "../types/task";
-import { TaskRow } from "./TaskRow";
+import { AddTaskForm } from "./AddTaskForm";
+import { TaskRowDetails } from "./TaskRowDetails";
 
 const pulse = keyframes`
   0%   { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
@@ -16,13 +17,50 @@ type Props = {
   taskId: string;
   stack: string[];
   tasksInList: Task[];
-  onCloseAll: () => void;
   isPulsing?: boolean;
+  newTaskTitle: string;
+  newTaskDescription: string;
+  newTaskDueDate: string;
+  newTaskPriority: string;
+  setNewTaskTitle: (title: string) => void;
+  setNewTaskDescription: (description: string) => void;
+  setNewTaskDueDate: (dueDate: string) => void;
+  setNewTaskPriority: (priority: string) => void;
+  refresh: () => void;
+  navigate: (path: string) => void;
+  onCloseAll: () => void;
   onChanged?: () => void;
+  onDelete?: (taskId: string) => void;
 };
 
+// Get current timezone
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+// Set today's date as default due date in YYYY-MM-DD format
+const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
+
 export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
-  function TaskDetailsPane({ listId, taskId, stack, tasksInList, onCloseAll, isPulsing, onChanged }, ref) {
+  function TaskDetailsPane({
+    listId,
+    taskId,
+    stack,
+    tasksInList,
+    isPulsing,
+    newTaskTitle,
+    newTaskDescription,
+    newTaskDueDate,
+    newTaskPriority,
+    setNewTaskTitle,
+    setNewTaskDescription,
+    setNewTaskDueDate,
+    setNewTaskPriority,
+    refresh,
+    navigate,
+    onCloseAll,
+    onChanged,
+    onDelete }, ref
+  ) {
+  
+  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const selected = tasksInList.find((t) => t.id === taskId);
 
   const children = selected
@@ -31,6 +69,23 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder)
     : [];
+  
+  const prepAddTaskForm = () => {
+    if (showAddTaskForm) {
+      setShowAddTaskForm(false);
+      return;
+    } else {
+      setShowAddTaskForm(!showAddTaskForm);
+      let newTaskTitleUnique = newTaskTitle;
+      if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === ("New Task")) {
+        newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
+      }
+      setNewTaskTitle(newTaskTitleUnique);
+      setNewTaskDescription("");
+      setNewTaskDueDate(todayDate);
+      setNewTaskPriority("Medium");
+    }
+  };
 
   return (
     <Box
@@ -96,11 +151,12 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
                       {incomplete.length > 0 ? (
                         incomplete.map((child) => (
                           <Box key={child.id} w={"100%"}>
-                            <TaskRow
+                            <TaskRowDetails
                               to={buildTaskStackPath(listId, nextStackOnClick(stack, child.id))}
                               task={child}
                               showLists={false}
                               onChanged={onChanged}
+                              onDelete={onDelete}
                             />
                           </Box>
                         ))
@@ -113,11 +169,12 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
                       {completed.length > 0 ? (
                         completed.map((child) => (
                           <Box key={child.id} w={"100%"}>
-                            <TaskRow
+                            <TaskRowDetails
                               to={buildTaskStackPath(listId, nextStackOnClick(stack, child.id))}
                               task={child}
                               showLists={false}
                               onChanged={onChanged}
+                              onDelete={onDelete}
                             />
                           </Box>
                         ))
@@ -131,6 +188,31 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, Props>(
               </Box>
             )}
           </VStack>
+          {!showAddTaskForm ? (
+            <Button
+              bg="green.200"
+              variant="outline"
+              onClick={() => prepAddTaskForm()}
+            > Add New Task</Button>
+            ) : null}
+          {showAddTaskForm && (
+            <AddTaskForm
+              parentTaskId={selected.id}
+              listId={listId}
+              stack={stack}
+              newTaskTitle={newTaskTitle}
+              setNewTaskTitle={setNewTaskTitle}
+              newTaskDescription={newTaskDescription}
+              setNewTaskDescription={setNewTaskDescription}
+              newTaskDueDate={newTaskDueDate}
+              setNewTaskDueDate={setNewTaskDueDate}
+              newTaskPriority={newTaskPriority}
+              setNewTaskPriority={setNewTaskPriority}
+              setShowAddTaskForm={setShowAddTaskForm}
+              navigate={navigate}
+              refresh={refresh}
+            />
+          )}
         </Box>
       )}
     </Box>
