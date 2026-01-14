@@ -13,6 +13,11 @@ export function UpdatesPage() {
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
 
+  const handleDeleteTask = (taskId: string) => {
+    taskService.delete(taskId);
+    refresh();
+  };
+
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <HStack w="100%" justify="space-between" align="start">
@@ -66,7 +71,13 @@ export function UpdatesPage() {
 
                 {task ? (
                   <Box mt={2}>
-                    <TaskRow task={task} to={linkToTask(task.listId, task.id)} showLists onChanged={refresh} />
+                    <TaskRow
+                      task={task}
+                      to={linkToTask(task.listId, task.id)}
+                      showLists
+                      onChanged={refresh}
+                      onDelete={() => handleDeleteTask(task.id)}
+                    />
                   </Box>
                 ) : null}
               </Box>

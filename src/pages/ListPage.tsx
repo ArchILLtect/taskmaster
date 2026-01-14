@@ -74,12 +74,13 @@ export function ListPage() {
   }, [activeTaskId]);
 
   const handleDeleteTask = (taskId: string) => {
-  taskService.delete(taskId);
-  refresh();
+    taskService.delete(taskId);
+    refresh();
 
     // If the deleted task is in the open stack, remove it (and anything after it if you want)
-    if (stack.includes(taskId)) {
-      const nextStack = stack.filter(id => id !== taskId);
+    const idx = stack.indexOf(taskId);
+    if (idx !== -1) {
+      const nextStack = stack.slice(0, idx); // drop deleted + anything after
       navigate(buildTaskStackPath(listId, nextStack), { replace: true });
     }
   };

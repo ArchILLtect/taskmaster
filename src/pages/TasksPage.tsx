@@ -10,6 +10,12 @@ export function TasksPage() {
   const [tick, setTick] = useState(0);
   const tasks = useMemo(() => taskService.getAll(), [tick]);
   const refresh = () => setTick(t => t + 1);
+
+  const handleDeleteTask = (taskId: string) => {
+    taskService.delete(taskId);
+    refresh();
+  };
+
   
   return (
     <VStack minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
@@ -39,7 +45,13 @@ export function TasksPage() {
             {tasks.map((task) => (
               task.status !== "Done" ? (
                 <Box key={task.id}>
-                  <TaskRow task={task} to={`/lists/${task.listId}/tasks/${task.id}`} showLists={true} onChanged={refresh} />
+                  <TaskRow
+                    task={task}
+                    to={`/lists/${task.listId}/tasks/${task.id}`}
+                    showLists
+                    onChanged={refresh}
+                    onDelete={() => handleDeleteTask(task.id)}
+                  />
                 </Box>
               ) : null
             ))}
@@ -50,7 +62,13 @@ export function TasksPage() {
           {tasks.map((task) => (
             task.status === "Done" && (
               <Box key={task.id}>
-                <TaskRow task={task} to={`/lists/${task.listId}/tasks/${task.id}`} showLists={true} onChanged={refresh} />
+                <TaskRow
+                  task={task}
+                  to={`/lists/${task.listId}/tasks/${task.id}`}
+                  showLists
+                  onChanged={refresh}
+                  onDelete={() => handleDeleteTask(task.id)}
+                />
               </Box>
             )
           ))}

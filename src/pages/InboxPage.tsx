@@ -1,17 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  Badge,
-  Box,
-  Button,
-  Heading,
-  HStack,
-  NumberInput,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { useMemo, useState } from "react";
+import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
+import { taskService } from "../services/taskService";
 
 export function InboxPage() {
   const [tick, setTick] = useState(0);
@@ -20,13 +12,19 @@ export function InboxPage() {
 
   const refresh = () => setTick((t) => t + 1);
 
-  // Optional: if you want “new since last view” to be stable while on the page,
+  // TODO: Optional: if you want “new since last view” to be stable while on the page,
   // do NOT auto-mark viewed here. Keep it explicit via “Done triaging”.
-  useEffect(() => {
-    // noop
-  }, []);
+  // useEffect(() => {
+  //   inboxService.markViewedNow();
+  //   refresh();
+  // }, []);
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
+
+  const handleDeleteTask = (taskId: string) => {
+    taskService.delete(taskId);
+    refresh();
+  };
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
@@ -83,7 +81,13 @@ export function InboxPage() {
             {vm.newTasks.map((t) => (
               <HStack key={t.id} gap={2} align="stretch">
                 <Box flex="1">
-                  <TaskRow task={t} to={linkToTask(t.listId, t.id)} showLists />
+                  <TaskRow
+                    task={t}
+                    to={linkToTask(t.listId, t.id)}
+                    showLists
+                    onChanged={refresh}
+                    onDelete={() => handleDeleteTask(t.id)}
+                  />
                 </Box>
                 <Button
                   size="sm"
@@ -115,7 +119,13 @@ export function InboxPage() {
             {vm.dueSoonTasks.map((t) => (
               <HStack key={t.id} gap={2} align="stretch">
                 <Box flex="1">
-                  <TaskRow task={t} to={linkToTask(t.listId, t.id)} showLists />
+                  <TaskRow
+                    task={t}
+                    to={linkToTask(t.listId, t.id)}
+                    showLists
+                    onChanged={refresh}
+                    onDelete={() => handleDeleteTask(t.id)}
+                  />
                 </Box>
                 <Button
                   size="sm"
