@@ -8,18 +8,38 @@ type TaskPatch = Partial<
 >;
 
 type TaskPatchStore = {
+  created: Record<string, Task>;
   patches: Record<string, TaskPatch>;
   deletedIds: string[];
 };
 
-const DEFAULTS: TaskPatchStore = { patches: {}, deletedIds: [] };
+const DEFAULTS: TaskPatchStore = { patches: {}, deletedIds: [], created: {} };
 
 function getStore(): TaskPatchStore {
-  const s = readJson<TaskPatchStore>(KEY, DEFAULTS);
-  return {
-    patches: s.patches ?? {},
-    deletedIds: Array.isArray(s.deletedIds) ? s.deletedIds : [],
+  const raw = readJson<Partial<TaskPatchStore>>(KEY, DEFAULTS);
+  const created = (raw.created ?? {}) as Record<string, Task>;
+  const patches = (raw.patches ?? {}) as Record<string, TaskPatch>;
+
+  // Migration: older versions stored the full created Task object in `patches`.
+  // Move any "task-shaped" patch entries into `created` so created tasks remain visible.
+  let migrated = false;
+  for (const [taskId, patch] of Object.entries(patches)) {
+    const maybeTask = patch as unknown as Partial<Task>;
+    if (maybeTask && typeof maybeTask === "object" && typeof maybeTask.listId === "string" && typeof maybeTask.title === "string") {
+      created[taskId] = maybeTask as Task;
+      delete (patches as Record<string, unknown>)[taskId];
+      migrated = true;
+    }
+  }
+
+  const store: TaskPatchStore = {
+    patches,
+    deletedIds: Array.isArray(raw.deletedIds) ? raw.deletedIds : [],
+    created,
   };
+
+  if (migrated) setStore(store);
+  return store;
 }
 
 function setStore(next: TaskPatchStore) {
@@ -29,15 +49,19 @@ function setStore(next: TaskPatchStore) {
 export const taskPatchStore = {
   applyAll(base: Task[]): Task[] {
     const store = getStore();
+    const created = Object.values(store.created ?? {});
     const deleted = new Set(store.deletedIds);
-    if (!store || Object.keys(store).length === 0) return base;
 
-    return base
+    const merged = [...base, ...created]
       .filter((t) => !deleted.has(t.id))
       .map((t) => {
         const patch = store.patches[t.id];
         return patch ? { ...t, ...patch } : t;
       });
+
+    // Defensive de-dupe (shouldn't happen, but keeps output stable).
+    const seen = new Set<string>();
+    return merged.filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true)));
   },
 
   patch(taskId: string, patch: TaskPatch) {
@@ -68,8 +92,18 @@ export const taskPatchStore = {
   },
 
   addPatch(patch: { type: "create"; task: Task }) {
+    // Back-compat: older callers used addPatch for create; treat as created task.
     const store = getStore();
-    store.patches[patch.task.id] = patch.task;
+    store.created[patch.task.id] = patch.task;
+    // If it had been deleted previously, revive it.
+    store.deletedIds = store.deletedIds.filter((id) => id !== patch.task.id);
+    setStore(store);
+  },
+
+  addCreated(task: Task) {
+    const store = getStore();
+    store.created[task.id] = task;
+    store.deletedIds = store.deletedIds.filter((id) => id !== task.id);
     setStore(store);
   },
 
@@ -78,8 +112,8 @@ export const taskPatchStore = {
     const set = new Set(store.deletedIds);
     for (const id of ids) {
       set.add(id);
-      // optional: also clear patches so store doesn’t grow forever
       delete store.patches[id];
+      delete store.created[id];
     }
     store.deletedIds = Array.from(set);
     setStore(store);

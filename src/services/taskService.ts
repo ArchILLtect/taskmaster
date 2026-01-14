@@ -34,28 +34,31 @@ export const taskService = {
   },
 
   create(data: Partial<Task>): Task {
+    const now = new Date().toISOString();
+    const listId = data.listId || "default";
     const all = this.getAll();
+
+    const maxSortOrderInList = all
+      .filter((t) => t.listId === listId)
+      .reduce((acc, t) => Math.max(acc, t.sortOrder), 0);
+
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      listId: data.listId || "default",
-      parentTaskId: data.parentTaskId || null,
+      listId,
+      parentTaskId: data.parentTaskId ?? null,
       title: data.title || "New Task",
       description: data.description || "",
-      status: data.status || null,
+      status: (data.status ?? "Open"),
       priority: data.priority || "Medium",
       tagIds: data.tagIds || [],
-      dueAt: data.dueAt || null,
-      completedAt: data.completedAt || null,
-      sortOrder: data.sortOrder || all.filter(t => t.listId === (data.listId || "default") && t.parentTaskId === (data.parentTaskId || null)).length,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      dueAt: data.dueAt ?? null,
+      completedAt: null,
+      sortOrder: data.sortOrder ?? (maxSortOrderInList + 1),
+      createdAt: now,
+      updatedAt: now,
     };
 
-    taskPatchStore.addPatch({
-      type: "create",
-      task: newTask,
-    });
-
+    taskPatchStore.addCreated(newTask);
     return newTask;
   },
 
