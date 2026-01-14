@@ -1,5 +1,5 @@
-import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Input, Button, Select, Portal, useListCollection, CloseButton } from "@chakra-ui/react";
-import { FormControl, FormLabel } from "@chakra-ui/form-control"
+import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button } from "@chakra-ui/react";
+import { Toaster, toaster } from "../components/ui/toaster"
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { buildTaskStackPath, nextStackOnClick, parseTaskStackFromPath } from "../routes/taskStack";
@@ -7,8 +7,7 @@ import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
 import { taskService } from "../services/taskService";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
-
-type Option = { label: string; value: string }
+import { AddTaskForm } from "../components/AddTaskForm";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -26,7 +25,6 @@ export function ListPage() {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
   const [newTaskPriority, setNewTaskPriority] = useState("Medium");
-
 
   const { listId } = useParams<{ listId: string }>();
 
@@ -47,22 +45,7 @@ export function ListPage() {
 
   const tasksInList = useMemo(() => taskService.getByListId(listId), [listId, tick]);
   const topLevelTasks = useMemo(() => taskService.getTopLevel(tasksInList), [tasksInList]);
-
   const completedCount = topLevelTasks.filter(t => t.status === "Done").length;
-
-  const dueAtIso = newTaskDueDate ? new Date(`${newTaskDueDate}T00:00:00`).toISOString() : null;
-
-  const options: Option[] = [
-    { label: "Low", value: "Low" },
-    { label: "Medium", value: "Medium" },
-    { label: "High", value: "High" },
-  ]
-
-  const { collection } = useListCollection<Option>({
-    initialItems: options,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  })
 
   //if a task is completed, re-render with different message
   const allTasksCompleted = topLevelTasks.every(task => task.status === "Done");
@@ -124,23 +107,18 @@ export function ListPage() {
     }
   };
 
-  const handleAddTask = () => {
-    // create new task name consisting of "New Task" plus a unique
-    // sequence of 10 digits of both numbers and letters to avoid collisions
-    
-    const newTask = taskService.create({
-      listId,
-      title: newTaskTitle,
-      description: newTaskDescription,
-      dueAt: dueAtIso || null,
-      priority: (newTaskPriority as "Low" | "Medium" | "High") || "Medium",
+  const notImplementedToast = () => {
+    toaster.create({
+      title: "Not Implemented",
+      description: "This feature is not yet implemented. Stay tuned!",
+      duration: 3000,
+      type: "info",
     });
-    refresh();
-    navigate(buildTaskStackPath(listId, [...stack, newTask.id]));
   };
 
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
+      <Toaster />
       {/* Left: task list */}
       <Box width="40vw">
         <VStack align="start" gap={2}>
@@ -187,142 +165,42 @@ export function ListPage() {
             <Box w="100%" mt={2} p={2} bg="gray.50" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
               <VStack align="start" gap={2}>
                 <Heading size="sm">New List Item</Heading>
-                {!showAddTaskForm ? (
-                <Button
-                  bg="green.200"
-                  variant="outline"
-                  onClick={() => prepAddTaskForm()}
-                > Add New Task</Button>
-                ) : null}
+                <>
+                  <Button
+                    bg="green.200"
+                    variant="outline"
+                    onClick={() => notImplementedToast()}
+                  >Add New Event</Button>
+                  {!showAddTaskForm && (
+                    <Button
+                      bg="green.200"
+                      variant="outline"
+                      onClick={() => prepAddTaskForm()}
+                    > Add New Task</Button>
+                  )}
+                  <Button
+                    bg="green.200"
+                    variant="outline"
+                    onClick={() => notImplementedToast()}
+                  >Add New Note</Button>
+                </>
               </VStack>
               {showAddTaskForm && (
-                <Box w="100%" mt={2} p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
-                  <VStack align="start" gap={2}>
-                    <Flex justify="space-between" align="center" width="100%">
-                      <Heading size="sm" fontWeight="bold">New Task</Heading>
-                      <CloseButton
-                        onClick={() => { 
-                          setShowAddTaskForm(false); 
-                          setNewTaskTitle("");
-                          setNewTaskDescription("");
-                          setNewTaskDueDate("");
-                          setNewTaskPriority("low");
-                        }}
-                        size="xs"
-                      />
-                    </Flex>
-
-                    <div style={{height: "1px", width: "100%", backgroundColor: "gray"}} />
-
-                    <FormControl isRequired width="100%">
-                      <Flex justify="space-between" align="center">
-                        <FormLabel fontSize="small" fontWeight="bold" htmlFor="task-title">Title</FormLabel>
-                        <Input
-                          minW="150px"
-                          maxW="200px"
-                          id="task-title"
-                          bg="white"
-                          placeholder="Task Title"
-                          value={newTaskTitle}
-                          onChange={(e) => setNewTaskTitle(e.target.value)}
-                        />
-                      </Flex>
-                    </FormControl>
-                    <FormControl w="100%">
-                      <Flex display="flex" justify="space-between" align="center" width="100%">
-                        <FormLabel fontSize="small" fontWeight="bold" htmlFor="task-description">Description</FormLabel>
-                        <Input
-                          minW="150px"
-                          maxW="200px"
-                          id="task-description"
-                          bg="white"
-                          placeholder="Task Description (optional)"
-                          value={newTaskDescription}
-                          onChange={(e) => setNewTaskDescription(e.target.value)}
-                        />
-                      </Flex>
-                    </FormControl>
-                    <FormControl w="100%">
-                      <Flex justify="space-between" align="center" width="100%">
-                        <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor="task-due-date">Due Date</FormLabel>
-                        <Input
-                          minW="150px"
-                          maxW="200px"
-                          type="date"
-                          min={todayDate}
-                          id="task-due-date"
-                          bg="white"
-                          placeholder="Due Date (optional)"
-                          value={newTaskDueDate}
-                          onChange={(e) => setNewTaskDueDate(e.target.value)}
-                      />
-                      </Flex>
-                    </FormControl>
-                    <Select.Root collection={collection} value={[newTaskPriority]} onValueChange={(e) => { setNewTaskPriority(e.value[0] ?? "Medium"); }}>
-                      <Flex justify="space-between" align="center" width="100%">
-                      <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-priority">Priority</Select.Label>
-
-                      <Select.Control bg="white" minW="200px" maxW="200px" id="task-priority">
-                        <Select.Trigger>
-                          <Select.ValueText placeholder="Select a priority" />
-                            <Select.Indicator />
-                        </Select.Trigger>
-                      </Select.Control>
-
-                      <Portal>
-                        <Select.Positioner>
-                          <Select.Content>
-                            {/* Renders all items in the collection */}
-                            {collection.items.map((item) => (
-                              <Select.Item
-                                item={item}
-                                key={item.value}
-                              >
-                                <Select.ItemText>{item.label}</Select.ItemText>
-                                <Select.ItemIndicator />
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Positioner>
-                      </Portal>
-                      </Flex>
-                    </Select.Root>
-
-                    <Flex justify="space-between" align="center" width="100%">
-                      <Button
-                        bg="green.200"
-                        variant="outline"
-                        onClick={() => { 
-                          handleAddTask();
-                          setShowAddTaskForm(false);
-                        }}
-                      > Create Task</Button>
-                      <Box gap="2" display="flex">
-                        <Button
-                          bg={"blue.200"}
-                          variant="outline"
-                          onClick={() => { 
-                            setNewTaskTitle("");
-                            setNewTaskDescription("");
-                            setNewTaskDueDate("");
-                            setNewTaskPriority("low");
-                          }}
-                        > Clear</Button>
-                        <Button
-                          bg={"red.200"}
-                          variant="outline"
-                          onClick={() => { 
-                            setShowAddTaskForm(false); 
-                            setNewTaskTitle("");
-                            setNewTaskDescription("");
-                            setNewTaskDueDate("");
-                            setNewTaskPriority("low");
-                          }}
-                        > Cancel</Button>
-                      </Box>
-                    </Flex>
-                  </VStack>
-                </Box>
+                <AddTaskForm
+                  listId={listId}
+                  stack={stack}
+                  newTaskTitle={newTaskTitle}
+                  setNewTaskTitle={setNewTaskTitle}
+                  newTaskDescription={newTaskDescription}
+                  setNewTaskDescription={setNewTaskDescription}
+                  newTaskDueDate={newTaskDueDate}
+                  setNewTaskDueDate={setNewTaskDueDate}
+                  newTaskPriority={newTaskPriority}
+                  setNewTaskPriority={setNewTaskPriority}
+                  setShowAddTaskForm={setShowAddTaskForm}
+                  navigate={navigate}
+                  refresh={refresh}
+                />
               )}
             </Box>
           )}
@@ -344,11 +222,22 @@ export function ListPage() {
           taskId={taskId}
           stack={stack}
           tasksInList={tasksInList}
-          onCloseAll={closeAll}
           isPulsing={pulseTaskId === taskId}
+          newTaskTitle={newTaskTitle}
+          newTaskDescription={newTaskDescription}
+          newTaskDueDate={newTaskDueDate}
+          newTaskPriority={newTaskPriority}
+          setNewTaskTitle={setNewTaskTitle}
+          setNewTaskDescription={setNewTaskDescription}
+          setNewTaskDueDate={setNewTaskDueDate}
+          setNewTaskPriority={setNewTaskPriority}
+          navigate={navigate}
+          refresh={refresh}
+          onCloseAll={closeAll}
           onChanged={refresh}
         />
       ))}
     </Flex>
+    
   );
 }
