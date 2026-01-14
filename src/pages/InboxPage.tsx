@@ -125,7 +125,7 @@ export function InboxPage() {
                     refresh();
                   }}
                 >
-                  Ack
+                  Acknowledge
                 </Button>
               </HStack>
             ))}
