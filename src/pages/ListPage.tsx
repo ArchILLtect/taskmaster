@@ -1,8 +1,9 @@
 import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button } from "@chakra-ui/react";
-import { Toaster, toaster } from "../components/ui/toaster"
+import { Toaster } from "../components/ui/toaster";
+import { toaster } from "../components/ui/toasterInstance";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
-import { buildTaskStackPath, nextStackOnClick, parseTaskStackFromPath } from "../routes/taskStack";
+import { buildTaskStackPath, parseTaskStackFromPath } from "../routes/taskStack";
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
 import { taskService } from "../services/taskService";
@@ -34,29 +35,29 @@ export function ListPage() {
   
   const lastPaneRef = useRef<HTMLDivElement | null>(null);
 
-  let taskMessage: string;
-
-  // This is not possible, but TypeScript doesn't know that
-  if (!listId) throw new Error("List ID is required");
-  if (!listId) return <Navigate to="/lists" replace />;
-
   const { stack } = parseTaskStackFromPath(location.pathname);
   const activeTaskId = stack.at(-1);
 
-  const tasksInList = useMemo(() => taskService.getByListId(listId), [listId, tick]);
+    const tasksInList = useMemo(() => {
+      if (!listId) return [];
+      return taskService.getByListId(listId);
+    }, [listId, tick]);
   const topLevelTasks = useMemo(() => taskService.getTopLevel(tasksInList), [tasksInList]);
   const completedCount = topLevelTasks.filter(t => t.status === "Done").length;
 
   //if a task is completed, re-render with different message
   const allTasksCompleted = topLevelTasks.every(task => task.status === "Done");
-  allTasksCompleted ? taskMessage = "All tasks completed! 🎉" : taskMessage = "Here are your tasks.";
+    const taskMessage = allTasksCompleted ? "All tasks completed! 🎉" : "Here are your tasks.";
 
   // Show or hide completed tasks
   const visibleTasks = showCompletedTasks
   ? topLevelTasks
   : topLevelTasks.filter(t => t.status !== "Done");
 
-  const closeAll = () => navigate(buildTaskStackPath(listId, []));
+  const closeAll = () => {
+    if (!listId) return;
+    navigate(buildTaskStackPath(listId, []));
+  };
 
   useEffect(() => {
     lastPaneRef.current?.scrollIntoView({
@@ -68,12 +69,16 @@ export function ListPage() {
 
   useEffect(() => {
     if (!activeTaskId) return;
-    setPulseTaskId(activeTaskId);
-    const t = window.setTimeout(() => setPulseTaskId(null), 500);
-    return () => window.clearTimeout(t);
+    const startTimer = window.setTimeout(() => setPulseTaskId(activeTaskId), 0);
+    const clearTimer = window.setTimeout(() => setPulseTaskId(null), 500);
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearTimeout(clearTimer);
+    };
   }, [activeTaskId]);
 
   const handleDeleteTask = (taskId: string) => {
+    if (!listId) return;
     taskService.delete(taskId);
     refresh();
 
@@ -117,6 +122,8 @@ export function ListPage() {
     });
   };
 
+  if (!listId) return <Navigate to="/lists" replace />;
+
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
       <Toaster />
@@ -147,7 +154,7 @@ export function ListPage() {
                   <Box key={task.id} w="100%">
                     <TaskRow
                       task={task}
-                      to={buildTaskStackPath(listId, nextStackOnClick(stack, task.id))}
+                      to={buildTaskStackPath(listId, [task.id])}
                       showLists={false}
                       onChanged={refresh}
                       onDelete={handleDeleteTask}
