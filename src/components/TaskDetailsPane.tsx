@@ -1,7 +1,7 @@
 import { forwardRef, useState } from "react";
 import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
-import { buildTaskStackPath, nextStackOnClick } from "../routes/taskStack";
+import { buildTaskStackPath, nextStackFromLevel } from "../routes/taskStack";
 import { AddTaskForm } from "./AddTaskForm";
 import { TaskRowDetails } from "./TaskRowDetails";
 import type { TaskDetailsPaneProps } from "../types/task";
@@ -138,7 +138,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                         incomplete.map((child) => (
                           <Box key={child.id} w={"100%"}>
                             <TaskRowDetails
-                              to={buildTaskStackPath(listId, nextStackOnClick(stack, child.id))}
+                              to={buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, child.id))}
                               task={child}
                               showLists={false}
                               onChanged={onChanged}
@@ -156,7 +156,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                         completed.map((child) => (
                           <Box key={child.id} w={"100%"}>
                             <TaskRowDetails
-                              to={buildTaskStackPath(listId, nextStackOnClick(stack, child.id))}
+                              to={buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, child.id))}
                               task={child}
                               showLists={false}
                               onChanged={onChanged}
