@@ -23,12 +23,26 @@ function getStore(): TaskPatchStore {
   // Migration: older versions stored the full created Task object in `patches`.
   // Move any "task-shaped" patch entries into `created` so created tasks remain visible.
   let migrated = false;
+  
+  const toMove: Array<{ taskId: string; task: Task }> = [];
+
   for (const [taskId, patch] of Object.entries(patches)) {
     const maybeTask = patch as unknown as Partial<Task>;
-    if (maybeTask && typeof maybeTask === "object" && typeof maybeTask.listId === "string" && typeof maybeTask.title === "string") {
-      created[taskId] = maybeTask as Task;
-      delete (patches as Record<string, unknown>)[taskId];
-      migrated = true;
+    if (
+      maybeTask &&
+      typeof maybeTask === "object" &&
+      typeof maybeTask.listId === "string" &&
+      typeof maybeTask.title === "string"
+    ) {
+      toMove.push({ taskId, task: { ...(maybeTask as Task), id: taskId } });
+    }
+  }
+  
+  if (toMove.length > 0) {
+    migrated = true;
+    for (const { taskId, task } of toMove) {
+      created[taskId] = task;
+      delete patches[taskId];
     }
   }
 
