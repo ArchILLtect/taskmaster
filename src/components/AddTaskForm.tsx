@@ -53,7 +53,7 @@ export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewT
         <Heading size="sm" fontWeight="bold">New Task</Heading>
         <CloseButton
           onClick={() => { 
-            setShowAddTaskForm && setShowAddTaskForm(false);
+            if (setShowAddTaskForm) setShowAddTaskForm(false);
             setNewTaskTitle("");
             setNewTaskDescription("");
             setNewTaskDueDate("");
@@ -145,7 +145,7 @@ export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewT
           variant="outline"
           onClick={() => { 
             handleAddTask();
-            setShowAddTaskForm && setShowAddTaskForm(false);
+            if (setShowAddTaskForm) setShowAddTaskForm(false);
           }}
         > Create Task</Button>
         <Box gap="2" display="flex">
@@ -163,7 +163,7 @@ export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewT
             bg={"red.200"}
             variant="outline"
             onClick={() => { 
-              setShowAddTaskForm && setShowAddTaskForm(false);
+              if (setShowAddTaskForm) setShowAddTaskForm(false);
               setNewTaskTitle("");
               setNewTaskDescription("");
               setNewTaskDueDate("");
