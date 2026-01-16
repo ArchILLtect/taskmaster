@@ -37,13 +37,17 @@ export const taskService = {
     const now = new Date().toISOString();
     const listId = data.listId || "default";
     const all = this.getAll();
+    const id =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? `task-${crypto.randomUUID()}`
+          : `task-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     const maxSortOrderInList = all
       .filter((t) => t.listId === listId)
       .reduce((acc, t) => Math.max(acc, t.sortOrder), 0);
 
     const newTask: Task = {
-      id: `task-${Date.now()}`,
+      id,
       listId,
       parentTaskId: data.parentTaskId ?? null,
       title: data.title || "New Task",
