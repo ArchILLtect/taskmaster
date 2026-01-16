@@ -17,6 +17,14 @@ const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
 
+const formatDue = (iso?: string | null) => {
+  if (!iso) return "Someday";
+  const d = new Date(iso);
+  return isNaN(d.getTime())
+    ? "Someday"
+    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+};
+
 export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   function TaskDetailsPane({
     listId,
@@ -108,7 +116,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
             </HStack>
 
             <Text color="gray.600" fontSize="sm">
-              Due: {selected.dueAt ?? "Someday"}
+              Due: {formatDue(selected.dueAt)}
             </Text>
           </VStack>
 
