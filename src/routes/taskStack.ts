@@ -21,6 +21,30 @@ export function buildTaskStackPath(listId: string, stack: string[]): string {
   return `/lists/${listId}/tasks/${stack.join("/tasks/")}`;
 }
 
+// Level-aware stack update.
+// - fromTaskId === null means the click came from the top-level list → reset stack.
+// - otherwise, keep the stack up to (and including) fromTaskId, then navigate to clickedTaskId.
+export function nextStackFromLevel(
+  stack: string[],
+  fromTaskId: string | null,
+  clickedTaskId: string,
+): string[] {
+  if (!fromTaskId) return [clickedTaskId];
+
+  const fromIdx = stack.indexOf(fromTaskId);
+  if (fromIdx === -1) return [clickedTaskId];
+
+  const kept = stack.slice(0, fromIdx + 1);
+
+  // If the clicked task is already in the kept prefix, treat it as a truncate.
+  const existingIdx = kept.indexOf(clickedTaskId);
+  if (existingIdx !== -1) {
+    return kept.slice(0, existingIdx + 1);
+  }
+
+  return [...kept, clickedTaskId];
+}
+
 // Given the current stack of open task IDs and a clicked task ID,
 // return the new stack of task IDs to represent the updated panes.
 // If the clicked ID is already in the stack, truncate the stack to that ID.
