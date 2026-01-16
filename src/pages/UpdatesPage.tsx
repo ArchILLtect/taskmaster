@@ -26,7 +26,7 @@ export function UpdatesPage() {
             <Heading size="md">Updates</Heading>
             {vm.unreadCount > 0 ? <Badge rounded="md">{vm.unreadCount} unread</Badge> : null}
           </HStack>
-          <Text color="gray.600">Informational activity log (derived from tasks for MVP).</Text>
+          <Text color="gray.600">Informational activity log (persisted event feed).</Text>
         </VStack>
 
         <HStack>
@@ -76,7 +76,7 @@ export function UpdatesPage() {
                       to={linkToTask(task.listId, task.id)}
                       showLists
                       onChanged={refresh}
-                      onDelete={() => handleDeleteTask(task.id)}
+                      onDelete={handleDeleteTask}
                     />
                   </Box>
                 ) : null}
@@ -87,7 +87,7 @@ export function UpdatesPage() {
       )}
 
       <Text color="gray.500" fontSize="sm">
-        Tip: This is intentionally “dumb but stable” until we add real event capture (Zustand/Auth phase).
+        Tip: Events are captured from task actions and stored locally (will move into Zustand persistence later).
       </Text>
     </VStack>
   );
