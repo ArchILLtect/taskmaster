@@ -1,6 +1,7 @@
 import type { Task } from "../types/task";
 import { mockTasks } from "../mocks/tasks";
 import { taskPatchStore } from "./taskPatchStore";
+import { updatesEventStore } from "./updatesEventStore";
 
 export const taskService = {
   getAll(): Task[] {
@@ -30,7 +31,28 @@ export const taskService = {
   },
 
   setStatus(taskId: string, status: Task["status"]) {
+    const prev = this.getById(taskId)?.status;
     taskPatchStore.setStatus(taskId, status);
+    const task = this.getById(taskId);
+    if (!task || prev === status) return;
+
+    if (prev === "Open" && status === "Done") {
+      updatesEventStore.append({
+        type: "task_completed",
+        taskId: task.id,
+        listId: task.listId,
+        title: `Task completed: ${task.title}`,
+        parentTaskId: task.parentTaskId ?? null,
+      });
+    } else if (prev === "Done" && status === "Open") {
+      updatesEventStore.append({
+        type: "task_reopened",
+        taskId: task.id,
+        listId: task.listId,
+        title: `Task reopened: ${task.title}`,
+        parentTaskId: task.parentTaskId ?? null,
+      });
+    }
   },
 
   create(data: Partial<Task>): Task {
@@ -63,11 +85,29 @@ export const taskService = {
     };
 
     taskPatchStore.addCreated(newTask);
+    updatesEventStore.append({
+      type: "task_created",
+      taskId: newTask.id,
+      listId: newTask.listId,
+      title: `Task created: ${newTask.title}`,
+      parentTaskId: newTask.parentTaskId ?? null,
+    });
     return newTask;
   },
 
   delete(taskId: string) {
     const all = this.getAll();
+    const victim = this.getById(taskId);
+
+    if (victim) {
+      updatesEventStore.append({
+        type: "task_deleted",
+        taskId: victim.id,
+        listId: victim.listId,
+        title: `Task deleted (and subtasks if present): ${victim.title}`,
+        parentTaskId: victim.parentTaskId ?? null,
+      });
+    }
 
     const toDelete = new Set<string>();
     const visit = (id: string) => {
