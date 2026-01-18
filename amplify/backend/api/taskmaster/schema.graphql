@@ -1,0 +1,51 @@
+
+type TaskList
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID! @primaryKey
+  name: String!
+  isFavorite: Boolean!
+  sortOrder: Int!
+
+  tasks: [Task] @hasMany(indexName: "byList", fields: ["id"])
+}
+
+type Task
+  @model
+  @auth(rules: [{ allow: owner }]) {
+  id: ID! @primaryKey
+
+  # Query tasks in a list ordered by sortOrder
+  listId: ID! @index(name: "byList", sortKeyFields: ["sortOrder"])
+  sortOrder: Int!
+
+  # Query subtasks ordered by sortOrder
+  parentTaskId: ID @index(name: "byParent", sortKeyFields: ["sortOrder"])
+
+  title: String!
+  description: String
+  status: TaskStatus!
+  priority: TaskPriority!
+
+  dueAt: AWSDateTime
+  completedAt: AWSDateTime
+
+  assigneeId: String
+  tagIds: [String!]!
+
+  list: TaskList @belongsTo(fields: ["listId"])
+
+  # OPTIONAL (not needed for MVP; safe to omit for now)
+  # parentTask: Task @belongsTo(fields: ["parentTaskId"])
+}
+
+enum TaskStatus {
+  Open
+  Done
+}
+
+enum TaskPriority {
+  Low
+  Medium
+  High
+}

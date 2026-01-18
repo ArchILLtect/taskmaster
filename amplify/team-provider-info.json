@@ -22,6 +22,9 @@
           "deploymentBucketName": "amplify-taskmaster-dev-eadfe-deployment",
           "s3Key": "amplify-builds/taskmaster776070ddPostConfirmation-654978684d5a684a625a-build.zip"
         }
+      },
+      "api": {
+        "taskmaster": {}
       }
     }
   }
