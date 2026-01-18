@@ -1,7 +1,10 @@
 
 type TaskList
   @model
-  @auth(rules: [{ allow: owner }]) {
+  @auth(rules: [
+    { allow: owner },
+    { allow: groups, groups: ["Admin"] }
+  ]) {
   id: ID! @primaryKey
   name: String!
   isFavorite: Boolean!
@@ -12,15 +15,18 @@ type TaskList
 
 type Task
   @model
-  @auth(rules: [{ allow: owner }]) {
+  @auth(rules: [
+    { allow: owner },
+    { allow: groups, groups: ["Admin"] }
+  ]) {
   id: ID! @primaryKey
 
   # Query tasks in a list ordered by sortOrder
-  listId: ID! @index(name: "byList", sortKeyFields: ["sortOrder"])
+  listId: ID! @index(name: "byList", sortKeyFields: ["sortOrder"], queryField: "tasksByList")
   sortOrder: Int!
 
   # Query subtasks ordered by sortOrder
-  parentTaskId: ID @index(name: "byParent", sortKeyFields: ["sortOrder"])
+  parentTaskId: ID @index(name: "byParent", sortKeyFields: ["sortOrder"], queryField: "tasksByParent")
 
   title: String!
   description: String

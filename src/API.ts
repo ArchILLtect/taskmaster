@@ -644,7 +644,7 @@ export type ListTasksQuery = {
   } | null,
 };
 
-export type TasksByListIdAndSortOrderQueryVariables = {
+export type TasksByListQueryVariables = {
   listId: string,
   sortOrder?: ModelIntKeyConditionInput | null,
   sortDirection?: ModelSortDirection | null,
@@ -653,8 +653,8 @@ export type TasksByListIdAndSortOrderQueryVariables = {
   nextToken?: string | null,
 };
 
-export type TasksByListIdAndSortOrderQuery = {
-  tasksByListIdAndSortOrder?:  {
+export type TasksByListQuery = {
+  tasksByList?:  {
     __typename: "ModelTaskConnection",
     items:  Array< {
       __typename: "Task",
@@ -678,7 +678,7 @@ export type TasksByListIdAndSortOrderQuery = {
   } | null,
 };
 
-export type TasksByParentTaskIdAndSortOrderQueryVariables = {
+export type TasksByParentQueryVariables = {
   parentTaskId: string,
   sortOrder?: ModelIntKeyConditionInput | null,
   sortDirection?: ModelSortDirection | null,
@@ -687,8 +687,8 @@ export type TasksByParentTaskIdAndSortOrderQueryVariables = {
   nextToken?: string | null,
 };
 
-export type TasksByParentTaskIdAndSortOrderQuery = {
-  tasksByParentTaskIdAndSortOrder?:  {
+export type TasksByParentQuery = {
+  tasksByParent?:  {
     __typename: "ModelTaskConnection",
     items:  Array< {
       __typename: "Task",
