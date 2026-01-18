@@ -14,6 +14,18 @@ This file is a running backlog of ideas, cleanups, and future improvements.
 - [ ] Still local component state:
      - [ ] showAddTaskForm, showAddListItemForm, form inputs (title/desc/due/priority), UI toggles
 
+## Security & Auth (Post-MVP Hardening)
+- [ ] Harden owner-based GraphQL auth rules
+  - Prevent clients from reassigning the `owner` field on @model types
+  - Apply field-level auth or remove `owner` from client-writable inputs
+  - Ensure:
+    - owners can CRUD only their own records
+    - Admin group can read/write across users
+    - ownership cannot be transferred via mutation payloads
+  - Context:
+    - Amplify warning: “owners may reassign ownership”
+    - Deferred intentionally for MVP speed
+
 ## UI / UX
 - [ ] In TaskDetailsPane, your “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string. Later you’ll want a formatter, but not urgent.
 - [ ] Replace the tick/refresh() pattern everywhere (but during the migration)--Don’t refactor it now. Just note where it exists:
