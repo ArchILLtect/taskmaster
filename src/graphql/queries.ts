@@ -128,7 +128,7 @@ export const listTasks = /* GraphQL */ `query ListTasks(
   }
 }
 ` as GeneratedQuery<APITypes.ListTasksQueryVariables, APITypes.ListTasksQuery>;
-export const tasksByListIdAndSortOrder = /* GraphQL */ `query TasksByListIdAndSortOrder(
+export const tasksByList = /* GraphQL */ `query TasksByList(
   $listId: ID!
   $sortOrder: ModelIntKeyConditionInput
   $sortDirection: ModelSortDirection
@@ -136,7 +136,7 @@ export const tasksByListIdAndSortOrder = /* GraphQL */ `query TasksByListIdAndSo
   $limit: Int
   $nextToken: String
 ) {
-  tasksByListIdAndSortOrder(
+  tasksByList(
     listId: $listId
     sortOrder: $sortOrder
     sortDirection: $sortDirection
@@ -167,10 +167,10 @@ export const tasksByListIdAndSortOrder = /* GraphQL */ `query TasksByListIdAndSo
   }
 }
 ` as GeneratedQuery<
-  APITypes.TasksByListIdAndSortOrderQueryVariables,
-  APITypes.TasksByListIdAndSortOrderQuery
+  APITypes.TasksByListQueryVariables,
+  APITypes.TasksByListQuery
 >;
-export const tasksByParentTaskIdAndSortOrder = /* GraphQL */ `query TasksByParentTaskIdAndSortOrder(
+export const tasksByParent = /* GraphQL */ `query TasksByParent(
   $parentTaskId: ID!
   $sortOrder: ModelIntKeyConditionInput
   $sortDirection: ModelSortDirection
@@ -178,7 +178,7 @@ export const tasksByParentTaskIdAndSortOrder = /* GraphQL */ `query TasksByParen
   $limit: Int
   $nextToken: String
 ) {
-  tasksByParentTaskIdAndSortOrder(
+  tasksByParent(
     parentTaskId: $parentTaskId
     sortOrder: $sortOrder
     sortDirection: $sortDirection
@@ -209,6 +209,6 @@ export const tasksByParentTaskIdAndSortOrder = /* GraphQL */ `query TasksByParen
   }
 }
 ` as GeneratedQuery<
-  APITypes.TasksByParentTaskIdAndSortOrderQueryVariables,
-  APITypes.TasksByParentTaskIdAndSortOrderQuery
+  APITypes.TasksByParentQueryVariables,
+  APITypes.TasksByParentQuery
 >;
