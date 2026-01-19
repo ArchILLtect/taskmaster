@@ -31,6 +31,8 @@ export function Sidebar() {
 
       <Separator my={3} />
 
+      <SidebarItem to="/dev" label="Dev" main />
+
     </Box>
   );
 }

@@ -47,6 +47,7 @@ export function TopBar({ user, onSignOut }: TopBarProps) {
           <Button size="sm" variant="solid">
             Sign in
           </Button>
+
         )}
         <RouterLink to={"/settings"}>
           {({ isActive }) => (

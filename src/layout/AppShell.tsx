@@ -2,20 +2,19 @@ import { Outlet } from "react-router-dom";
 import { Box, Flex } from "@chakra-ui/react";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
-import { currentUser } from "../mocks/currentUser.ts";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 
 const TOPBAR_H = "64px";
 
-export function AppShell() {
+export function AppShell({ user, onSignOut }: { user?: any; onSignOut?: () => void }) {
   // TEMP: mocked user until Amplify Auth is wired
-  const user = currentUser;
+  
   return (
     <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell">
 
       {/* Top Bar stays fixed at the top */}
       <Box h={TOPBAR_H} flexShrink={0}>
-        <TopBar user={user} />
+        <TopBar onSignOut={onSignOut} user={user} />
       </Box>
 
       {/* Body: sidebar + main */}

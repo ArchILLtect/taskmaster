@@ -21,13 +21,8 @@ export default function App() {
     <Authenticator>
       {({ signOut, user }) => (
         <>
-          {/* optional quick top bar */}
-          <div style={{ padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
-            <span>Signed in as: {user?.username}</span>
-            <button onClick={signOut}>Sign out</button>
-          </div>
           <Routes>
-            <Route element={<AppShell />}>
+            <Route element={<AppShell user={user} onSignOut={signOut} />}>
               <Route path="/" element={<Navigate to="/today" replace />} />
               <Route path="/inbox" element={<InboxPage />} />
               <Route path="/today" element={<TodayPage />} />
