@@ -28,6 +28,11 @@ This file is a running backlog of ideas, cleanups, and future improvements.
 
 ## UI / UX
 - [ ] In TaskDetailsPane, your “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string. Later you’ll want a formatter, but not urgent.
+- [ ] Update ProfilePage to use real auth/user data (Cognito/Amplify) instead of `src/mocks/currentUser.ts`
+- [ ] Add an app footer
+  - [ ] Link to your showcase site
+  - [ ] Move the Sign Out button into the footer
+  - [ ] Add an email link: `mailto:nick@nickhanson.me`
 - [ ] Replace the tick/refresh() pattern everywhere (but during the migration)--Don’t refactor it now. Just note where it exists:
    - ListPage / UpdatesPage / InboxPage / TasksPage etc.
    - When Zustand lands, refresh() disappears and components re-render via selectors.

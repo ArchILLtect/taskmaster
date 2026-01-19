@@ -71,4 +71,9 @@ Auth integration entry point (when you wire Cognito claims → app user):
 - [src/auth/mapUserFromClaims.ts](src/auth/mapUserFromClaims.ts)
 
 ## Known issues (current repo state)
+DEV: GraphQLSmokeTest.tsx is giving over-nesting errors (but runs perfectly fine). If it continues to bother, use:
+- tsconfig.json → set:
+  - "skipLibCheck": true
+
+--> to turn it off temporarily.
 
