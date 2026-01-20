@@ -1,28 +1,81 @@
-# Documentation Index
+## Documentation Index
 
 This repo uses Markdown “living docs” stored alongside the code.
 
-## Tutorials / onboarding
-- Local setup: [SETUP.md](SETUP.md)
+This directory contains **intentional design documents** for TaskMaster.
 
-## How-to guides
+### TaskMaster – Design & Architecture Docs
+
+These docs exist so future work is:
+- planned
+- consistent
+- not rediscovered through trial-and-error
+
+If you’re reading this months later, **start here** in this doc.
+
+#### 🧭 <u>Planning Docs</u>:
+
+These documents define **what gets built, and when**.
+
+- **[ROADMAP.md](ROADMAP.md)**: Overall direction and sequencing of work.
+
+- **[MILESTONES.md](MILESTONES.md)**: Phase-based checkpoints (MVP → Post-MVP → Offline).
+
+Start with these before diving into implementation details.
+
+> If something feels “missing,” it’s probably deferred — not forgotten.
+
+#### 📘 <u>Offline Mode (Planned)</u>:
+
+**File:** `offline-mode-design.md`  
+**Status:** Not implemented
+
+Describes the complete offline-capable architecture, including:
+- Zustand as client source of truth
+- GraphQL as server source of truth
+- IndexedDB caching
+- Offline mutation queue
+- Sync + conflict resolution
+- UX expectations while offline
+
+This document should be followed when offline mode is implemented.
+
+#### <u>Philosophy</u>
+
+- MVP favors **correctness and simplicity**
+- Advanced features are **designed first, built later**
+- Docs exist to reduce future cognitive load
+
+If a feature feels “missing,” check here before assuming it was forgotten.
+
+---
+
+### Tutorials / onboarding
+- Getting Started: [README.md](../README.md)
+- Local setup: [SETUP.md](SETUP.md)
+- Contributing: [CONTRIBUTING.md](../CONTRIBUTING.md)
+
+### How-to guides
 - Troubleshooting & resets: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
-## Reference
+### Reference
 - Data model: [DATA_MODEL.md](DATA_MODEL.md)
 - API reference (current + planned): [API.md](API.md)
 - Style guide (UI + code patterns): [STYLE_GUIDE.md](STYLE_GUIDE.md)
 
-## Explanations
+### Explanations
 - Architecture overview: [ARCHITECTURE.md](ARCHITECTURE.md)
 - Offline mode design (planned): [offline-mode-design.md](offline-mode-design.md)
+- License: [LICENSE](../LICENSE)
 
-## Planning
+### Planning
 - Roadmap: [ROADMAP.md](ROADMAP.md)
 - Milestones: [MILESTONES.md](MILESTONES.md)
 - PRD: [PRD.md](PRD.md)
 - Risk register: [RISK_REGISTER.md](RISK_REGISTER.md)
 
-## Checklists
+### Checklists
+- Things to do: [TODO.md](../TODO.md)
+- Changelog: [CHANGELOG.md](../CHANGELOG.md)
 - Security & legal: [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md)
 - Deployment: [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
