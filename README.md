@@ -1,12 +1,17 @@
+<!-- {root}/README.md -->
+
 # TaskMaster (WIP)
 
-TaskMaster is a Vite + React + TypeScript task app prototype using Chakra UI. The app currently uses mocked data (no backend wired yet) and focuses on navigation + list/task browsing patterns.
+TaskMaster is a Vite + React + TypeScript task app prototype using Chakra UI.  
+The app is transitioning from mocked data to a real backend powered by AWS Amplify (AppSync + Cognito), with an MVP-first mindset.
 
 ## Tech stack
 - React 19 + TypeScript + Vite
 - Chakra UI (all UI primitives)
 - React Router v7 (`react-router-dom`)
-- AWS Amplify scaffolding is present, but not yet integrated into runtime auth/data flows
+- AWS Amplify (Auth + GraphQL / AppSync)
+- AppSync + DynamoDB via `@model` GraphQL schema
+- (Planned) Zustand for client-side state/cache
 
 Entry points:
 - App bootstrapping: [src/main.tsx](src/main.tsx)
@@ -15,8 +20,11 @@ Entry points:
 
 ## What’s implemented
 - App shell with persistent sidebar + top bar
-- Views/pages (mostly placeholders today): Inbox/Today/Week/Month/Updates/Settings/Profile
-- Tasks index page that renders all mock tasks
+- Cognito authentication via Amplify `Authenticator`
+- GraphQL backend (AppSync + DynamoDB) generated from schema
+- Core data models: TaskList, Task
+- Dev-only GraphQL smoke testing page (`/dev`)
+- Views/pages: Inbox / Today / Week / Month / Updates / Settings / Profile
 - Lists page with an “infinite pane stack” details UI for drilling into tasks
 
 ## Routing model
@@ -26,54 +34,81 @@ Key patterns:
 - Base list views: `/lists` and `/lists/:listId` render the same page component.
 - “Pane stack” list details: `/lists/:listId/tasks/*`
   - The `*` splat encodes a stack of selected task IDs as path segments.
-  - Example: `/lists/inbox/tasks/t1/t3` opens a details pane for `t1`, then another for `t3`.
-  - Implementation lives in [src/pages/ListPage.tsx](src/pages/ListPage.tsx) (`buildStackUrl`, `stackIds`, `pushTask`, `popTo`).
+  - Example: `/lists/inbox/tasks/t1/t3`
+  - Implementation lives in [src/pages/ListPage.tsx](src/pages/ListPage.tsx).
 
-## Data model (mocked)
-All data is currently local mock data.
+## Data model
+The backend is driven by a GraphQL schema using Amplify `@model`.
 
-- Types live in [src/types](src/types) (notably [src/types/task.ts](src/types/task.ts)).
-- Mocks live in [src/mocks](src/mocks):
-  - Lists: [src/mocks/lists.ts](src/mocks/lists.ts)
-  - Tasks: [src/mocks/tasks.ts](src/mocks/tasks.ts)
-  - Current user (temporary): [src/mocks/currentUser.ts](src/mocks/currentUser.ts)
+- Schema: `amplify/backend/api/*/schema.graphql`
+- Tables are auto-generated in DynamoDB by Amplify.
+- No manual database setup is required.
 
-UI components typically consume these mocks directly (no services layer yet).
+Local mocks are still present but are being phased out as pages migrate to GraphQL.
 
-## UI conventions
-- Use Chakra layout primitives (`VStack`, `HStack`, `Flex`, `Box`). Many pages use a consistent “card” container: `p={4} bg="white" rounded="md" boxShadow="sm"` (example: [src/pages/TodayPage.tsx](src/pages/TodayPage.tsx)).
-- Use [src/components/RouterLink.tsx](src/components/RouterLink.tsx) (wrapper over `NavLink`) when you need active-state styling.
-- Sidebar main items are declared in [src/layout/Sidebar.tsx](src/layout/Sidebar.tsx). Collapsible sections pull items from [src/config/sidebar.ts](src/config/sidebar.ts).
+## 📄 Architecture & Design Docs
+
+Design documents live in `/docs` and describe **planned or deferred architecture** so future work is intentional—not rediscovered.
+
+### Offline Mode (Planned)
+
+- **Document:** [`/docs/offline-mode-design.md`](./docs/offline-mode-design.md)
+- **Status:** Not implemented (by design)
+
+This document describes the full offline-capable architecture for TaskMaster, including:
+- Zustand as the single client-side source of truth
+- GraphQL (AppSync) as the server source of truth
+- IndexedDB-based caching
+- Offline mutation queue + optimistic UI
+- Sync, conflict resolution, and UX rules
+
+⚠️ **Important:**  
+Offline support is intentionally deferred until after the MVP.  
+When implemented, this document should be treated as the **source of truth**.
+
+> If you’re reading this in the future and wondering “why isn’t offline here yet?” —  
+> it’s because MVP-first decisions were made on purpose. The roadmap already exists. 😉
+
+See also: [`/docs/README.md`](./docs/README.md)
+
+## 🧭 Roadmap & Milestones
+
+TaskMaster follows an **MVP → Post-MVP → Offline** progression.  
+Planning is documented explicitly so future work is intentional and scoped.
+
+- **Roadmap:** [`/docs/ROADMAP.md`](./docs/ROADMAP.md)  
+  High-level direction and phase goals.
+
+- **Milestones:** [`/docs/MILESTONES.md`](./docs/MILESTONES.md)  
+  Concrete deliverables grouped by phase:
+  - MVP
+  - Post-MVP
+  - Offline Mode
+
+If you’re wondering *“what should I work on next?”* — start here.
+
+## Amplify notes
+The [amplify](amplify) folder is Amplify CLI output/scaffolding.
+
+- GraphQL, DynamoDB, and Cognito are already live.
+- `@model` types automatically create tables and resolvers.
+- No `amplify add storage` is required for GraphQL-backed data models.
+
+Auth integration entry point:
+- [src/auth/mapUserFromClaims.ts](src/auth/mapUserFromClaims.ts)
 
 ## Getting started
-Install deps:
 
 ```bash
 npm install
-```
-
-Run dev server:
-
-```bash
 npm run dev
 ```
 
 ## Scripts
-- `npm run dev` — start Vite dev server
-- `npm run build` — typecheck (`tsc -b`) then build (`vite build`)
-- `npm run lint` — run ESLint
-- `npm run preview` — preview production build
 
-## Amplify notes
-The [amplify](amplify) folder is Amplify CLI output/scaffolding. Until the app is wired up to Amplify Auth/API, treat it as generated config (see [amplify/README.md](amplify/README.md)).
+- npm run dev — start Vite dev server
+- npm run build — typecheck + build
+- npm run lint — run ESLint
+- npm run preview — preview production build
 
-Auth integration entry point (when you wire Cognito claims → app user):
-- [src/auth/mapUserFromClaims.ts](src/auth/mapUserFromClaims.ts)
-
-## Known issues (current repo state)
-DEV: GraphQLSmokeTest.tsx is giving over-nesting errors (but runs perfectly fine). If it continues to bother, use:
-- tsconfig.json → set:
-  - "skipLibCheck": true
-
---> to turn it off temporarily.
-
+---
