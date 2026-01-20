@@ -112,3 +112,26 @@ npm run dev
 - npm run preview — preview production build
 
 ---
+
+## Documentation (additional)
+
+> TODO: This section is additive and may overlap with earlier doc links.
+
+Start here:
+- [docs/INDEX.md](docs/INDEX.md)
+
+Common entry points:
+- Local setup: [docs/SETUP.md](docs/SETUP.md)
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- API reference: [docs/API.md](docs/API.md)
+- Data model: [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
+- Troubleshooting: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+- Style guide: [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md)
+- Deployment checklist: [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)
+- Security checklist: [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)
+
+Repo-level docs:
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+
+> TODO: Some README claims may reflect planned work rather than current wiring. If something seems inconsistent, check [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the TODO section in [docs/ROADMAP.md](docs/ROADMAP.md).

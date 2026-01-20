@@ -51,3 +51,20 @@ This document should be followed when offline mode is implemented.
 - Docs exist to reduce future cognitive load
 
 If a feature feels “missing,” check here before assuming it was forgotten.
+
+---
+
+## TODO: Additional docs added
+
+The repo now also contains general onboarding/reference docs:
+- [INDEX.md](INDEX.md) (doc index)
+- [SETUP.md](SETUP.md) (local dev)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [API.md](API.md)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [STYLE_GUIDE.md](STYLE_GUIDE.md)
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- [PRD.md](PRD.md)
+- [RISK_REGISTER.md](RISK_REGISTER.md)
+- [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md)
+- [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)

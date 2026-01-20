@@ -1,38 +1,73 @@
 <!-- {root}/TODO.md -->
 
-# TODO (as time permits)
+# TO-DO (as time permits)
 
 This file is a running backlog of ideas, cleanups, and future improvements.
+Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tree extension.
+
+---
 
 ## Platform / Foundations
-- [ ] Normalize all time-related features by initializing and using the current time zone as the base for all times (display, storage, comparisons)
+- [ ] TODO(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times
+  - display
+  - storage
+  - comparisons
+
+---
 
 ## Data & Services
-- [ ] Zustand state (post-MVP):
+
+- [ ] TODO(P1) Zustand state (post-MVP)
   - [ ] tasks (GraphQL-backed, cached client-side)
   - [ ] taskLists
   - [ ] update feed (derived from updatedAt / createdAt)
   - [ ] updates read-state (lastReadAt / clearedBeforeAt)
 
-- [ ] Gradually migrate pages from mock/local services → GraphQL
+- [ ] TODO(P1) Gradually migrate pages from mock/local services → GraphQL
   - [ ] InboxPage
   - [ ] ListPage
   - [ ] UpdatesPage
 
+---
+
+## GraphQL & Data Modeling (Future Hardening / Improvements)
+
+- [ ] TODO(P3) Review GraphQL mutation selection sets for minimal ops
+  - Some minimal mutations are typed using full Amplify-generated output types
+  - This is intentional for MVP speed
+  - If TypeScript inference becomes misleading (e.g. assuming nested relations exist),
+    consider defining custom output types for minimal ops
+
+- [ ] TODO(P4) Evaluate adding `__typename` to GraphQL minimal queries/mutations
+  - Not required for MVP
+  - May help later if Zustand, memoization, or derived caches rely on entity identity
+
+---
+
 ## Offline Mode (Post-MVP)
-- [ ] Implement offline support following:
+
+- [ ] TODO(P5) Implement offline support following:
   - `/docs/offline-mode-design.md`
-- [ ] Introduce IndexedDB-backed cache
-- [ ] Add offline mutation queue + replay logic
-- [ ] Add sync status UI (offline / syncing / error)
+
+- [ ] TODO(P5) Introduce IndexedDB-backed cache
+
+- [ ] TODO(P5) Add offline mutation queue + replay logic
+
+- [ ] TODO(P5) Add sync status UI
+  - offline
+  - syncing
+  - error states
 
 ⚠️ Offline mode is intentionally deferred until:
 - GraphQL CRUD is stable
 - Zustand is the primary client cache
 - MVP UX is complete
 
+---
+
 ## Security & Auth (Post-MVP Hardening)
-- [ ] Harden owner-based GraphQL auth rules
+
+- [ ] TODO(P4) Harden owner-based GraphQL auth rules
   - Prevent clients from reassigning the `owner` field on @model types
   - Apply field-level auth or remove `owner` from client-writable inputs
   - Ensure:
@@ -43,34 +78,52 @@ This file is a running backlog of ideas, cleanups, and future improvements.
     - Amplify warning: “owners may reassign ownership”
     - Deferred intentionally for MVP speed
 
+---
+
 ## UI / UX
-- [ ] Add date formatting helper for task due dates
-  - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string. Later we’ll want a formatter, but not urgent.
-- [ ] Update ProfilePage to use real auth/user data (Cognito/Amplify) instead of `src/mocks/currentUser.ts`
-- [ ] Add an app footer
+
+- [ ] TODO(P2) Add date formatting helper for task due dates
+  - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string
+
+- [ ] TODO(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
+  - Replace `src/mocks/currentUser.ts`
+
+- [ ] TODO(P3) Add an app footer
   - [ ] Link to the showcase site
   - [ ] Move the Sign Out button into the footer
   - [ ] Add an email link: `mailto:nick@nickhanson.me`
-- [ ] Replace the tick/refresh() pattern everywhere (but during the migration)--Don’t refactor it now. Just note where it exists:
-   - ListPage / UpdatesPage / InboxPage / TasksPage etc.
-   - When Zustand lands, refresh() disappears and components re-render via selectors.
 
+- [ ] TODO(P3) Replace the tick/refresh() pattern everywhere (after migration)
+  - Do **not** refactor during GraphQL migration
+  - Known locations:
+    - ListPage
+    - UpdatesPage
+    - InboxPage
+    - TasksPage
+  - When Zustand lands, refresh() disappears and components re-render via selectors
+
+---
 
 ## Testing & Quality
-- [ ] Add a tiny “dev reset local state” helper (optional but helpful)--Not required, but it saves you pain while iterating:
-  - [ ] a function (or button in a dev-only area) that clears:
-    - taskmaster.taskPatches.v1
-    - taskmaster.updateEvents.v1
-    - taskmaster.updates.v1
-  - [ ] Useful during GraphQL/Zustand migration
-    - So when something gets weird you can nuke localStorage without spelunking.
+
+- [ ] TODO(P3) Add a tiny “dev reset local state” helper (optional but helpful)
+  - [ ] a function (or dev-only button) that clears:
+    - `taskmaster.taskPatches.v1`
+    - `taskmaster.updateEvents.v1`
+    - `taskmaster.updates.v1`
+  - Useful during GraphQL / Zustand migration
+  - Saves spelunking in localStorage
+
+---
 
 ## Docs
-- [ ] Keep `/docs/README.md` up to date as new design docs are added
+
+- [ ] TODO(P2) Keep `/docs/README.md` up to date as new design docs are added
+
+---
 
 ## Routing & Navigation
-- [ ] . . .
+- [ ] TODO(P4) . . .
 
 ## Performance
-- [ ] . . .
-
+- [ ] TODO(P4) . . .

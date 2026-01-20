@@ -97,3 +97,21 @@ Possible directions:
 - Mobile-first polish
 
 These are intentionally unspecified until earlier phases are complete.
+
+---
+
+## TODO: Current implementation status (docs vs code)
+
+Some items listed as MVP scope above (Cognito Auth + GraphQL-backed pages) are not yet reflected in the current UI implementation.
+
+Current code reality (as of today):
+- Pages primarily use mock data from `src/mocks/*`.
+- Task mutations are persisted locally via a patch/event system in `src/services/*` (localStorage-backed).
+
+References:
+- Current routing + pages: [src/App.tsx](../src/App.tsx)
+- Local task persistence: [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts)
+- Local task API: [src/services/taskService.ts](../src/services/taskService.ts)
+- Updates feed persistence: [src/services/updatesEventStore.ts](../src/services/updatesEventStore.ts)
+
+This roadmap remains the target direction; this section exists to prevent onboarding confusion until the MVP is fully GraphQL-wired.

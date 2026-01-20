@@ -69,3 +69,16 @@ Criteria:
 
 When this milestone is reached:
 > “The app works anywhere, anytime.”
+
+---
+
+## TODO: Milestone verification notes
+
+Some milestone statements (notably “GraphQL Backbone Established” and “No mock data used in user-facing pages”) may not match the current runtime wiring.
+
+Current code reality (as of today):
+- UI pages use `src/mocks/*` as the primary data source.
+- Local persistence exists via `src/services/*` (patch store + updates event store).
+- Amplify/GraphQL schema exists, but the app is not yet fully migrated to it.
+
+This TODO section is intentionally additive (no edits to the original milestone text) so we can reconcile the plan and the implementation later.
