@@ -125,5 +125,24 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 ## Routing & Navigation
 - [ ] TODO(P4) . . .
 
-## Performance
-- [ ] TODO(P4) . . .
+## Performance / Bundling
+
+- [ ] TODO(P4) Investigate production bundle size & code splitting
+  - Vite warning: main JS chunk > 500 kB (≈1.4 MB minified, ≈395 kB gzip)
+  - Likely contributors:
+    - Chakra UI
+    - AWS Amplify (Auth + API)
+    - Large page components (ListPage, UpdatesPage, TasksPage)
+  - Notes:
+    - Lazy-loading the DevPage increased bundle size (expected; DevPage is tiny)
+    - Optimization should focus on **route-level code splitting**, not dev tooling
+  - Possible actions (later):
+    - Convert major routes to `React.lazy()`:
+      - ListPage
+      - UpdatesPage
+      - TasksPage
+    - Consider `manualChunks` in `vite.config.ts` if needed
+    - Re-evaluate after MVP UX + Zustand migration
+  - Status:
+    - Non-blocking for MVP
+    - Safe to defer until performance tuning phase
