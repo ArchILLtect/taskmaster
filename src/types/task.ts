@@ -39,10 +39,12 @@ export type Task = {
 
 export type TaskRowProps = {
     task: Task;
+    listName?: string;
     to: string;
     showLists?: boolean;
     onChanged?: () => void;
     onDelete?: (taskId: string) => void;
+    onToggleComplete?: (taskId: string, newStatus: TaskStatus) => Promise<void>;
 };
 
 export type TaskRowDetailsProps = {
@@ -75,11 +77,9 @@ export type TaskDetailsPaneProps = {
 };
 
 export type AddTaskFormProps = {
-  parentTaskId?: string | null;
   listId: string;
   stack: string[];
-  navigate: (path: string) => void;
-  setShowAddTaskForm?: (show: boolean) => void;
+  tasksInList: Task[];
   newTaskTitle: string;
   setNewTaskTitle: (title: string) => void;
   newTaskDescription: string;
@@ -88,7 +88,8 @@ export type AddTaskFormProps = {
   setNewTaskDueDate: (dueDate: string) => void;
   newTaskPriority: string;
   setNewTaskPriority: (priority: string) => void;
+  setShowAddTaskForm?: (show: boolean) => void;
+  navigate: (path: string) => void;
   refresh: () => void;
-  onChanged?: () => void;
-  onDelete?: (taskId: string) => void;
+  parentTaskId?: string | null;
 };
