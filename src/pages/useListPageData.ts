@@ -1,55 +1,57 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { taskmasterApi } from "../api/taskmasterApi"
 import { mapTask, mapTaskList } from "../api/mappers";
+import type { Task } from "../types/task";
+import type { TaskList } from "../types/list";
 
 export function useListPageData(listId: string | undefined) {
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const [lists, setLists] = useState<any[]>([]);
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [rawLists, setRawLists] = useState<TaskList[]>([]);
+  const [rawTasks, setRawTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<unknown>(null);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     if (!listId) return;
-    setLoading(true);
-    setErr(null);
 
     try {
-      // Fetch all lists (small enough for MVP)
-      const listPage = await taskmasterApi.listTaskLists({ limit: 200 });
-      setLists(listPage.items);
+      setLoading(true);
+      setErr(null);
 
-      // Fetch tasks for the current list
-      const taskPage = await taskmasterApi.tasksByList({
-        listId,
-        sortOrder: { ge: 0 },
-        limit: 500,
-      });
-      setTasks(taskPage.items);
+      const [listPage, taskPage] = await Promise.all([
+        taskmasterApi.listTaskLists({ limit: 200 }),
+        taskmasterApi.tasksByList({
+          listId,
+          sortOrder: { ge: 0 },
+          limit: 500,
+        }),
+      ]);
+
+      setRawLists(listPage.items as TaskList[]);
+      setRawTasks(taskPage.items as Task[]);
     } catch (e) {
       setErr(e);
+      setRawLists([]);
+      setRawTasks([]);
     } finally {
       setLoading(false);
     }
-  }
+  }, [listId]);
 
   useEffect(() => {
     void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listId]);
+  }, [refresh]);
 
-  const mapped = useMemo(() => {
-    return {
-      lists: lists.map(mapTaskList),
-      tasks: tasks.map(mapTask).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-    };
-  }, [lists, tasks]);
+  const lists: TaskList[] = useMemo(() => {
+    const mapped = rawLists.map(mapTaskList);
+    mapped.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    return mapped;
+  }, [rawLists]);
 
-  return {
-    ...mapped,
-    loading,
-    err,
-    refresh,
-  };
+  const tasks: Task[] = useMemo(() => {
+    const mapped = rawTasks.map(mapTask);
+    mapped.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    return mapped;
+  }, [rawTasks]);
+
+  return { lists, tasks, loading, err, refresh };
 }
