@@ -1,4 +1,5 @@
-import type { TaskList } from "../types/list"; // adjust if your type path differs
+// TODO Switch to using API enums for consistency when possible
+import type { TaskList } from "../types/list";
 import { mockLists } from "../mocks/lists";
 
 export const listService = {

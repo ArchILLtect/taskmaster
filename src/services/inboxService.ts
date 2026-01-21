@@ -1,3 +1,4 @@
+// TODO: Switch to using API enums for consistency when possible
 import type { Task } from "../types/task";
 import { taskService } from "./taskService";
 import { isoNow, readJson, writeJson } from "./storage";
