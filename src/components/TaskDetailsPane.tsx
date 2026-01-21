@@ -3,7 +3,7 @@ import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/re
 import { keyframes } from "@emotion/react";
 import { buildTaskStackPath, nextStackFromLevel } from "../routes/taskStack";
 import { AddTaskForm } from "./AddTaskForm";
-import { TaskRowDetails } from "./TaskRowDetails";
+import { TaskDetailsRow } from "./TaskDetailsRow";
 import type { TaskDetailsPaneProps } from "../types/task";
 
 const pulse = keyframes`
@@ -145,7 +145,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                       {incomplete.length > 0 ? (
                         incomplete.map((child) => (
                           <Box key={child.id} w={"100%"}>
-                            <TaskRowDetails
+                            <TaskDetailsRow
                               to={buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, child.id))}
                               task={child}
                               showLists={false}
@@ -163,7 +163,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                       {completed.length > 0 ? (
                         completed.map((child) => (
                           <Box key={child.id} w={"100%"}>
-                            <TaskRowDetails
+                            <TaskDetailsRow
                               to={buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, child.id))}
                               task={child}
                               showLists={false}
@@ -191,9 +191,9 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
             ) : null}
           {showAddTaskForm && (
             <AddTaskForm
-              parentTaskId={selected.id}
               listId={listId}
               stack={stack}
+              tasksInList={tasksInList}
               newTaskTitle={newTaskTitle}
               setNewTaskTitle={setNewTaskTitle}
               newTaskDescription={newTaskDescription}
@@ -205,6 +205,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
               setShowAddTaskForm={setShowAddTaskForm}
               navigate={navigate}
               refresh={refresh}
+              parentTaskId={selected.id}
             />
           )}
         </Box>

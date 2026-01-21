@@ -2,10 +2,10 @@ import { Box, HStack, Text, Badge, Button, Flex } from "@chakra-ui/react";
 import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react-icons/io5";
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./Tooltip";
-import type { TaskRowDetailsProps } from "../types/task";
+import type { TaskDetailsRowProps } from "../types/task";
 import { taskService } from "../services/taskService";
 
-export const TaskRowDetails = ({ task, to, onChanged, onDelete }: TaskRowDetailsProps) => {
+export const TaskDetailsRow = ({ task, to, onChanged, onDelete }: TaskDetailsRowProps) => {
 
   const onComplete = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

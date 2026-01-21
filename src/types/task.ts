@@ -47,7 +47,7 @@ export type TaskRowProps = {
     onToggleComplete?: (taskId: string, newStatus: TaskStatus) => Promise<void>;
 };
 
-export type TaskRowDetailsProps = {
+export type TaskDetailsRowProps = {
     task: Task;
     to: string;
     showLists?: boolean;
