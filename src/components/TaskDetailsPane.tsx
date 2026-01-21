@@ -3,8 +3,11 @@ import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/re
 import { keyframes } from "@emotion/react";
 import { buildTaskStackPath, nextStackFromLevel } from "../routes/taskStack";
 import { AddTaskForm } from "./AddTaskForm";
-import { TaskDetailsRow } from "./TaskDetailsRow";
+import { SubTaskRow } from "./SubTaskRow";
 import type { TaskDetailsPaneProps } from "../types/task";
+import { taskmasterApi } from "../api/taskmasterApi";
+import { EditTaskForm } from "./EditTaskForm";
+import { TaskPriority, TaskStatus } from "../API";
 
 const pulse = keyframes`
   0%   { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
@@ -49,6 +52,15 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const selected = tasksInList.find((t) => t.id === taskId);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftDescription, setDraftDescription] = useState("");
+  const [draftPriority, setDraftPriority] = useState(TaskPriority.Medium);
+  const [draftStatus, setDraftStatus] = useState(TaskStatus.Open);
+  const [draftDueDate, setDraftDueDate] = useState(""); // YYYY-MM-DD
+  const [saving, setSaving] = useState(false);
+
   const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
 
   const children = selected
@@ -56,7 +68,25 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
         .filter((t) => t.parentTaskId === selected.id)
         .slice()
         .sort((a, b) => a.sortOrder - b.sortOrder)
-    : [];
+    : []
+  ;
+
+  // Initialize draft when selection changes
+  if (selected && draftTitle === "" && draftDescription === "" && !isEditing) {
+    // (This "guard" prevents re-init on every render; we’ll do it properly with useEffect below.)
+  }
+
+  const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
+
+    await taskmasterApi.updateTask({
+      id: taskId,
+      status: nextStatus as any, // (only needed if API types are enum-y)
+      completedAt,
+    });
+
+    await refresh();
+  };
   
   const prepAddTaskForm = () => {
     if (showAddTaskForm) {
@@ -71,9 +101,11 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       setNewTaskTitle(newTaskTitleUnique);
       setNewTaskDescription("");
       setNewTaskDueDate(todayDate);
-      setNewTaskPriority("Medium");
+      setNewTaskPriority(TaskPriority.Medium);
     }
   };
+
+
 
   return (
     <Box
@@ -105,11 +137,38 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       ) : (
         <Box w="100%">
           <VStack align="start" gap={2}>
-            <Text fontWeight="700" fontSize="lg">
-              {selected.title}
-            </Text>
-            {selected.description ? <Text>{selected.description}</Text> : null}
+            <HStack justify="space-between" w="100%">
+              <Text fontWeight="700" fontSize="lg">
+                {selected.title}
+              </Text>
 
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
+                {isEditing ? "Hide Edit" : "Edit"}
+              </Button>
+            </HStack>
+
+            {isEditing ? (
+              <EditTaskForm
+                task={selected}
+                draftTitle={draftTitle}
+                setDraftTitle={setDraftTitle}
+                draftDescription={draftDescription}
+                setDraftDescription={setDraftDescription}
+                draftPriority={draftPriority}
+                setDraftPriority={setDraftPriority}
+                draftStatus={draftStatus}
+                setDraftStatus={setDraftStatus}
+                draftDueDate={draftDueDate}
+                setDraftDueDate={setDraftDueDate}
+                saving={saving}
+                setSaving={setSaving}
+                setIsEditing={setIsEditing}
+                onClose={() => setIsEditing(false)}
+                onChanged={onChanged}
+                refresh={refresh}
+              />
+            ) : (
+              <>
             <HStack>
               <Badge>{selected.priority}</Badge>
               <Badge variant="outline">{selected.status}</Badge>
@@ -118,6 +177,8 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
             <Text color="gray.600" fontSize="sm">
               Due: {formatDue(selected.dueAt)}
             </Text>
+            </>
+            )}
           </VStack>
 
           <VStack align="start" gap={2} mt={4}>
@@ -129,9 +190,9 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
               <Box w="100%">
               {(() => {
                 // Get all completed children
-                const completed = children.filter(c => c.status === "Done");
+                const completed = children.filter(c => c.status === TaskStatus.Done);
                 // Get all incomplete children
-                const incomplete = children.filter(c => c.status !== "Done");
+                const incomplete = children.filter(c => c.status !== TaskStatus.Done);
                 const completedCount = completed.length;
                 return (
                   <Box w={"100%"}>
@@ -145,12 +206,11 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                       {incomplete.length > 0 ? (
                         incomplete.map((child) => (
                           <Box key={child.id} w={"100%"}>
-                            <TaskDetailsRow
+                            <SubTaskRow
                               to={buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, child.id))}
                               task={child}
-                              showLists={false}
-                              onChanged={onChanged}
                               onDelete={onDelete}
+                              onToggleComplete={handleToggleComplete}
                             />
                           </Box>
                         ))
@@ -163,12 +223,11 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                       {completed.length > 0 ? (
                         completed.map((child) => (
                           <Box key={child.id} w={"100%"}>
-                            <TaskDetailsRow
+                            <SubTaskRow
                               to={buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, child.id))}
                               task={child}
-                              showLists={false}
-                              onChanged={onChanged}
                               onDelete={onDelete}
+                              onToggleComplete={handleToggleComplete}
                             />
                           </Box>
                         ))

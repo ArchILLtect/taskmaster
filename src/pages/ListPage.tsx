@@ -10,6 +10,7 @@ import { TaskRow } from "../components/TaskRow";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { AddTaskForm } from "../components/AddTaskForm";
 import { taskmasterApi } from "../api/taskmasterApi";
+import { TaskPriority, TaskStatus } from "../API";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -25,7 +26,7 @@ export function ListPage() {
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
-  const [newTaskPriority, setNewTaskPriority] = useState("Medium");
+  const [newTaskPriority, setNewTaskPriority] = useState(TaskPriority.Medium);
 
   const { listId } = useParams<{ listId: string }>();
   const { lists, tasks, loading, err, refresh } = useListPageData(listId);
@@ -49,16 +50,16 @@ export function ListPage() {
     return list ? list.name : "Unknown List";
   }
 
-  const completedCount = topLevelTasks.filter(t => t.status === "Done").length;
+  const completedCount = topLevelTasks.filter(t => t.status === TaskStatus.Done).length;
 
   //if a task is completed, re-render with different message
-  const allTasksCompleted = topLevelTasks.every(task => task.status === "Done");
+  const allTasksCompleted = topLevelTasks.every(task => task.status === TaskStatus.Done);
     const taskMessage = allTasksCompleted ? "All tasks completed! 🎉" : "Here are your tasks.";
 
   // Show or hide completed tasks
   const visibleTasks = showCompletedTasks
   ? topLevelTasks
-  : topLevelTasks.filter(t => t.status !== "Done");
+  : topLevelTasks.filter(t => t.status !== TaskStatus.Done);
 
   const closeAll = () => {
     if (!listId) return;
@@ -83,12 +84,12 @@ export function ListPage() {
     };
   }, [activeTaskId]);
 
-  const handleToggleComplete = async (taskId: string, nextStatus: "Open" | "Done") => {
-    const completedAt = nextStatus === "Done" ? new Date().toISOString() : null;
+  const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
     await taskmasterApi.updateTask({
       id: taskId,
-      status: nextStatus as any, // (only needed if API types are enum-y)
+      status: nextStatus,
       completedAt,
     });
 
@@ -127,7 +128,7 @@ export function ListPage() {
       setNewTaskTitle(newTaskTitleUnique);
       setNewTaskDescription("");
       setNewTaskDueDate(todayDate);
-      setNewTaskPriority("Medium");
+      setNewTaskPriority(TaskPriority.Medium);
     }
   };
 
@@ -179,7 +180,6 @@ export function ListPage() {
                       listName={getListName(task.listId)}
                       to={buildTaskStackPath(listId, [task.id])}
                       showLists={false}
-                      onChanged={refresh}
                       onDelete={handleDeleteTask}
                       onToggleComplete={handleToggleComplete}
                     />
