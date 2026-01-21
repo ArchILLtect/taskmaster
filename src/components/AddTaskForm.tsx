@@ -1,8 +1,9 @@
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex, Select, Portal, useListCollection } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
-import { taskService } from "../services/taskService";
 import { buildTaskStackPath } from "../routes/taskStack";
-import type { AddTaskFormProps } from "../types/task";
+import { taskmasterApi } from "../api/taskmasterApi";
+import { TaskStatus, TaskPriority } from "../API";
+import type { Task, AddTaskFormProps } from "../types/task";
 
 type Option = { label: string; value: string }
 
@@ -11,9 +12,31 @@ const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
 
-export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewTaskTitle, newTaskDescription, setNewTaskDescription, newTaskDueDate, setNewTaskDueDate, newTaskPriority, setNewTaskPriority, setShowAddTaskForm, navigate, refresh }: AddTaskFormProps) => {
+function nextSortOrder(tasks: Task[], parentTaskId: string | null) {
+  const max = tasks
+    .filter(t => (t.parentTaskId ?? null) === parentTaskId)
+    .reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
 
-    const dueAtIso = newTaskDueDate ? new Date(`${newTaskDueDate}T00:00:00`).toISOString() : null;
+  return max + 1;
+}
+
+export const AddTaskForm = ({
+  listId,
+  stack,
+  tasksInList,
+  newTaskTitle,
+  setNewTaskTitle,
+  newTaskDescription,
+  setNewTaskDescription,
+  newTaskDueDate,
+  setNewTaskDueDate,
+  newTaskPriority,
+  setNewTaskPriority,
+  setShowAddTaskForm,
+  navigate,
+  refresh,
+  parentTaskId
+}: AddTaskFormProps) => {
 
   const options: Option[] = [
     { label: "Low", value: "Low" },
@@ -27,22 +50,37 @@ export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewT
     itemToString: (item) => item.label,
   })
 
-  const handleAddTask = () => {
-    // create new task name consisting of "New Task" plus a unique
-    // sequence of 10 digits of both numbers and letters to avoid collisions
-    
-    const newTask = taskService.create({
-      listId,
-      title: newTaskTitle,
-      description: newTaskDescription,
-      dueAt: dueAtIso || null,
-      priority: (newTaskPriority as "Low" | "Medium" | "High") || "Medium",
-      parentTaskId: parentTaskId ?? null,
-    });
-    refresh();
-    const nextStack =
-      parentTaskId ? stack : [...stack, newTask.id];
+  const handleAddTask = async () => {
+    const dueAtIso = newTaskDueDate
+      ? new Date(`${newTaskDueDate}T00:00:00`).toISOString()
+      : null;
 
+    const parent = parentTaskId ?? null;
+
+    const created = await taskmasterApi.createTask({
+      listId,
+      sortOrder: nextSortOrder(tasksInList, parent),
+      parentTaskId: parent,
+      title: newTaskTitle,
+      description: newTaskDescription || "",
+      status: TaskStatus.Open,
+      priority:
+        newTaskPriority === "Low"
+          ? TaskPriority.Low
+          : newTaskPriority === "High"
+            ? TaskPriority.High
+            : TaskPriority.Medium,
+      dueAt: dueAtIso,
+      completedAt: null,
+      assigneeId: null,
+      tagIds: [],
+    });
+
+    // refresh the page-level data from AppSync
+    await refresh();
+
+    // navigate same as before (open the task pane for top-level tasks)
+    const nextStack = parentTaskId ? stack : [...stack, created.id];
     navigate(buildTaskStackPath(listId, nextStack));
   };
 
@@ -57,7 +95,7 @@ export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewT
             setNewTaskTitle("");
             setNewTaskDescription("");
             setNewTaskDueDate("");
-            setNewTaskPriority("Low");
+            setNewTaskPriority("Medium");
           }}
           size="xs"
         />
@@ -143,9 +181,9 @@ export const AddTaskForm = ({ parentTaskId, listId, stack, newTaskTitle, setNewT
         <Button
           bg="green.200"
           variant="outline"
-          onClick={() => { 
-            handleAddTask();
-            if (setShowAddTaskForm) setShowAddTaskForm(false);
+          onClick={async () => {
+            await handleAddTask();
+            setShowAddTaskForm?.(false);
           }}
         > Create Task</Button>
         <Box gap="2" display="flex">
