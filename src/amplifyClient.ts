@@ -1,8 +1,14 @@
 import { generateClient } from "aws-amplify/api";
 
-let _client: ReturnType<typeof generateClient> | null = null;
+type AmplifyGraphQLClient = {
+  graphql: (args: any) => Promise<any>;
+};
 
-export function getClient() {
-  if (!_client) _client = generateClient();
+let _client: AmplifyGraphQLClient | null = null;
+
+export function getClient(): AmplifyGraphQLClient {
+  if (!_client) {
+    _client = generateClient() as unknown as AmplifyGraphQLClient;
+  }
   return _client;
 }
