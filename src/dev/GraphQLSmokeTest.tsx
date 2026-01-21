@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Code, Heading, HStack, Text, VStack } from "@chakra-ui/react";
-
-import { generateClient } from "aws-amplify/api";
+import { getClient } from "../amplifyClient";
 import { getCurrentUser } from "aws-amplify/auth";
 import { TaskStatus, TaskPriority } from "../API";
 
@@ -29,9 +28,10 @@ type OpOut<T extends GenOp> =
   never
 ;
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+type AmplifyGraphQLClient = ReturnType<typeof getClient>;
+
 async function runOp<T extends GenOp>(
-  client: ReturnType<typeof generateClient>,
+  client: AmplifyGraphQLClient,
   query: T,
   variables?: any
 ) {
@@ -40,7 +40,7 @@ async function runOp<T extends GenOp>(
 }
 
 export function GraphQLSmokeTest() {
-  const client = useMemo(() => generateClient(), []);
+  const client = useMemo(() => getClient(), []);
   const [log, setLog] = useState<LogLine[]>([]);
   const [lastListId, setLastListId] = useState<string | null>(null);
 
