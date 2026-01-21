@@ -3,16 +3,25 @@ import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./Tooltip";
 import type { TaskRowProps } from "../types";
-import { mockLists } from "../mocks/lists";
-import { taskService } from "../services/taskService";
+import { taskmasterApi } from "../api/taskmasterApi";
+import { TaskStatus } from "../API";
 
-export const TaskRow = ({ task, to, showLists, onChanged, onDelete }: TaskRowProps) => {
+export const TaskRow = ({ task, listName, to, showLists, onChanged, onDelete, onToggleComplete }: TaskRowProps) => {
 
-  const onComplete = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onComplete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    taskService.setStatus(task.id, task.status === "Done" ? "Open" : "Done");
-    onChanged?.();
+
+  const nextStatus =
+    task.status === TaskStatus.Done ? TaskStatus.Open : TaskStatus.Done;
+
+  await taskmasterApi.updateTask({
+    id: task.id,
+    status: nextStatus,
+    completedAt: nextStatus === TaskStatus.Done ? new Date().toISOString() : null,
+  });
+
+  await onChanged?.();
   };
 
   const onDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -47,7 +56,7 @@ export const TaskRow = ({ task, to, showLists, onChanged, onDelete }: TaskRowPro
               {showLists ? (
                 <Box w="75px" textAlign="right">
                   <Badge fontSize="sm" color="gray.500">
-                    {mockLists.find((l) => l.id === task.listId)?.name ?? task.listId}
+                    {listName || "Unknown List"}
                   </Badge>
                 </Box>
               ) : null}
