@@ -1,4 +1,3 @@
-// TODO Re-introduce these types later to make the mapper more explicit
 // import type { Task as GqlTask, TaskList as GqlTaskList } from "../API";
 import type { Task } from "../types/task";
 import type { TaskList } from "../types/list";
@@ -15,7 +14,6 @@ import type { TaskList } from "../types/list";
 */
 
 // Map GraphQL TaskList to local TaskList type
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function mapTaskList(list: TaskList): TaskList {
   // g is the object returned by AppSync (has fields + __typename sometimes)
   return {
@@ -29,7 +27,6 @@ export function mapTaskList(list: TaskList): TaskList {
 }
 
 // Map GraphQL Task to local Task type
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function mapTask(task: Task): Task {
   // g is the object returned by AppSync (has fields + __typename sometimes)
   return {

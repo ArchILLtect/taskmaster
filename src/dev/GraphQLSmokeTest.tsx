@@ -33,6 +33,7 @@ type AmplifyGraphQLClient = ReturnType<typeof getClient>;
 async function runOp<T extends GenOp>(
   client: AmplifyGraphQLClient,
   query: T,
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   variables?: any
 ) {
   const res = (await client.graphql({ query, variables })) as { data?: OpOut<T> };

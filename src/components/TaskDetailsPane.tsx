@@ -81,7 +81,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
     await taskmasterApi.updateTask({
       id: taskId,
-      status: nextStatus as any, // (only needed if API types are enum-y)
+      status: nextStatus as TaskStatus,
       completedAt,
     });
 

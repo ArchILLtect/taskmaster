@@ -1,6 +1,7 @@
 import { generateClient } from "aws-amplify/api";
 
 type AmplifyGraphQLClient = {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   graphql: (args: any) => Promise<any>;
 };
 
