@@ -4,6 +4,8 @@ import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { updatesService } from "../services/updatesService";
 import { taskService } from "../services/taskService";
+import { TaskStatus } from "../API";
+import { taskmasterApi } from "../api/taskmasterApi";
 
 export function UpdatesPage() {
   const [tick, setTick] = useState(0);
@@ -12,6 +14,18 @@ export function UpdatesPage() {
   const refresh = () => setTick((t) => t + 1);
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
+
+  const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
+
+    await taskmasterApi.updateTask({
+      id: taskId,
+      status: nextStatus,
+      completedAt,
+    });
+
+    await refresh();
+  };
 
   const handleDeleteTask = (taskId: string) => {
     taskService.delete(taskId);
@@ -75,7 +89,7 @@ export function UpdatesPage() {
                       task={task}
                       to={linkToTask(task.listId, task.id)}
                       showLists
-                      onChanged={refresh}
+                      onToggleComplete={handleToggleComplete}
                       onDelete={handleDeleteTask}
                     />
                   </Box>

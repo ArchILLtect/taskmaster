@@ -3,6 +3,8 @@ import { TaskRow } from "../components/TaskRow";
 import { useMemo, useState } from "react";
 import { taskService } from "../services/taskService";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
+import { TaskStatus } from "../API";
+import { taskmasterApi } from "../api/taskmasterApi";
 
 export function TasksPage() {
 
@@ -10,6 +12,18 @@ export function TasksPage() {
   const [tick, setTick] = useState(0);
   const tasks = useMemo(() => taskService.getAll(), [tick]);
   const refresh = () => setTick(t => t + 1);
+
+  const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
+
+    await taskmasterApi.updateTask({
+      id: taskId,
+      status: nextStatus,
+      completedAt,
+    });
+
+    await refresh();
+  };
 
   const handleDeleteTask = (taskId: string) => {
     taskService.delete(taskId);
@@ -49,7 +63,7 @@ export function TasksPage() {
                     task={task}
                     to={`/lists/${task.listId}/tasks/${task.id}`}
                     showLists
-                    onChanged={refresh}
+                    onToggleComplete={handleToggleComplete}
                     onDelete={() => handleDeleteTask(task.id)}
                   />
                 </Box>
@@ -66,7 +80,7 @@ export function TasksPage() {
                   task={task}
                   to={`/lists/${task.listId}/tasks/${task.id}`}
                   showLists
-                  onChanged={refresh}
+                  onToggleComplete={handleToggleComplete}
                   onDelete={() => handleDeleteTask(task.id)}
                 />
               </Box>

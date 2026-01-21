@@ -4,6 +4,8 @@ import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
 import { taskService } from "../services/taskService";
+import { TaskStatus } from "../API";
+import { taskmasterApi } from "../api/taskmasterApi";
 
 export function InboxPage() {
   const [tick, setTick] = useState(0);
@@ -20,6 +22,18 @@ export function InboxPage() {
   // }, []);
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
+
+  const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
+
+    await taskmasterApi.updateTask({
+      id: taskId,
+      status: nextStatus,
+      completedAt,
+    });
+
+    await refresh();
+  };
 
   const handleDeleteTask = (taskId: string) => {
     taskService.delete(taskId);
@@ -85,8 +99,8 @@ export function InboxPage() {
                     task={t}
                     to={linkToTask(t.listId, t.id)}
                     showLists
-                    onChanged={refresh}
                     onDelete={() => handleDeleteTask(t.id)}
+                    onToggleComplete={handleToggleComplete}
                   />
                 </Box>
                 <Button
@@ -123,7 +137,7 @@ export function InboxPage() {
                     task={t}
                     to={linkToTask(t.listId, t.id)}
                     showLists
-                    onChanged={refresh}
+                    onToggleComplete={handleToggleComplete}
                     onDelete={() => handleDeleteTask(t.id)}
                   />
                 </Box>
