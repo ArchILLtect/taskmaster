@@ -1,8 +1,6 @@
 export type {
     Task,
     TaskRowProps,
-    Priority,
-    TaskStatus,
     Tag,
     Assignee,
     SubTask,

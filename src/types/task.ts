@@ -1,5 +1,7 @@
-export type Priority = "Low" | "Medium" | "High";
-export type TaskStatus = "Open" | "Done";
+import { TaskStatus, TaskPriority } from "../API";
+
+// export type Priority = "Low" | "Medium" | "High";
+// export type TaskStatus = "Open" | "Done";
 
 export type Tag = {
     id: string;
@@ -28,7 +30,7 @@ export type Task = {
 
     dueAt?: string | null; // ISO string or null = someday
     assigneeId?: string | null; // User ID or null = unassigned
-    priority: Priority;
+    priority: TaskPriority;
     tagIds: string[]; // Points to Tag objects
     parentTaskId?: string | null; // Points to parent Task ID or null = no parent
 
@@ -38,21 +40,25 @@ export type Task = {
 };
 
 export type TaskRowProps = {
-    task: Task;
-    listName?: string;
-    to: string;
-    showLists?: boolean;
-    onChanged?: () => void;
-    onDelete?: (taskId: string) => void;
-    onToggleComplete?: (taskId: string, newStatus: TaskStatus) => Promise<void>;
+  task: Task;
+  to: string;
+  showLists: boolean;
+  listName?: string;
+
+  onDelete?: (taskId: string) => void;
+
+  // parent owns API + refresh
+  onToggleComplete?: (taskId: string, nextStatus: TaskStatus) => Promise<void> | void;
 };
 
-export type TaskDetailsRowProps = {
-    task: Task;
-    to: string;
-    showLists?: boolean;
-    onChanged?: () => void;
-    onDelete?: (taskId: string) => void;
+export type SubTaskRowProps = {
+  task: Task;
+  to: string;
+
+  onDelete?: (taskId: string) => void;
+
+  // parent owns API + refresh
+  onToggleComplete?: (taskId: string, nextStatus: TaskStatus) => Promise<void> | void;
 };
 
 export type TaskDetailsPaneProps = {
@@ -64,11 +70,11 @@ export type TaskDetailsPaneProps = {
   newTaskTitle: string;
   newTaskDescription: string;
   newTaskDueDate: string;
-  newTaskPriority: string;
+  newTaskPriority: TaskPriority;
   setNewTaskTitle: (title: string) => void;
   setNewTaskDescription: (description: string) => void;
   setNewTaskDueDate: (dueDate: string) => void;
-  setNewTaskPriority: (priority: string) => void;
+  setNewTaskPriority: (priority: TaskPriority) => void;
   refresh: () => void;
   navigate: (path: string) => void;
   onCloseAll: () => void;
@@ -86,10 +92,30 @@ export type AddTaskFormProps = {
   setNewTaskDescription: (description: string) => void;
   newTaskDueDate: string;
   setNewTaskDueDate: (dueDate: string) => void;
-  newTaskPriority: string;
-  setNewTaskPriority: (priority: string) => void;
+  newTaskPriority: TaskPriority;
+  setNewTaskPriority: (priority: TaskPriority) => void;
   setShowAddTaskForm?: (show: boolean) => void;
   navigate: (path: string) => void;
   refresh: () => void;
   parentTaskId?: string | null;
+};
+
+export type EditTaskFormProps = {
+    task: Task;
+    draftTitle: string;
+    setDraftTitle: (title: string) => void;
+    draftDescription: string;
+    setDraftDescription: (description: string) => void;
+    draftPriority: TaskPriority;
+    setDraftPriority: (priority: TaskPriority) => void;
+    draftStatus: TaskStatus;
+    setDraftStatus: (status: TaskStatus) => void;
+    draftDueDate: string;
+    setDraftDueDate: (dueDate: string) => void;
+    saving: boolean;
+    setSaving: (saving: boolean) => void;
+    setIsEditing: (isEditing: boolean) => void;
+    onClose: () => void;
+    onChanged?: () => void;
+    refresh: () => void;
 };
