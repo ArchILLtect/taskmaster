@@ -2,6 +2,7 @@ import type { Task } from "../types/task";
 import { mockTasks } from "../mocks/tasks";
 import { taskPatchStore } from "./taskPatchStore";
 import { updatesEventStore } from "./updatesEventStore";
+import { TaskPriority, TaskStatus } from "../API";
 
 export const taskService = {
   getAll(): Task[] {
@@ -74,8 +75,8 @@ export const taskService = {
       parentTaskId: data.parentTaskId ?? null,
       title: data.title || "New Task",
       description: data.description || "",
-      status: (data.status ?? "Open"),
-      priority: data.priority || "Medium",
+      status: (data.status ?? TaskStatus.Open) as TaskStatus,
+      priority: data.priority || TaskPriority.Medium,
       tagIds: data.tagIds || [],
       dueAt: data.dueAt ?? null,
       completedAt: null,
