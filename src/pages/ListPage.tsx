@@ -83,6 +83,18 @@ export function ListPage() {
     };
   }, [activeTaskId]);
 
+  const handleToggleComplete = async (taskId: string, nextStatus: "Open" | "Done") => {
+    const completedAt = nextStatus === "Done" ? new Date().toISOString() : null;
+
+    await taskmasterApi.updateTask({
+      id: taskId,
+      status: nextStatus as any, // (only needed if API types are enum-y)
+      completedAt,
+    });
+
+    await refresh();
+  };
+
   const handleDeleteTask = async (taskId: string) => {
     if (!listId) return;
 
@@ -164,10 +176,12 @@ export function ListPage() {
                   <Box key={task.id} w="100%">
                     <TaskRow
                       task={task}
+                      listName={getListName(task.listId)}
                       to={buildTaskStackPath(listId, [task.id])}
                       showLists={false}
                       onChanged={refresh}
                       onDelete={handleDeleteTask}
+                      onToggleComplete={handleToggleComplete}
                     />
                   </Box>
                 ))}
@@ -207,6 +221,7 @@ export function ListPage() {
                 <AddTaskForm
                   listId={listId}
                   stack={stack}
+                  tasksInList={tasksInList}   // ✅ add this
                   newTaskTitle={newTaskTitle}
                   setNewTaskTitle={setNewTaskTitle}
                   newTaskDescription={newTaskDescription}
@@ -218,6 +233,7 @@ export function ListPage() {
                   setShowAddTaskForm={setShowAddTaskForm}
                   navigate={navigate}
                   refresh={refresh}
+                  parentTaskId={undefined /* or omit if optional */}
                 />
               )}
             </Box>
