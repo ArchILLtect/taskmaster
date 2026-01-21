@@ -14,7 +14,9 @@ import { UpdatesPage } from "./pages/UpdatesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { ListSelectorPage } from "./pages/ListSelectorPage";
-import { DevPage } from "./pages/DevPage";
+import { lazy, Suspense } from "react";
+
+const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
 
 export default function App() {
   return (
@@ -39,7 +41,14 @@ export default function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               {import.meta.env.DEV ? (
-                <Route path="/dev" element={<DevPage />} />
+                <Route
+                  path="/dev"
+                  element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <DevPage />
+                    </Suspense>
+                  }
+                />
               ) : null}
 
               {/* Optional: catch-all */}
