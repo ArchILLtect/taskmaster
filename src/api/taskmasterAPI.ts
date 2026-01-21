@@ -23,7 +23,7 @@ import {
   // tasksByParentMinimal, // later if needed
 } from "../graphql/operations";
 import type { ListTaskListsQuery, TasksByListQuery } from "../API";
-import type { TaskStatus } from "../API";
+import { TaskStatus } from "../API";
 
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
@@ -160,7 +160,7 @@ export const taskmasterApi = {
     return await this.updateTask({
       id: taskId,
       status,
-      completedAt: status === "Done" ? now : null,
+      completedAt: status === TaskStatus.Done ? now : null,
     });
   }
 };
