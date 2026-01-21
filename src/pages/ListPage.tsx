@@ -3,12 +3,13 @@ import { Toaster } from "../components/ui/toaster";
 import { toaster } from "../components/ui/toasterInstance";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
+import { useListPageData } from "../pages/useListPageData";
 import { buildTaskStackPath, parseTaskStackFromPath } from "../routes/taskStack";
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
-import { taskService } from "../services/taskService";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { AddTaskForm } from "../components/AddTaskForm";
+import { taskmasterApi } from "../api/taskmasterApi";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -17,32 +18,37 @@ const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZon
 
 export function ListPage() {
 
-  const [tick, setTick] = useState(0);
   const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const [showAddListItemForm, setShowAddListItemForm] = useState(false);
-  const [showCompletedTasks, setShowCompletedTasks] = useState(true); // Add toggle button later
+  const [showCompletedTasks, setShowCompletedTasks] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
   const [newTaskPriority, setNewTaskPriority] = useState("Medium");
 
   const { listId } = useParams<{ listId: string }>();
+  const { lists, tasks, loading, err, refresh } = useListPageData(listId);
 
   const location = useLocation();
   const navigate = useNavigate();
-  const refresh = () => setTick(t => t + 1);
   
   const lastPaneRef = useRef<HTMLDivElement | null>(null);
 
   const { stack } = parseTaskStackFromPath(location.pathname);
   const activeTaskId = stack.at(-1);
 
-    const tasksInList = useMemo(() => {
-      if (!listId) return [];
-      return taskService.getByListId(listId);
-    }, [listId, tick]);
-  const topLevelTasks = useMemo(() => taskService.getTopLevel(tasksInList), [tasksInList]);
+  const tasksInList = tasks;
+  const topLevelTasks = useMemo(
+    () => tasksInList.filter(t => t.parentTaskId == null).slice().sort((a,b) => a.sortOrder - b.sortOrder),
+    [tasksInList]
+  );
+
+  const getListName = (listId: string) => {
+    const list = lists.find(l => l.id === listId);
+    return list ? list.name : "Unknown List";
+  }
+
   const completedCount = topLevelTasks.filter(t => t.status === "Done").length;
 
   //if a task is completed, re-render with different message
@@ -77,15 +83,15 @@ export function ListPage() {
     };
   }, [activeTaskId]);
 
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
     if (!listId) return;
-    taskService.delete(taskId);
-    refresh();
 
-    // If the deleted task is in the open stack, remove it (and anything after it if you want)
+    await taskmasterApi.deleteTask({ id: taskId }); // input: DeleteTaskInput
+    await refresh();
+
     const idx = stack.indexOf(taskId);
     if (idx !== -1) {
-      const nextStack = stack.slice(0, idx); // drop deleted + anything after
+      const nextStack = stack.slice(0, idx);
       navigate(buildTaskStackPath(listId, nextStack), { replace: true });
     }
   };
@@ -123,6 +129,10 @@ export function ListPage() {
   };
 
   if (!listId) return <Navigate to="/lists" replace />;
+  // TODO add Chakra UI loading and error states:
+  if (loading) return <div>Loading…</div>;
+  // TODO use ErrorBoundary for errors:
+  if (err) return <div>Failed to load list data.</div>;
 
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
@@ -133,7 +143,7 @@ export function ListPage() {
           <Flex justify="space-between" align="center" width="100%">
             <HStack gap={10}>
               <Heading size="lg">List:</Heading>
-              <Badge variant="outline" size={"lg"}>{listId}</Badge>
+              <Badge variant="outline" size={"lg"}>{getListName(listId)}</Badge>
             </HStack>
             <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
           </Flex>
