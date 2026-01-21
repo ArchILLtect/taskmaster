@@ -3,25 +3,18 @@ import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./Tooltip";
 import type { TaskRowProps } from "../types";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskStatus } from "../API";
 
-export const TaskRow = ({ task, listName, to, showLists, onChanged, onDelete, onToggleComplete }: TaskRowProps) => {
+export const TaskRow = ({ task, listName, to, showLists, onDelete, onToggleComplete }: TaskRowProps) => {
 
   const onComplete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
-  const nextStatus =
-    task.status === TaskStatus.Done ? TaskStatus.Open : TaskStatus.Done;
+    const nextStatus =
+      task.status === TaskStatus.Done ? TaskStatus.Open : TaskStatus.Done;
 
-  await taskmasterApi.updateTask({
-    id: task.id,
-    status: nextStatus,
-    completedAt: nextStatus === TaskStatus.Done ? new Date().toISOString() : null,
-  });
-
-  await onChanged?.();
+    await onToggleComplete?.(task.id, nextStatus);
   };
 
   const onDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -65,24 +58,53 @@ export const TaskRow = ({ task, listName, to, showLists, onChanged, onDelete, on
                 <Badge>{task.priority}</Badge>
                 <Badge variant="outline">{task.status}</Badge>
               </VStack>
+
               <Box border="none" padding="0">
-                {task.status === "Done" ? (
+                {task.status === TaskStatus.Done ? (
                   <Tooltip content="Revive task">
-                    <Button bg={"blue.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={onComplete} variant="outline">
-                        <IoRefreshCircleOutline size="24px" color="blue" />
+                    <Button
+                      bg="blue.100"
+                      h="32px"
+                      w="33px"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                      onClick={onComplete}
+                      variant="outline"
+                    >
+                      <IoRefreshCircleOutline size="24px" color="blue" />
                     </Button>
                   </Tooltip>
                 ) : (
-                  <Flex gap={1} w="50px" flexDirection={"column"} alignItems={"end"}>
+                  <Flex gap={1} w="50px" flexDirection="column" alignItems="end">
                     <Tooltip content="Mark as complete">
-                      <Button bg={"green.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={onComplete} variant={"ghost"}>
-                            <IoCheckmarkCircleOutline size="30px" color="green" />
+                      <Button
+                        bg="green.100"
+                        h="32px"
+                        w="33px"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        onClick={onComplete}
+                        variant="ghost"
+                      >
+                        <IoCheckmarkCircleOutline size="30px" color="green" />
                       </Button>
                     </Tooltip>
+
                     <Tooltip content="Delete task">
-                    <Button bg={"red.100"} height={"32px"} width={"33px"} justifyContent={"center"} alignItems={"center"} display={"flex"} onClick={onDeleteClick} variant={"ghost"}>
+                      <Button
+                        bg="red.100"
+                        h="32px"
+                        w="33px"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        onClick={onDeleteClick}
+                        variant="ghost"
+                      >
                         <IoTrash size="24px" color="red" />
-                    </Button>
+                      </Button>
                     </Tooltip>
                   </Flex>
                 )}
