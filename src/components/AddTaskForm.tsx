@@ -1,16 +1,51 @@
-import { Box, Heading, VStack, CloseButton, Input, Button, Flex, Select, Portal, useListCollection } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  VStack,
+  CloseButton,
+  Input,
+  Button,
+  Flex,
+  Select,
+  Portal,
+  useListCollection,
+} from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskStatus, TaskPriority } from "../API";
 import type { Task, AddTaskFormProps } from "../types/task";
+import { useState } from "react";
 
-type Option = { label: string; value: string }
+type Option<T extends string> = { label: string; value: T };
+
+const isTaskPriority = (v: string): v is TaskPriority =>
+  (Object.values(TaskPriority) as string[]).includes(v);
+
+const isTaskStatus = (v: string): v is TaskStatus =>
+  (Object.values(TaskStatus) as string[]).includes(v);
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
+
+// --- helpers (keep local, simple)
+function dateInputToIso(date: string) {
+  if (!date) return null;
+  return new Date(`${date}T00:00:00.000Z`).toISOString();
+}
+
+const PRIORITY_OPTIONS: Option<TaskPriority>[] = [
+  { label: "Low", value: TaskPriority.Low },
+  { label: "Medium", value: TaskPriority.Medium },
+  { label: "High", value: TaskPriority.High },
+];
+
+const STATUS_OPTIONS: Option<TaskStatus>[] = [
+  { label: "Open", value: TaskStatus.Open },
+  { label: "Done", value: TaskStatus.Done },
+];
 
 function nextSortOrder(tasks: Task[], parentTaskId: string | null) {
   const max = tasks
@@ -38,50 +73,65 @@ export const AddTaskForm = ({
   parentTaskId
 }: AddTaskFormProps) => {
 
-  const options: Option[] = [
-    { label: "Low", value: "Low" },
-    { label: "Medium", value: "Medium" },
-    { label: "High", value: "High" },
-  ]
+  const [saving, setSaving] = useState(false);
+  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>(TaskStatus.Open);
 
-  const { collection } = useListCollection<Option>({
-    initialItems: options,
+  //  Chakra v3 pattern: destructure `{ collection }`
+  const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({
+    initialItems: PRIORITY_OPTIONS,
     itemToValue: (item) => item.value,
     itemToString: (item) => item.label,
   })
 
-  const handleAddTask = async () => {
-    const dueAtIso = newTaskDueDate
-      ? new Date(`${newTaskDueDate}T00:00:00`).toISOString()
-      : null;
+  const { collection: statusCollection } = useListCollection<Option<TaskStatus>>({
+    initialItems: STATUS_OPTIONS,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
 
-    const parent = parentTaskId ?? null;
+  const onCancel = () => {
+    setShowAddTaskForm?.(false);
+    setNewTaskTitle("");
+    setNewTaskDescription("");
+    setNewTaskDueDate("");
+    setNewTaskPriority(TaskPriority.Medium);
+    setNewTaskStatus(TaskStatus.Open);
+  };
 
-    const created = await taskmasterApi.createTask({
-      listId,
-      sortOrder: nextSortOrder(tasksInList, parent),
-      parentTaskId: parent,
-      title: newTaskTitle,
-      description: newTaskDescription || "",
-      status: TaskStatus.Open,
-      priority:
-        newTaskPriority === "Low"
-          ? TaskPriority.Low
-          : newTaskPriority === "High"
-            ? TaskPriority.High
-            : TaskPriority.Medium,
-      dueAt: dueAtIso,
-      completedAt: null,
-      assigneeId: null,
-      tagIds: [],
-    });
+  const onCreate = async () => {
+    if (saving) return;
 
-    // refresh the page-level data from AppSync
-    await refresh();
+    setSaving(true);
+    try {
+      const dueAtIso = dateInputToIso(newTaskDueDate);
+      const parent = parentTaskId ?? null;
+      const status = newTaskStatus ?? TaskStatus.Open;
+      const completedAt = status === TaskStatus.Done ? new Date().toISOString() : null;
 
-    // navigate same as before (open the task pane for top-level tasks)
-    const nextStack = parentTaskId ? stack : [...stack, created.id];
-    navigate(buildTaskStackPath(listId, nextStack));
+      const created = await taskmasterApi.createTask({
+        listId,
+        sortOrder: nextSortOrder(tasksInList, parent),
+        parentTaskId: parent,
+        title: newTaskTitle.trim() || "Untitled Task",
+        description: newTaskDescription,
+        status: status as unknown as TaskStatus,
+        priority: newTaskPriority as unknown as TaskPriority,
+        dueAt: dueAtIso,
+        completedAt,
+        assigneeId: null,
+        tagIds: [],
+      });
+
+      // refresh the page-level data from AppSync
+      await refresh();
+
+      // navigate same as before (open the task pane for top-level tasks)
+      const nextStack = parentTaskId ? stack : [...stack, created.id];
+      navigate(buildTaskStackPath(listId, nextStack));
+      setShowAddTaskForm?.(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -90,13 +140,7 @@ export const AddTaskForm = ({
       <Flex justify="space-between" align="center" width="100%">
         <Heading size="sm" fontWeight="bold">New Task</Heading>
         <CloseButton
-          onClick={() => { 
-            if (setShowAddTaskForm) setShowAddTaskForm(false);
-            setNewTaskTitle("");
-            setNewTaskDescription("");
-            setNewTaskDueDate("");
-            setNewTaskPriority("Medium");
-          }}
+          onClick={onCancel}
           size="xs"
         />
       </Flex>
@@ -147,7 +191,15 @@ export const AddTaskForm = ({
           />
         </Flex>
       </FormControl>
-      <Select.Root collection={collection} value={[newTaskPriority]} onValueChange={(e) => { setNewTaskPriority(e.value[0] ?? "Medium"); }}>
+
+      <Select.Root
+        collection={priorityCollection}
+        value={[newTaskPriority]}
+        onValueChange={(e) => {
+          const raw = e.value[0];
+          setNewTaskPriority(raw && isTaskPriority(raw) ? raw : TaskPriority.Medium);
+        }}
+      >
         <Flex justify="space-between" align="center" width="100%">
           <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-priority">Priority</Select.Label>
 
@@ -162,7 +214,7 @@ export const AddTaskForm = ({
             <Select.Positioner>
               <Select.Content>
                 {/* Renders all items in the collection */}
-                {collection.items.map((item) => (
+                {priorityCollection.items.map((item) => (
                   <Select.Item
                     item={item}
                     key={item.value}
@@ -177,38 +229,49 @@ export const AddTaskForm = ({
         </Flex>
       </Select.Root>
 
+      <Select.Root
+        collection={statusCollection}
+        value={[newTaskStatus]}
+        onValueChange={(e) => {
+          const raw = e.value[0];
+          setNewTaskStatus(raw && isTaskStatus(raw) ? raw : TaskStatus.Open);
+        }}
+      >
+        <Flex justify="space-between" align="center" width="100%">
+          <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-status">
+            Status
+          </Select.Label>
+
+          <Select.Control bg="white" minW="200px" maxW="200px" id="task-status">
+            <Select.Trigger>
+              <Select.ValueText placeholder="Select a status" />
+              <Select.Indicator />
+            </Select.Trigger>
+          </Select.Control>
+
+          <Portal>
+            <Select.Positioner>
+              <Select.Content>
+                {statusCollection.items.map((item) => (
+                  <Select.Item item={item} key={item.value}>
+                    <Select.ItemText>{item.label}</Select.ItemText>
+                    <Select.ItemIndicator />
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Positioner>
+          </Portal>
+        </Flex>
+      </Select.Root>
+
       <Flex justify="space-between" align="center" width="100%">
-        <Button
-          bg="green.200"
-          variant="outline"
-          onClick={async () => {
-            await handleAddTask();
-            setShowAddTaskForm?.(false);
-          }}
-        > Create Task</Button>
-        <Box gap="2" display="flex">
-          <Button
-            bg={"blue.200"}
-            variant="outline"
-            onClick={() => { 
-              setNewTaskTitle("");
-              setNewTaskDescription("");
-              setNewTaskDueDate("");
-              setNewTaskPriority("Low");
-            }}
-          > Clear</Button>
-          <Button
-            bg={"red.200"}
-            variant="outline"
-            onClick={() => { 
-              if (setShowAddTaskForm) setShowAddTaskForm(false);
-              setNewTaskTitle("");
-              setNewTaskDescription("");
-              setNewTaskDueDate("");
-              setNewTaskPriority("Low");
-            }}
-          > Cancel</Button>
-        </Box>
+        <Button variant="ghost" onClick={onCancel} disabled={saving}>
+          Cancel
+        </Button>
+
+        <Button colorScheme="green" onClick={onCreate} loading={saving}>
+          Create
+        </Button>
       </Flex>
     </VStack>
   </Box>
