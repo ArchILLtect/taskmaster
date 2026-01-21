@@ -26,8 +26,10 @@ type GenOp = string & {
 type OpOut<T extends GenOp> =
   T extends { __generatedMutationOutput: infer O } ? O :
   T extends { __generatedQueryOutput: infer O } ? O :
-  never;
+  never
+;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function runOp<T extends GenOp>(
   client: ReturnType<typeof generateClient>,
   query: T,
@@ -54,11 +56,11 @@ export function GraphQLSmokeTest() {
         pushLog("No signed in user ❌ (sign in first)", e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function runCreateListAndTask() {
     try {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const listData =
         await runOp(client, createTaskListMinimal as any, {
           input: {
@@ -68,12 +70,14 @@ export function GraphQLSmokeTest() {
           },
         });
 
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const createdList = (listData as any)?.createTaskList;
       if (!createdList?.id) throw new Error("createTaskList did not return an id");
 
       pushLog("Created TaskList ✅", createdList);
       setLastListId(createdList.id);
 
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const taskData = await runOp(client, createTaskMinimal as any, {
         input: {
           listId: createdList.id,

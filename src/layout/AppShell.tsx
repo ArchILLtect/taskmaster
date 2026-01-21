@@ -6,6 +6,7 @@ import { ErrorBoundary } from "./ErrorBoundary.tsx";
 
 const TOPBAR_H = "64px";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function AppShell({ user, onSignOut }: { user?: any; onSignOut?: () => void }) {
   // TEMP: mocked user until Amplify Auth is wired
   
