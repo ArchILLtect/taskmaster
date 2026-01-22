@@ -7,14 +7,15 @@ import { InboxPage } from "./pages/InboxPage";
 import { TodayPage } from "./pages/TodayPage";
 import { WeekPage } from "./pages/WeekPage";
 import { MonthPage } from "./pages/MonthPage";
-import { ListPage } from "./pages/ListPage";
+import { ListsPage } from "./pages/ListsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { TasksPage } from "./pages/TasksPage";
 import { UpdatesPage } from "./pages/UpdatesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
-import { ListSelectorPage } from "./pages/ListSelectorPage";
+import { ListDetailsPage } from "./pages/ListDetailsPage";
 import { lazy, Suspense } from "react";
+
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
 
@@ -31,11 +32,11 @@ export default function App() {
               <Route path="/week" element={<WeekPage />} />
               <Route path="/month" element={<MonthPage />} />
               <Route path="/updates" element={<UpdatesPage />} />
-              <Route path="/lists" element={<ListSelectorPage />} />
-              <Route path="/lists/:listId" element={<ListPage />} />
+              <Route path="/lists" element={<ListsPage />} />
+              <Route path="/lists/:listId" element={<ListDetailsPage />} />
 
               {/* Optional focus route (single pane), if you want it later */}
-              <Route path="/lists/:listId/tasks/*" element={<ListPage />} />
+              <Route path="/lists/:listId/tasks/*" element={<ListDetailsPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
