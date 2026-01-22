@@ -60,6 +60,8 @@ If a feature feels “missing,” check here before assuming it was forgotten.
 
 ### Reference
 - Data model: [DATA_MODEL.md](DATA_MODEL.md)
+- Product spec (rules of the universe): [product-spec.md](product-spec.md)
+- Glossary: [glossary.md](glossary.md)
 - API reference (current + planned): [API.md](API.md)
 - Style guide (UI + code patterns): [STYLE_GUIDE.md](STYLE_GUIDE.md)
 
