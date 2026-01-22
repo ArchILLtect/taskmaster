@@ -21,10 +21,11 @@ export type ListItem = {
 export type ListRowProps = {
   list: TaskList;
   to: string;
-  setSelectedList: (listId: string) => void;
-  isEditing: boolean;
-  setIsEditing: (isEditing: boolean) => void;
+  setSelectedList?: (listId: string) => void;
+  isEditing?: boolean;
+  setIsEditing?: (isEditing: boolean) => void;
   isActive: boolean;
+  isEditable?: boolean;
   onDelete?: (listId: string) => Promise<void>;
   onToggleFavorite?: (listId: string, isFavorite: boolean) => Promise<void>;
 };
