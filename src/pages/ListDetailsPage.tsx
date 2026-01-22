@@ -3,7 +3,7 @@ import { Toaster } from "../components/ui/toaster";
 import { toaster } from "../components/ui/toasterInstance";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
-import { useListPageData } from "../pages/useListPageData";
+import { useListDetailsPageData } from "./useListDetailsPageData";
 import { buildTaskStackPath, parseTaskStackFromPath } from "../routes/taskStack";
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
@@ -11,13 +11,14 @@ import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { AddTaskForm } from "../components/AddTaskForm";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskPriority, TaskStatus } from "../API";
+import { EditListForm } from "../components/EditListForm";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
 
-export function ListPage() {
+export function ListDetailsPage() {
 
   const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
@@ -27,9 +28,15 @@ export function ListPage() {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
   const [newTaskPriority, setNewTaskPriority] = useState(TaskPriority.Medium);
+  const [draftListName, setDraftListName] = useState("");
+  const [draftListDescription, setDraftListDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const { listId } = useParams<{ listId: string }>();
-  const { lists, tasks, loading, err, refresh } = useListPageData(listId);
+  const { lists, tasks, loading, err, refresh } = useListDetailsPageData(listId);
+  const list = lists.find(l => l.id === listId);
+  const listName = list?.name || "Unknown List";  
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,16 +52,11 @@ export function ListPage() {
     [tasksInList]
   );
 
-  const getListName = (listId: string) => {
-    const list = lists.find(l => l.id === listId);
-    return list ? list.name : "Unknown List";
-  }
-
   const completedCount = topLevelTasks.filter(t => t.status === TaskStatus.Done).length;
 
   //if a task is completed, re-render with different message
   const allTasksCompleted = topLevelTasks.every(task => task.status === TaskStatus.Done);
-    const taskMessage = allTasksCompleted ? "All tasks completed! 🎉" : "Here are your tasks.";
+    const taskMessage = allTasksCompleted ? "All tasks completed! 🎉" : "Tasks for this list (including “someday” tasks).";
 
   // Show or hide completed tasks
   const visibleTasks = showCompletedTasks
@@ -153,14 +155,31 @@ export function ListPage() {
       {/* Left: task list */}
       <Box width="40vw">
         <VStack align="start" gap={2}>
-          <Flex justify="space-between" align="center" width="100%">
-            <HStack gap={10}>
+          <Flex justify="space-between" align="center" width="100%" mb={8}>
+            <HStack align="start" gap={30}>
               <Heading size="lg">List:</Heading>
-              <Badge variant="outline" size={"lg"}>{getListName(listId)}</Badge>
+              <Badge variant="outline" size={"lg"}>{listName}</Badge>
             </HStack>
+            <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
+              {isEditing ? "Hide Edit" : "Edit"}
+            </Button>
             <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
           </Flex>
-          <Text color="gray.600">Tasks for this list (including “someday” tasks).</Text>
+
+          {isEditing &&
+            <EditListForm
+              list={list!}
+              draftName={draftListName}
+              setDraftName={setDraftListName}
+              draftDescription={draftListDescription}
+              setDraftDescription={setDraftListDescription}
+              saving={saving}
+              setSaving={setSaving}
+              setIsEditing={setIsEditing}
+              onClose={() => setIsEditing(false)}
+              refresh={refresh}
+            />
+          }
 
           {topLevelTasks.length === 0 ? (
             <Text>No tasks yet. Add your first one ✍️</Text>
@@ -177,7 +196,7 @@ export function ListPage() {
                   <Box key={task.id} w="100%">
                     <TaskRow
                       task={task}
-                      listName={getListName(task.listId)}
+                      listName={listName}
                       to={buildTaskStackPath(listId, [task.id])}
                       showLists={false}
                       onDelete={handleDeleteTask}
