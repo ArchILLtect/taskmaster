@@ -261,15 +261,15 @@ export const EditTaskForm = ({
         </Flex>
       </Select.Root>
 
-        <Flex justify="space-between" align="center" width="100%">
-          <Button variant="ghost" onClick={onCancel} disabled={saving}>
-            Cancel
-          </Button>
+      <Flex justify="space-between" align="center" width="100%">
+        <Button variant="ghost" onClick={onCancel} disabled={saving}>
+          Cancel
+        </Button>
 
-          <Button colorScheme="green" onClick={onSave} loading={saving}>
-            Save
-          </Button>
-        </Flex>
+        <Button colorScheme="green" onClick={onSave} loading={saving}>
+          Save
+        </Button>
+      </Flex>
     </VStack>
   </Box>
   );
