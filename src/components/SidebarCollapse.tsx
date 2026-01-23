@@ -4,7 +4,7 @@ import { FiChevronDown } from "react-icons/fi";
 
 type SidebarCollapseProps = {
   label: string;
-  to: string;              // header page
+  to: string;
   items: { to: string; label: string }[];
   defaultOpen?: boolean;
 };
