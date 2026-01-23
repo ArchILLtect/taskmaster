@@ -1,59 +1,42 @@
-import { useMemo, useState } from "react";
-import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
-import { taskService } from "../services/taskService";
 import { TaskStatus } from "../API";
 import { taskmasterApi } from "../api/taskmasterApi";
+import { useInboxPageData } from "./useInboxPageData";
 
 export function InboxPage() {
-  const [tick, setTick] = useState(0);
-
-  const vm = useMemo(() => inboxService.getViewModel(), [tick]);
-
-  const refresh = () => setTick((t) => t + 1);
-
-  // TODO: Optional: if you want “new since last view” to be stable while on the page,
-  // do NOT auto-mark viewed here. Keep it explicit via “Done triaging”.
-  // useEffect(() => {
-  //   inboxService.markViewedNow();
-  //   refresh();
-  // }, []);
+  const { vm, loading, err, refreshData, refreshInbox } = useInboxPageData();
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
-
-    await taskmasterApi.updateTask({
-      id: taskId,
-      status: nextStatus,
-      completedAt,
-    });
-
-    await refresh();
+    await taskmasterApi.updateTask({ id: taskId, status: nextStatus, completedAt });
+    await refreshData();
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    taskService.delete(taskId);
-    refresh();
+  const handleDeleteTask = async (taskId: string) => {
+    await taskmasterApi.deleteTask({ id: taskId });
+    await refreshData();
   };
+
+  if (loading) return <div>Loading…</div>;
+  if (err) return <div>Failed to load inbox data.</div>;
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <Heading size="md">Inbox</Heading>
-          <Text color="gray.600">
-            Actionable triage: new tasks + due soon. Dismiss stuff to shrink the pile.
-          </Text>
+          <Text color="gray.600">Actionable triage: new tasks + due soon. Dismiss stuff to shrink the pile.</Text>
         </VStack>
 
         <Button
           onClick={() => {
             inboxService.markViewedNow();
-            refresh();
+            refreshInbox();
           }}
         >
           Done triaging
@@ -71,7 +54,7 @@ export function InboxPage() {
           onValueChange={({ valueAsNumber }) => {
             if (!Number.isFinite(valueAsNumber)) return;
             inboxService.setDueSoonWindowDays(valueAsNumber);
-            refresh();
+            refreshInbox();
           }}
         >
           <NumberInput.Input />
@@ -108,7 +91,7 @@ export function InboxPage() {
                   variant="outline"
                   onClick={() => {
                     inboxService.dismiss(t.id);
-                    refresh();
+                    refreshInbox();
                   }}
                 >
                   Dismiss
@@ -146,7 +129,7 @@ export function InboxPage() {
                   variant="outline"
                   onClick={() => {
                     inboxService.dismiss(t.id);
-                    refresh();
+                    refreshInbox();
                   }}
                 >
                   Acknowledge
