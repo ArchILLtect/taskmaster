@@ -1,13 +1,22 @@
 import { Box, Flex, VStack, HStack, Heading, Text, Button } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
-import { Toaster } from "../components/ui/toaster";
-import { toaster } from "../components/ui/toasterInstance";
 import { useState } from "react";
 import { EditListForm } from "../components/EditListForm";
 import { AddListForm } from "../components/AddListForm";
-import { useNavigate } from "react-router-dom";
-// import { taskmasterApi } from "../api/taskmasterApi";
+import { taskmasterApi } from "../api/taskmasterApi";
+import { getInboxListId, isInboxList } from "../config/inboxSettings";
+import { fireToast } from "../hooks/useFireToast";
+import { Toaster } from "../components/ui/Toaster";
+import type { TaskList } from "../types";
+import { isInboxListId } from "../lists/listVisibility";
+import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
+
+function nextSortOrder(lists: TaskList[]) {
+  const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
+
+  return max + 1;
+}
 
 export const ListsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -19,30 +28,107 @@ export const ListsPage = () => {
   const [draftListDescription, setDraftListDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { lists, loading, err, refresh } = useListsPageData();
-  const selected = lists.find((l) => l.id === selectedList); // Replace ListId with actual selected list ID logic
-  const navigate = useNavigate();
+  const { visibleLists, loading, err, refresh } = useListsPageData();
+  const selected = visibleLists.find((l) => l.id === selectedList);
+  const inboxListId = getInboxListId();
+
+  const handleCreate = async () => {
+
+    const trimmed = newListName.trim();
+    const isInvalidName =
+      !trimmed ||
+      trimmed === SYSTEM_INBOX_NAME;
+    
+    if (saving || isInvalidName) {
+      // Toast notification for unimplemented feature
+      fireToast("error", "List not created", (saving ? "Please wait until the current save is complete." : "List name is invalid.")  );
+      return;
+    };
+
+    setSaving(true);
+    try {
+      await taskmasterApi.createTaskList({
+        name: trimmed || "Untitled List",
+        isFavorite: false,
+        sortOrder: nextSortOrder(visibleLists),
+        // description: newListDescription,
+      });
+
+      await refresh();
+      setShowAddListForm(false);
+
+      // Fire toast notification for unimplemented feature
+      await fireToast("success", "List Created", "The new list has been successfully created.");
+
+    } catch (error) {
+      // Fire toast notification for unimplemented feature
+      await fireToast("error", "Creation Failed", "There was an error creating the list. Please try again.");
+      setSaving(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selected) return;
+
+    const trimmed = draftListName.trim();
+    const isInvalidName =
+      !trimmed ||
+      trimmed === SYSTEM_INBOX_NAME
+    ;
+
+    if (saving || isInvalidName) {
+      // Toast notification for unimplemented feature
+      fireToast("error", "List not saved", (saving ? "Please wait until the current save is complete." : "List name is invalid.")  );
+      return;
+    };
+
+    try {
+      setSaving(true);
+      await taskmasterApi.updateTaskList({
+        id: selected.id,
+        name: draftListName.trim() || "Untitled List",
+        // description: draftDescription,
+      });
+
+      await refresh();
+      setIsEditing(false);
+    } catch (error) {
+      // Fire toast notification for unimplemented feature
+      await fireToast("error", "Save Failed", "There was an error saving the list. Please try again. Error details: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      // Fire toast notification for unimplemented feature
+      await fireToast("success", "List Saved", "Your changes have been saved successfully.");
+      setSaving(false);
+    }
+  };
 
   const handleDeleteList = async (listId: string) => {
-    if (!listId) return;
+    const list = visibleLists.find(l => l.id === listId);
+    
+    if (!list || !listId) return;
+    if (isInboxListId(list.id, inboxListId)) return;
 
-    // Toast notification
-    notImplementedToast();
-
-    // add API logic when ready
-    //await taskmasterApi.deleteList({ id: listId }); // input: DeleteListInput
+    await taskmasterApi.deleteTaskListSafeById(listId);
     await refresh();
+
+    // Fire toast notification for unimplemented feature
+    await fireToast("info", "List Deleted", "The list has been successfully deleted.");
   };
 
   const onToggleFavorite = async (listId: string, isFavorite: boolean) => {
-    if (!listId || isFavorite === undefined) return;
+    const list = visibleLists.find(l => l.id === listId);
 
-    // Toast notification
-    notImplementedToast();
+    if (!list || !listId || isFavorite === undefined) return;
+    if (isInboxListId(list.id, inboxListId)) return;
 
-    // add API logic when ready
-    //await taskmasterApi.updateList({ id: listId, isFavorite });
+    await taskmasterApi.updateTaskList({ id: listId, isFavorite });
+
     await refresh();
+
+    // Fire toast notification for unimplemented feature
+    await fireToast("warning", "Favorite Toggled", `The list has been ${isFavorite ? "added to" : "removed from"} favorites.`);
   };
 
   const prepAddListForm = () => {
@@ -60,24 +146,33 @@ export const ListsPage = () => {
     }
   };
 
-  const getSelectedList = () => {
+  const handleListSelect = () => {
     return (listId: string) => {
       setSelectedList(listId);
     };
   };
 
-  const notImplementedToast = () => {
-    toaster.create({
-      title: "Not Implemented",
-      description: "This feature is not yet implemented. Stay tuned!",
-      duration: 3000,
-      type: "info",
-    });
+  const handleCancel = (source: "add" | "edit") => {
+    switch (source) {
+      case "add":
+        setNewListName("");
+        setNewListDescription("");
+        setShowAddListForm(false);
+        break;
+      case "edit":
+        setDraftListName(selected?.name ?? "");
+        setDraftListDescription(selected?.description ?? "");
+        setIsEditing(false);
+        break;
+    }
+    refresh();
+
+    // Fire toast notification for canceled edit
+    fireToast("success", source === "edit" ? "Edit Canceled" : "Add Canceled", "Your changes have been discarded.");
   };
 
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-
       <Toaster />
       <Box w="100%" mb={4}>
         <HStack justify="space-between" width="100%">
@@ -88,74 +183,76 @@ export const ListsPage = () => {
         </HStack>
       </Box>
       <Flex gap={4} w="100%">
-      <Box w="50%">
-        <Box w="100%" mb={4}>
+        <Box w="50%">
+          <Box w="100%" mb={4}>
 
-          {loading ? <Text>Loading…</Text> : null}
-          {err ? <Text>Failed to load lists.</Text> : null}
+            {loading ? <Text>Loading…</Text> : null}
+            {err ? <Text>Failed to load lists.</Text> : null}
 
-          {!loading && !err ? (
-            lists.length > 0 ? (
+            {!loading && !err ? (
+              visibleLists.length > 0 ? (
 
-              <VStack align="stretch" gap={1} width={"100%"}>
-                {lists.map((l) => (
-                  <ListRow
-                    key={l.id}
-                    list={l}
-                    setSelectedList={getSelectedList()}
-                    to={`/lists/${l.id}`}
-                    isActive={false}
-                    isEditing={isEditing}
-                    setIsEditing={setIsEditing}
-                    onDelete={() => handleDeleteList(l.id)}
-                    onToggleFavorite={() => onToggleFavorite(l.id, !l.isFavorite)}
-                  />
-                ))}
-              </VStack>
-            ) : (
-              <Text>No lists available. Create a new list to get started.</Text>
-            )
-          ) : null}
-        </Box>
+                <VStack align="stretch" gap={2} width={"100%"}>
+                  {visibleLists.map((l) => {
+                  const system = isInboxList(l, inboxListId);
 
-        <>
-          {!showAddListForm ? (
-            <Button
-              bg="green.200"
-              variant="outline"
-              onClick={() => prepAddListForm()}
-            > Add New List</Button>
+                  return (
+                    <ListRow
+                      key={l.id}
+                      list={l}
+                      setSelectedList={handleListSelect()} 
+                      to={`/lists/${l.id}`}
+                      isActive={false}
+                      isEditing={isEditing}
+                      isEditable={!system}
+                      setIsEditing={setIsEditing}
+                      onDelete={system ? undefined : () => handleDeleteList(l.id)}
+                      onToggleFavorite={system ? undefined : () => onToggleFavorite(l.id, !l.isFavorite)}
+                    />
+                  )})}
+                </VStack>
+              ) : (
+                <Text>No lists available. Create a new list to get started.</Text>
+              )
             ) : null}
+          </Box>
 
-          {showAddListForm && (
-            <AddListForm
-              newListName={newListName}
-              newListDescription={newListDescription}
-              setNewListName={setNewListName}
-              setNewListDescription={setNewListDescription}
-              setShowAddListForm={setShowAddListForm}
-              navigate={navigate}
-              refresh={refresh}
+          <>
+            {!showAddListForm ? (
+              <Button
+                bg="green.200"
+                variant="outline"
+                onClick={() => prepAddListForm()}
+              > Add New List</Button>
+              ) : null}
+
+            {showAddListForm && (
+              <AddListForm
+                newListName={newListName}
+                newListDescription={newListDescription}
+                setNewListName={setNewListName}
+                setNewListDescription={setNewListDescription}
+                saving={saving}
+                onCreate={handleCreate}
+                onCancel={() => handleCancel("add")}
+              />
+            )}
+          </>
+        </Box>
+        <Box w="50%">
+          {isEditing &&
+            <EditListForm
+              list={selected}
+              draftName={draftListName}
+              setDraftName={setDraftListName}
+              draftDescription={draftListDescription}
+              setDraftDescription={setDraftListDescription}
+              saving={saving}
+              onSave={handleSave}
+              onCancel={() => handleCancel("edit")}
             />
-          )}
-        </>
-      </Box>
-      <Box w="50%">
-        {isEditing &&
-          <EditListForm
-            list={selected}
-            draftName={draftListName}
-            setDraftName={setDraftListName}
-            draftDescription={draftListDescription}
-            setDraftDescription={setDraftListDescription}
-            saving={saving}
-            setSaving={setSaving}
-            setIsEditing={setIsEditing}
-            onClose={() => setIsEditing(false)}
-            refresh={refresh}
-          />
-        }
-      </Box>
+          }
+        </Box>
       </Flex>
     </VStack>
   );
