@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { mapTask, mapTaskList } from "../api/mappers";
+import { 
+  getInboxListId, 
+  setInboxListId, 
+  findInboxListIdByName, 
+  SYSTEM_INBOX_NAME 
+} from "../config/inboxSettings";
+// import { isInboxList } from "../config/inboxSettings";
 import type { Task } from "../types/task";
 import type { TaskList } from "../types/list";
 
@@ -14,6 +21,36 @@ type TaskIndex = {
   tasksByListId: Record<string, Task[]>;
   childrenByParentId: Record<string, Task[]>;
 };
+
+async function ensureInboxListExists(rawLists: any[]) {
+  // 1) Stored id path
+  const storedId = getInboxListId();
+if (storedId && rawLists.some(l => l?.id === storedId)) {
+    return { lists: rawLists };
+  }
+
+  // 2) Name fallback
+  const byNameId = findInboxListIdByName(rawLists);
+  if (byNameId) {
+    setInboxListId(byNameId);
+    return { lists: rawLists };
+  }
+
+  // 3) Create it
+  const maxSortOrder = rawLists.reduce((acc, l) => Math.max(acc, l?.sortOrder ?? 0), 0);
+
+  const created = await taskmasterApi.createTaskList({
+    name: SYSTEM_INBOX_NAME,
+    sortOrder: maxSortOrder + 1,
+    isFavorite: false,
+  });
+
+  // created should include id
+  if (created?.id) setInboxListId(created.id);
+
+  // Make sure it exists in the current in-memory list set
+  return { lists: [...rawLists, created] };
+}
 
 async function fetchAllTasksForList(listId: string) {
   const all: any[] = [];
@@ -53,11 +90,15 @@ export function useTaskIndex(opts?: {
       const listPage = await taskmasterApi.listTaskLists({ limit: opts?.listLimit ?? 200 });
       const lists = listPage.items.filter((l): l is NonNullable<typeof l> => !!l);
 
-      // 2) fan out tasksByList for each list (parallel)
-      const tasksNested = await Promise.all(lists.map((l) => fetchAllTasksForList(l.id)));
+      // 2) ensure inbox exists (and localStorage is updated)
+      const ensured = await ensureInboxListExists(lists);
+      const ensuredLists = ensured.lists;
+
+      // 3) fan out tasksByList for each list (parallel)
+      const tasksNested = await Promise.all(ensuredLists.map((l) => fetchAllTasksForList(l.id)));
       const tasks = tasksNested.flat();
 
-      setRawLists(lists);
+      setRawLists(ensuredLists);
       setRawTasks(tasks);
     } catch (e) {
       setErr(e);
