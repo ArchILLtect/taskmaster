@@ -1,5 +1,5 @@
 import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button } from "@chakra-ui/react";
-import { Toaster } from "../components/ui/toaster";
+import { Toaster } from "../components/ui/Toaster";
 import { toaster } from "../components/ui/toasterInstance";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
@@ -176,7 +176,7 @@ export function ListDetailsPage() {
               saving={saving}
               setSaving={setSaving}
               setIsEditing={setIsEditing}
-              onClose={() => setIsEditing(false)}
+              onCancel={() => setIsEditing(false)}
               refresh={refresh}
             />
           }
