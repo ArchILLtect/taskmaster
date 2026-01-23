@@ -6,7 +6,7 @@ import { getInboxListId } from "../config/inboxSettings";
 export function useListsPageData() {
   const { lists, loading, err, refresh } = useTaskIndex();
 
-  const inboxListId = useMemo(() => getInboxListId(), []);
+  const inboxListId = getInboxListId();
 
   const visibleLists = useMemo(() => {
     return getUserVisibleLists(lists, { inboxListId });
