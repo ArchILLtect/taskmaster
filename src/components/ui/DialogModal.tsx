@@ -1,15 +1,16 @@
 import { Dialog, Button, Portal } from "@chakra-ui/react"
 
 type DialogModalProps = {
+  list: { id: string; isFavorite: boolean };
   title: string;
   body: React.ReactNode;
   open: boolean;
   setOpen: (open: boolean) => void;
-  onAccept: () => void;
+  onAccept: (id: string, isFavorite: boolean) => void;
   onCancel: () => void;
 }
 
-export const DialogModal = ({ title, body, open, setOpen, onAccept, onCancel } : DialogModalProps) => {
+export const DialogModal = ({ list, title, body, open, setOpen, onAccept, onCancel } : DialogModalProps) => {
 
   return (
     <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
@@ -27,7 +28,7 @@ export const DialogModal = ({ title, body, open, setOpen, onAccept, onCancel } :
               <Dialog.ActionTrigger asChild>
                 <Button variant="outline" onClick={onCancel}>Cancel</Button>
               </Dialog.ActionTrigger>
-              <Button onClick={onAccept}>Accept</Button>
+              <Button onClick={() => onAccept(list.id, list.isFavorite)}>Accept</Button>
             </Dialog.Footer>
             <Dialog.CloseTrigger asChild>
               <Button onClick={onCancel}>Cancel</Button>
