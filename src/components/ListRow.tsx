@@ -4,7 +4,7 @@ import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./Tooltip";
 import type { ListRowProps } from "../types";
 
-export const ListRow = ({ list, to, isEditing, setIsEditing, onDelete, onToggleFavorite }: ListRowProps) => {
+export const ListRow = ({ list, setSelectedList, to, isEditable, isEditing, setIsEditing, onDelete, onToggleFavorite }: ListRowProps) => {
 
   const onToggleFavoriteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -21,7 +21,8 @@ export const ListRow = ({ list, to, isEditing, setIsEditing, onDelete, onToggleF
   const onEditingClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsEditing(!isEditing);
+    setIsEditing?.(!isEditing);
+    setSelectedList?.(list.id);
   };
 
   return (
@@ -83,6 +84,7 @@ export const ListRow = ({ list, to, isEditing, setIsEditing, onDelete, onToggleF
                       </Button>
                     </Tooltip>
                   </Flex>
+                  {isEditable && (
                   <Flex gap={1} flexDirection="column" alignItems="end">
                     <Tooltip content="Edit list">
                       <Button size="sm" variant="outline" onClick={onEditingClick}>
@@ -90,6 +92,7 @@ export const ListRow = ({ list, to, isEditing, setIsEditing, onDelete, onToggleF
                       </Button>
                     </Tooltip>
                   </Flex>
+                  )}
                   </HStack>
               </Box>
             </HStack>
