@@ -48,8 +48,6 @@ export type EditListFormProps = {
   draftDescription: string;
   setDraftDescription: (description: string) => void;
   saving: boolean;
-  setSaving: (saving: boolean) => void;
-  setIsEditing: (isEditing: boolean) => void;
+  onSave: () => Promise<void>;
   onCancel: () => void;
-  refresh: () => Promise<void>;
 };
