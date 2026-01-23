@@ -27,7 +27,7 @@ export type ListRowProps = {
   isActive: boolean;
   isEditable?: boolean;
   onDelete?: (listId: string) => Promise<void>;
-  onToggleFavorite?: (listId: string, isFavorite: boolean) => Promise<void>;
+  onToggleFavorite?: (listId: string, isFavorite: boolean) => Promise<void> | void;
 };
 
 export type AddListFormProps = {
@@ -36,9 +36,9 @@ export type AddListFormProps = {
   setNewListName: (name: string) => void;
   newListDescription: string;
   setNewListDescription: (description: string) => void;
-  setShowAddListForm?: (show: boolean) => void;
-  navigate: (path: string) => void;
-  refresh: () => Promise<void>;
+  saving: boolean;
+  onCreate: () => Promise<void>;
+  onCancel: () => void;
 };
 
 export type EditListFormProps = {
@@ -50,7 +50,6 @@ export type EditListFormProps = {
   saving: boolean;
   setSaving: (saving: boolean) => void;
   setIsEditing: (isEditing: boolean) => void;
-  onClose: () => void;
-  onChanged?: () => void;
+  onCancel: () => void;
   refresh: () => Promise<void>;
 };
