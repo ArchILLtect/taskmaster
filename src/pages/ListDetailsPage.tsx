@@ -1,6 +1,5 @@
 import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button } from "@chakra-ui/react";
 import { Toaster } from "../components/ui/Toaster";
-import { toaster } from "../components/ui/toasterInstance";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { useListDetailsPageData } from "./useListDetailsPageData";
@@ -12,6 +11,8 @@ import { AddTaskForm } from "../components/AddTaskForm";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskPriority, TaskStatus } from "../API";
 import { EditListForm } from "../components/EditListForm";
+import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
+import { fireToast } from "../hooks/useFireToast";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -36,7 +37,7 @@ export function ListDetailsPage() {
   const { listId } = useParams<{ listId: string }>();
   const { lists, tasks, loading, err, refresh } = useListDetailsPageData(listId);
   const list = lists.find(l => l.id === listId);
-  const listName = list?.name || "Unknown List";  
+  const listName = list?.name || "Unknown List";
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -98,6 +99,41 @@ export function ListDetailsPage() {
     await refresh();
   };
 
+  const handleSave = async () => {
+    if (!list) return;
+
+    const trimmed = draftListName.trim();
+    const isInvalidName =
+      !trimmed ||
+      trimmed === SYSTEM_INBOX_NAME;
+
+      if (saving || isInvalidName) {
+        // Toast notification for unimplemented feature
+        fireToast("error", "List not saved", (saving ? "Please wait until the current save is complete." : "List name is invalid.")  );
+        return;
+      };
+  
+    setSaving(true);
+    try {
+  
+      await taskmasterApi.updateTaskList({
+        id: list.id,
+        name: draftListName.trim() || "Untitled List",
+        // description: draftDescription,
+      });
+
+      await refresh();
+      setIsEditing(false);
+
+    } catch (error) {
+      // Fire toast notification for unimplemented feature
+      await fireToast("error", "Save Failed", "There was an error saving the list. Please try again. Error details: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      fireToast("success", "List Saved", "Your changes have been saved successfully.");
+      setSaving(false);
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => {
     if (!listId) return;
 
@@ -111,11 +147,28 @@ export function ListDetailsPage() {
     }
   };
 
+  const handleCancel = () => {
+    setDraftListName(list?.name ?? "");
+    setDraftListDescription(list?.description ?? "");
+    setIsEditing(false);
+
+    // Fire toast notification for canceled edit
+    fireToast("info", "Edit Canceled", "Your changes have been discarded.");
+
+    refresh();
+  };
+
   const addListItem = (itemType: "task" | "note" | "event") => () => {
     if (itemType === "task") {
       setShowAddListItemForm(!showAddListItemForm);
     }
   };
+
+  const toggleShowCompletedTasks = () => {
+    setShowCompletedTasks((prev) => !prev);
+
+    fireToast("info", "Toggle Completed Tasks", `Completed tasks are now ${showCompletedTasks ? "hidden" : "visible"}.`);
+  }
 
   const prepAddTaskForm = () => {
     if (showAddTaskForm) {
@@ -132,15 +185,6 @@ export function ListDetailsPage() {
       setNewTaskDueDate(todayDate);
       setNewTaskPriority(TaskPriority.Medium);
     }
-  };
-
-  const notImplementedToast = () => {
-    toaster.create({
-      title: "Not Implemented",
-      description: "This feature is not yet implemented. Stay tuned!",
-      duration: 3000,
-      type: "info",
-    });
   };
 
   if (!listId) return <Navigate to="/lists" replace />;
@@ -163,7 +207,7 @@ export function ListDetailsPage() {
             <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
               {isEditing ? "Hide Edit" : "Edit"}
             </Button>
-            <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
+            <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={toggleShowCompletedTasks} />
           </Flex>
 
           {isEditing &&
@@ -174,10 +218,8 @@ export function ListDetailsPage() {
               draftDescription={draftListDescription}
               setDraftDescription={setDraftListDescription}
               saving={saving}
-              setSaving={setSaving}
-              setIsEditing={setIsEditing}
-              onCancel={() => setIsEditing(false)}
-              refresh={refresh}
+              onSave={handleSave}
+              onCancel={handleCancel}
             />
           }
 
@@ -220,7 +262,7 @@ export function ListDetailsPage() {
                   <Button
                     bg="green.200"
                     variant="outline"
-                    onClick={() => notImplementedToast()}
+                    onClick={() => fireToast("info", "Not Implemented", "This feature is coming soon!")}
                   >Add New Event</Button>
                   {!showAddTaskForm && (
                     <Button
@@ -232,7 +274,7 @@ export function ListDetailsPage() {
                   <Button
                     bg="green.200"
                     variant="outline"
-                    onClick={() => notImplementedToast()}
+                    onClick={() => fireToast("info", "Not Implemented", "This feature is coming soon!")}
                   >Add New Note</Button>
                 </>
               </VStack>
@@ -240,7 +282,7 @@ export function ListDetailsPage() {
                 <AddTaskForm
                   listId={listId}
                   stack={stack}
-                  tasksInList={tasksInList}   // ✅ add this
+                  tasksInList={tasksInList}
                   newTaskTitle={newTaskTitle}
                   setNewTaskTitle={setNewTaskTitle}
                   newTaskDescription={newTaskDescription}
@@ -252,7 +294,7 @@ export function ListDetailsPage() {
                   setShowAddTaskForm={setShowAddTaskForm}
                   navigate={navigate}
                   refresh={refresh}
-                  parentTaskId={undefined /* or omit if optional */}
+                  parentTaskId={undefined}
                 />
               )}
             </Box>
