@@ -24,17 +24,15 @@ import {
 } from "../graphql/operations";
 import type { ListTaskListsQuery, TasksByListQuery } from "../API";
 import { TaskStatus } from "../API";
+import { getInboxListId } from "../config/inboxSettings";
 
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
-
 
 /**
  * Single shared Amplify GraphQL client for the app.
  * (Amplify.configure is done in main.tsx)
  */
-
-
 type GenQuery<I, O> = string & { __generatedQueryInput: I; __generatedQueryOutput: O };
 type GenMutation<I, O> = string & { __generatedMutationInput: I; __generatedMutationOutput: O };
 
@@ -111,6 +109,12 @@ export const taskmasterApi = {
   async deleteTaskList(input: DeleteTaskListInput) {
     const data = await runMutation(deleteTaskListMinimal as any, { input });
     return (data as any).deleteTaskList;
+  },
+
+  async deleteTaskListSafeById(listId: string) {
+    const inboxId = getInboxListId();
+    if (inboxId && listId === inboxId) return;
+    return await this.deleteTaskList({ id: listId });
   },
 
   // -----------------------------
