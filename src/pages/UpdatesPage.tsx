@@ -1,35 +1,53 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { updatesService } from "../services/updatesService";
-import { taskService } from "../services/taskService";
 import { TaskStatus } from "../API";
 import { taskmasterApi } from "../api/taskmasterApi";
+import { useUpdatesPageData } from "./useUpdatesPageData";
+import { fireToast } from "../hooks/useFireToast";
 
 export function UpdatesPage() {
-  const [tick, setTick] = useState(0);
-  const vm = useMemo(() => updatesService.getViewModel(), [tick]);
 
-  const refresh = () => setTick((t) => t + 1);
+  const { allTasks, lists, refreshData } = useUpdatesPageData();
+  const vm = useMemo(() => updatesService.getViewModel(), [refreshData]);
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    if (!taskId || !nextStatus) return;
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
-    await taskmasterApi.updateTask({
-      id: taskId,
-      status: nextStatus,
-      completedAt,
-    });
-
-    await refresh();
+    try {
+      await taskmasterApi.updateTask({
+        id: taskId,
+        status: nextStatus,
+        completedAt,
+      });
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      fireToast("error", "Error updating task", "There was an issue updating the task status.");
+    } finally {
+      refreshData();
+      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
+    };
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    taskService.delete(taskId);
-    refresh();
+  const handleDeleteTask = async (taskId: string) => {
+    if (!taskId) return;
+
+    try {
+      await taskmasterApi.deleteTask({
+        id: taskId
+      });
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
+    } finally {
+      refreshData();
+      fireToast("success", "Task deleted", "The task has been successfully deleted.");
+    }
   };
 
   return (
@@ -48,7 +66,7 @@ export function UpdatesPage() {
             variant="outline"
             onClick={() => {
               updatesService.clearRead();
-              refresh();
+              refreshData();
             }}
           >
             Clear read
@@ -56,7 +74,7 @@ export function UpdatesPage() {
           <Button
             onClick={() => {
               updatesService.markAllReadNow();
-              refresh();
+              refreshData();
             }}
           >
             Mark all read
@@ -69,7 +87,11 @@ export function UpdatesPage() {
       ) : (
         <VStack align="stretch" gap={2} w="100%">
           {vm.events.map((e) => {
-            const task = taskService.getById(e.taskId);
+            if (e.taskId === null) return null;
+            const taskById = useMemo(() => new Map(allTasks.map(t => [t.id, t])), [allTasks]);
+            const task = e.taskId ? taskById.get(e.taskId) : null;
+            if (!task) return null;
+            const list = lists.find((l) => l.id === task.listId)
             return (
               <Box key={e.id} borderWidth="1px" rounded="md" p={3}>
                 <HStack justify="space-between" align="start">
@@ -83,10 +105,11 @@ export function UpdatesPage() {
                   <Badge variant="outline">{e.type}</Badge>
                 </HStack>
 
-                {task ? (
+                {task && list ? (
                   <Box mt={2}>
                     <TaskRow
                       task={task}
+                      list={list}
                       to={linkToTask(task.listId, task.id)}
                       showLists
                       onToggleComplete={handleToggleComplete}
