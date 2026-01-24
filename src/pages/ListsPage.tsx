@@ -61,7 +61,7 @@ export const ListsPage = () => {
 
     } catch (error) {
       // Fire toast notification for unimplemented feature
-      await fireToast("error", "Creation Failed", "There was an error creating the list. Please try again.");
+      await fireToast("error", "Creation Failed", "There was an error creating the list. Please try again. Error:" + (error instanceof Error ? error.message : String(error)));
       setSaving(false);
     } finally {
       setSaving(false);
