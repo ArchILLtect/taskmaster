@@ -1,7 +1,6 @@
-// TODO Re-introduce these types later to make the mapper more explicit??
-// import type { Task as GqlTask, TaskList as GqlTaskList } from "../API";
-import type { Task } from "../types/task";
-import type { TaskList } from "../types/list";
+import type { TaskPriority, TaskStatus } from "../API";
+import type { TaskUI } from "../types/task";
+import type { ListUI } from "../types/list";
 
 /*
 * Map from GraphQL types (from AppSync) to local types
@@ -14,38 +13,71 @@ import type { TaskList } from "../types/list";
 * export function mapTask(g: GqlTask): Task { ... } when the types are re-introduced
 */
 
-// Map GraphQL TaskList to local TaskList type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function mapTaskList(g: any): TaskList {
-  // g is the object returned by AppSync (has fields + __typename sometimes)
+// API shapes are often "selection set" objects (not necessarily the full generated model types).
+// Keep these structural so callers can pass query items directly.
+type ApiListLike = {
+  id: string;
+  name: string;
+  isFavorite: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  description?: string | null;
+};
+
+type ApiTaskLike = {
+  id: string;
+  listId: string;
+  sortOrder: number;
+  parentTaskId?: string | null;
+  title: string;
+  description?: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueAt?: string | null;
+  completedAt?: string | null;
+  assigneeId?: string | null;
+  tagIds?: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function toListUI(apiList: ApiListLike): ListUI {
   return {
-    id: g.id,
-    name: g.name,
-    isFavorite: g.isFavorite,
-    sortOrder: g.sortOrder,
-    createdAt: g.createdAt,
-    updatedAt: g.updatedAt,
+    id: apiList.id,
+    name: apiList.name,
+    description: apiList.description ?? null,
+    isFavorite: apiList.isFavorite,
+    sortOrder: apiList.sortOrder,
+    createdAt: apiList.createdAt,
+    updatedAt: apiList.updatedAt,
   };
 }
 
-// Map GraphQL Task to local Task type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function mapTask(g: any): Task {
-  // g is the object returned by AppSync (has fields + __typename sometimes)
+export function toTaskUI(apiTask: ApiTaskLike): TaskUI {
   return {
-    id: g.id,
-    listId: g.listId,
-    sortOrder: g.sortOrder,
-    parentTaskId: g.parentTaskId ?? null,
-    title: g.title,
-    description: g.description ?? "",
-    status: g.status,     // should match your union/enum strings
-    priority: g.priority, // same
-    dueAt: g.dueAt ?? null,
-    completedAt: g.completedAt ?? null,
-    assigneeId: g.assigneeId ?? null,
-    tagIds: g.tagIds ?? [],
-    createdAt: g.createdAt,
-    updatedAt: g.updatedAt,
+    id: apiTask.id,
+    listId: apiTask.listId,
+    sortOrder: apiTask.sortOrder,
+    parentTaskId: apiTask.parentTaskId ?? null,
+    title: apiTask.title,
+    description: apiTask.description ?? null,
+    status: apiTask.status,
+    priority: apiTask.priority,
+    dueAt: apiTask.dueAt ?? null,
+    completedAt: apiTask.completedAt ?? null,
+    assigneeId: apiTask.assigneeId ?? null,
+    tagIds: apiTask.tagIds ?? [],
+    createdAt: apiTask.createdAt,
+    updatedAt: apiTask.updatedAt,
   };
+}
+
+// Back-compat exports (older code calls mapTask/mapTaskList)
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function mapTaskList(g: any) {
+  return toListUI(g as ApiListLike);
+}
+export function mapTask(g: any) {
+  return toTaskUI(g as ApiTaskLike);
 }
