@@ -11,7 +11,9 @@ import { fireToast } from "../hooks/useFireToast";
 export function UpdatesPage() {
 
   const { allTasks, lists, refreshData } = useUpdatesPageData();
-  const vm = useMemo(() => updatesService.getViewModel(), [refreshData]);
+  const vm = updatesService.getViewModel();
+
+  const taskById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
 
@@ -88,7 +90,6 @@ export function UpdatesPage() {
         <VStack align="stretch" gap={2} w="100%">
           {vm.events.map((e) => {
             if (e.taskId === null) return null;
-            const taskById = useMemo(() => new Map(allTasks.map(t => [t.id, t])), [allTasks]);
             const task = e.taskId ? taskById.get(e.taskId) : null;
             if (!task) return null;
             const list = lists.find((l) => l.id === task.listId)
