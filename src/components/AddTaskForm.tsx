@@ -7,7 +7,6 @@ import {
   Button,
   Flex,
   Select,
-  Portal,
   useListCollection,
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
@@ -239,22 +238,20 @@ export const AddTaskForm = ({
             </Select.Trigger>
           </Select.Control>
 
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {/* Renders all items in the collection */}
-                {listCollection.items.map((item) => (
-                  <Select.Item
-                    item={item}
-                    key={item.value}
-                  >
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
+          <Select.Positioner>
+            <Select.Content>
+              {/* Renders all items in the collection */}
+              {listCollection.items.map((item) => (
+                <Select.Item
+                  item={item}
+                  key={item.value}
+                >
+                  <Select.ItemText>{item.label}</Select.ItemText>
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
         </Flex>
       </Select.Root>
 
@@ -293,22 +290,20 @@ export const AddTaskForm = ({
             </Select.Trigger>
           </Select.Control>
 
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {/* Renders all items in the collection */}
-                {priorityCollection.items.map((item) => (
-                  <Select.Item
-                    item={item}
-                    key={item.value}
-                  >
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
+          <Select.Positioner>
+            <Select.Content>
+              {/* Renders all items in the collection */}
+              {priorityCollection.items.map((item) => (
+                <Select.Item
+                  item={item}
+                  key={item.value}
+                >
+                  <Select.ItemText>{item.label}</Select.ItemText>
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
         </Flex>
       </Select.Root>
 
@@ -332,18 +327,16 @@ export const AddTaskForm = ({
             </Select.Trigger>
           </Select.Control>
 
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {statusCollection.items.map((item) => (
-                  <Select.Item item={item} key={item.value}>
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
+          <Select.Positioner>
+            <Select.Content>
+              {statusCollection.items.map((item) => (
+                <Select.Item item={item} key={item.value}>
+                  <Select.ItemText>{item.label}</Select.ItemText>
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
         </Flex>
       </Select.Root>
 
