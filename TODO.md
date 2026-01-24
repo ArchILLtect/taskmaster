@@ -150,3 +150,11 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - Status:
     - Non-blocking for MVP
     - Safe to defer until performance tuning phase
+
+
+### Specify later:
+
+- [ ] Add CI enforcement: run `npm run lint` + `npm run build` on PRs to keep the UI-layer API import restrictions enforced.
+- [ ] If we add more generated enums later (e.g., `TaskSomethingElse`), update ESLint allowlist in `eslint.config.js` (`allowImportNames`).
+- [ ] Consider tightening architecture: optionally forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`, forcing all API access through store/hooks (commented-out rule block exists in eslint.config.js).
+- [ ] Consider replacing `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type for better editor help and safer mapping.
