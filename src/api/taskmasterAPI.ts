@@ -166,5 +166,25 @@ export const taskmasterApi = {
       status,
       completedAt: status === TaskStatus.Done ? now : null,
     });
-  }
+  },
+
+  // -----------------------------
+  // Helpers
+  // -----------------------------
+
+  async moveTaskToList(taskId: string, targetListId: string, opts?: { sortOrder?: number }) {
+    return await this.updateTask({
+      id: taskId,
+      listId: targetListId,
+      parentTaskId: null,
+      sortOrder: opts?.sortOrder ?? 0, // see note below
+    });
+  },
+
+  async sendTaskToInbox(taskId: string) {
+    const inboxId = getInboxListId();
+    if (!inboxId) return;
+    return await this.moveTaskToList(taskId, inboxId);
+  },
+
 };
