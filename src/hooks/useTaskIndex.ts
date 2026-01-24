@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { taskmasterApi } from "../api/taskmasterApi";
-import { mapTask, mapTaskList } from "../api/mappers";
+import { toListUI, toTaskUI } from "../api/mappers";
 import { 
   getInboxListId, 
   setInboxListId, 
@@ -8,21 +8,21 @@ import {
   SYSTEM_INBOX_NAME 
 } from "../config/inboxSettings";
 // import { isInboxList } from "../config/inboxSettings";
-import type { Task } from "../types/task";
-import type { TaskList } from "../types/list";
+import type { TaskUI } from "../types/task";
+import type { ListUI } from "../types/list";
 
 type TaskIndex = {
-  lists: TaskList[];
-  tasks: Task[];
+  lists: ListUI[];
+  tasks: TaskUI[];
 
-  listsById: Record<string, TaskList>;
-  tasksById: Record<string, Task>;
+  listsById: Record<string, ListUI>;
+  tasksById: Record<string, TaskUI>;
 
-  tasksByListId: Record<string, Task[]>;
-  childrenByParentId: Record<string, Task[]>;
+  tasksByListId: Record<string, TaskUI[]>;
+  childrenByParentId: Record<string, TaskUI[]>;
 };
 
-async function ensureInboxListExists(rawLists: TaskList[]) {
+async function ensureInboxListExists(rawLists: ListUI[]) {
   // 1) Stored id path
   const storedId = getInboxListId();
 if (storedId && rawLists.some(l => l?.id === storedId)) {
@@ -49,7 +49,7 @@ if (storedId && rawLists.some(l => l?.id === storedId)) {
   if (created?.id) setInboxListId(created.id);
 
   // Make sure it exists in the current in-memory list set
-  return { lists: [...rawLists, created] };
+  return { lists: [...rawLists, toListUI(created)] };
 }
 
 // ignore any for linting purposes; pagination handles limits
@@ -78,8 +78,8 @@ export function useTaskIndex(opts?: {
   tasksPerListLimit?: number; // not used (pagination does the real work), kept for future tuning
   autoLoad?: boolean;
 }) {
-  const [rawLists, setRawLists] = useState<TaskList[]>([]);
-  const [rawTasks, setRawTasks] = useState<Task[]>([]);
+  const [rawLists, setRawLists] = useState<ListUI[]>([]);
+  const [rawTasks, setRawTasks] = useState<TaskUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<unknown>(null);
 
@@ -90,7 +90,9 @@ export function useTaskIndex(opts?: {
     try {
       // 1) fetch lists
       const listPage = await taskmasterApi.listTaskLists({ limit: opts?.listLimit ?? 200 });
-      const lists = listPage.items.filter((l): l is NonNullable<typeof l> => !!l);
+      const lists = listPage.items
+        .filter((l): l is NonNullable<typeof l> => !!l)
+        .map(toListUI);
 
       // 2) ensure inbox exists (and localStorage is updated)
       const ensured = await ensureInboxListExists(lists);
@@ -98,7 +100,7 @@ export function useTaskIndex(opts?: {
 
       // 3) fan out tasksByList for each list (parallel)
       const tasksNested = await Promise.all(ensuredLists.map((l) => fetchAllTasksForList(l.id)));
-      const tasks = tasksNested.flat();
+      const tasks = tasksNested.flat().map(toTaskUI);
 
       setRawLists(ensuredLists);
       setRawTasks(tasks);
@@ -117,28 +119,19 @@ export function useTaskIndex(opts?: {
   }, [refresh, opts?.autoLoad]);
 
   const index = useMemo<TaskIndex>(() => {
-    // NOTE: your mappers currently accept local types as input, but we’re feeding them GraphQL shapes.
-    // For MVP, just cast (the shapes are structurally compatible enough).
-    const lists = rawLists
-      .map((l) => mapTaskList(l as unknown as TaskList))
-      .slice()
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const lists = rawLists.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const tasks = rawTasks.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-    const tasks = rawTasks
-      .map((t) => mapTask(t as unknown as Task))
-      .slice()
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
-    const listsById: Record<string, TaskList> = {};
+    const listsById: Record<string, ListUI> = {};
     for (const l of lists) listsById[l.id] = l;
 
-    const tasksById: Record<string, Task> = {};
+    const tasksById: Record<string, TaskUI> = {};
     for (const t of tasks) tasksById[t.id] = t;
 
-    const tasksByListId: Record<string, Task[]> = {};
+    const tasksByListId: Record<string, TaskUI[]> = {};
     for (const t of tasks) (tasksByListId[t.listId] ??= []).push(t);
 
-    const childrenByParentId: Record<string, Task[]> = {};
+    const childrenByParentId: Record<string, TaskUI[]> = {};
     for (const t of tasks) {
       const parentId = t.parentTaskId ?? null;
       if (!parentId) continue;
