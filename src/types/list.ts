@@ -1,11 +1,12 @@
-export type TaskList = {
+// Stable UI-level list type (do not depend on generated API model types)
+export type ListUI = {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
 
   isFavorite: boolean;
+  sortOrder: number;
 
-  sortOrder: number; // sidebar ordering
   createdAt: string; // ISO string
   updatedAt: string; // ISO string
 };
@@ -13,13 +14,13 @@ export type TaskList = {
 export type ListItem = {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   isFavorite: boolean;
   sortOrder: number;
 };
 
 export type ListRowProps = {
-  list: TaskList;
+  list: ListUI;
   to: string;
   setSelectedList?: (listId: string) => void;
   isEditing?: boolean;
@@ -31,7 +32,7 @@ export type ListRowProps = {
 };
 
 export type AddListFormProps = {
-  list?: TaskList;
+  list?: ListUI;
   newListName: string;
   setNewListName: (name: string) => void;
   newListDescription: string;
@@ -42,7 +43,7 @@ export type AddListFormProps = {
 };
 
 export type EditListFormProps = {
-  list?: TaskList;
+  list?: ListUI;
   draftName: string;
   setDraftName: (name: string) => void;
   draftDescription: string;

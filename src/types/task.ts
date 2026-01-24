@@ -1,5 +1,5 @@
 import { TaskStatus, TaskPriority } from "../API";
-import type { TaskList } from "./list";
+import type { ListUI } from "./list";
 
 // export type Priority = "Low" | "Medium" | "High";
 // export type TaskStatus = "Open" | "Done";
@@ -19,34 +19,35 @@ export type SubTask = {
     id: string;
 };
 
-export type Task = {
-    id: string;
-    listId: string;
+// Stable UI-level task type (do not depend on generated API model types)
+export type TaskUI = {
+  id: string;
+  listId: string;
 
-    sortOrder: number; // lower = higher in list (stable ordering)
+  sortOrder: number; // lower = higher in list (stable ordering)
+  parentTaskId?: string | null;
 
-    title: string;
-    description?: string;
-    status: TaskStatus;
+  title: string;
+  description?: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
 
-    dueAt?: string | null; // ISO string or null = someday
-    assigneeId?: string | null; // User ID or null = unassigned
-    priority: TaskPriority;
-    tagIds: string[]; // Points to Tag objects
-    parentTaskId?: string | null; // Points to parent Task ID or null = no parent
+  dueAt?: string | null; // ISO string or null = someday
+  completedAt?: string | null; // ISO string or null
+  assigneeId?: string | null; // User ID or null = unassigned
+  tagIds: string[];
 
-    createdAt: string; // ISO string
-    updatedAt: string; // ISO string
-    completedAt?: string | null; // ISO string or null
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
 };
 
 export type TaskRowProps = {
-  task: Task;
+  task: TaskUI;
   to: string;
   showLists: boolean;
-  list: TaskList;
+  list: ListUI;
 
-  onMove?: (task: Task) => void | Promise<void>;
+  onMove?: (task: TaskUI) => void | Promise<void>;
 
   // parent owns API + refresh
   onToggleComplete?: (taskId: string, nextStatus: TaskStatus) => Promise<void> | void;
@@ -54,10 +55,10 @@ export type TaskRowProps = {
 };
 
 export type SubTaskRowProps = {
-  task: Task;
+  task: TaskUI;
   to: string;
 
-  onMove?: (task: Task) => Promise<void> | void;
+  onMove?: (task: TaskUI) => Promise<void> | void;
   onDelete?: (taskId: string) => void;
 
   // parent owns API + refresh
@@ -68,7 +69,7 @@ export type TaskDetailsPaneProps = {
   listId: string;
   taskId: string;
   stack: string[];
-  tasksInList: Task[];
+  tasksInList: TaskUI[];
   isPulsing?: boolean;
   newTaskTitle: string;
   newTaskDescription: string;
@@ -87,7 +88,7 @@ export type TaskDetailsPaneProps = {
 export type AddTaskFormProps = {
   listId?: string;
   stack?: string[];
-  tasksInList?: Task[];
+  tasksInList?: TaskUI[];
   newTaskTitle: string;
   setNewTaskTitle: (title: string) => void;
   newTaskDescription: string;
@@ -103,7 +104,7 @@ export type AddTaskFormProps = {
 };
 
 export type EditTaskFormProps = {
-    task: Task;
+  task: TaskUI;
     draftTaskTitle: string;
     setDraftTaskTitle: (title: string) => void;
     draftTaskDescription: string;
@@ -117,7 +118,7 @@ export type EditTaskFormProps = {
     skipModal?: boolean;
     saving: boolean;
     setSaving: (saving: boolean) => void;
-    onSave: (task: Task) => Promise<void> | void;
+    onSave: (task: TaskUI) => Promise<void> | void;
     onClose: () => void;
     refresh: () => void;
 };
