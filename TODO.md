@@ -104,6 +104,7 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 
 - [ ] TODO(P3) Find a way to ensure refreshing of favorites sidebar section upon starring/un-starring lists for favorites.
 - [ ] TODO(P3) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage.
+- [ ] TODO(P4) Add Tooltip/Toast for "already in inbox"
 
 ---
 
