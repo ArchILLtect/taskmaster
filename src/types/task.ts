@@ -46,8 +46,7 @@ export type TaskRowProps = {
   showLists: boolean;
   list: TaskList;
 
-  // TODO: Make type for task parameter more strict later.
-  onMove?: (task: any) => void | Promise<void>;
+  onMove?: (task: Task) => void | Promise<void>;
 
   // parent owns API + refresh
   onToggleComplete?: (taskId: string, nextStatus: TaskStatus) => Promise<void> | void;
