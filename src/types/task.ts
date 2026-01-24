@@ -81,7 +81,6 @@ export type TaskDetailsPaneProps = {
   refresh: () => void;
   navigate: (path: string) => void;
   onCloseAll: () => void;
-  onChanged?: () => void;
   onDelete?: (taskId: string) => void;
 };
 
