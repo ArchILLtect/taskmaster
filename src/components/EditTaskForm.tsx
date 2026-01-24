@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditTaskFormProps } from "../types/task";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { TaskPriority, TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
@@ -19,13 +19,6 @@ import { useTaskmasterData } from "../hooks/useTaskmasterData";
 type Option<T extends string> = { label: string; value: T };
 
 // --- helpers (keep local, simple)
-function isoToDateInput(iso?: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10);
-}
-
 const isTaskPriority = (v: string): v is TaskPriority =>
   (Object.values(TaskPriority) as string[]).includes(v);
 
@@ -72,16 +65,6 @@ export const EditTaskForm = ({
   const { visibleLists: allLists } = useTaskmasterData();
   const hideButtons = skipModal !== true;
 
-  useEffect(() => {
-    if (!task) return;
-    setSelectedListId(task.listId);
-    setDraftTaskTitle(task.title ?? "");
-    setDraftTaskDescription(task.description ?? "");
-    setDraftTaskPriority((task.priority as TaskPriority) ?? TaskPriority.Medium);
-    setDraftTaskStatus((task.status as TaskStatus) ?? TaskStatus.Open);
-    setDraftTaskDueDate(isoToDateInput(task.dueAt));
-  }, [task, task?.id, setDraftTaskTitle, setDraftTaskDescription, setDraftTaskPriority, setDraftTaskStatus, setDraftTaskDueDate ]); // only when task changes
-
   // ✅ Chakra v3 pattern: destructure `{ collection }`
   const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({
     initialItems: PRIORITY_OPTIONS,
@@ -106,15 +89,11 @@ export const EditTaskForm = ({
     return items;
   }, [allLists, inboxListId]);
 
-  const { collection: listCollection, set: setListCollection } = useListCollection<Option<string>>({
+  const { collection: listCollection } = useListCollection<Option<string>>({
     initialItems: listItems,
     itemToValue: (item) => item.value,
     itemToString: (item) => item.label,
   });
-
-  useEffect(() => {
-    setListCollection(listItems);
-  }, [listItems, setListCollection]);
 
   return (
   <Box w="100%" p={4} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
