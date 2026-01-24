@@ -32,18 +32,23 @@ export function useInboxPageData() {
     const dismissed = new Set(state.dismissedTaskIds);
     const nowMs = Date.now();
 
-    const newTasks = tasks
+    // Only tasks that belong to the Inbox list
+    const inboxTasks = inboxListId
+      ? tasks.filter((t) => t.listId === inboxListId)
+      : [];
+
+    const newTasks = inboxTasks
       .filter((t) => !dismissed.has(t.id))
       .filter((t) => isNewTask(t.createdAt, state.lastViewedAt))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    const dueSoonTasks = tasks
+    const dueSoonTasks = inboxTasks
       .filter((t) => !dismissed.has(t.id))
       .filter((t) => isDueSoon(t.dueAt ?? null, t.status, nowMs, state.dueSoonWindowDays))
       .sort((a, b) => new Date(a.dueAt ?? 0).getTime() - new Date(b.dueAt ?? 0).getTime());
 
     return { state, newTasks, dueSoonTasks };
-  }, [tasks, inboxVersion]);
+  }, [tasks, inboxVersion, inboxListId]);
 
   return {
     lists,
