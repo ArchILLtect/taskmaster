@@ -1,4 +1,5 @@
-import { TaskStatus, TaskPriority, type TaskList } from "../API";
+import { TaskStatus, TaskPriority } from "../API";
+import type { TaskList } from "./list";
 
 // export type Priority = "Low" | "Medium" | "High";
 // export type TaskStatus = "Open" | "Done";
@@ -45,12 +46,12 @@ export type TaskRowProps = {
   showLists: boolean;
   list: TaskList;
 
-  // Make type for task parameter more strict later.
+  // TODO: Make type for task parameter more strict later.
   onMove?: (task: any) => void | Promise<void>;
-  onDelete?: (taskId: string) => void;
 
   // parent owns API + refresh
   onToggleComplete?: (taskId: string, nextStatus: TaskStatus) => Promise<void> | void;
+  onDelete?: (taskId: string) => void;
 };
 
 export type SubTaskRowProps = {
@@ -116,7 +117,6 @@ export type EditTaskFormProps = {
     setDraftTaskDueDate: (dueDate: string) => void;
     saving: boolean;
     setSaving: (saving: boolean) => void;
-    setIsEditing: (isEditing: boolean) => void;
     onSave: (task: Task) => Promise<void> | void;
     onClose: () => void;
     refresh: () => void;
