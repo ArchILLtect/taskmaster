@@ -1,29 +1,177 @@
-import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
-import { TaskStatus } from "../API";
+import { TaskPriority, TaskStatus } from "../API";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { useInboxPageData } from "./useInboxPageData";
+import { useMemo, useState } from "react";
+import { AddTaskForm } from "../components/AddTaskForm";
+import { useNavigate } from "react-router-dom";
+import { fireToast } from "../hooks/useFireToast";
+import { DialogModal } from "../components/ui/DialogModal";
+import { EditTaskForm } from "../components/EditTaskForm";
+
+// TODO: Give this page more thought re: UX/design
+// What’s the best way to help users triage their inbox effectively?
+// Also, how to make this more of a staging area for new tasks and other “attention needed” items.
+
+// Possible improvements:
+// - Due soon for all tasks, not just inbox?
+// - Maybe tabs for New vs Due Soon instead of one long list?
+// - Better empty states?
+// - Bulk actions (dismiss all new, extend due dates, etc)
+// - Animation when dismissing items?
+// - Settings link for configuring inbox behavior?
+// - Keyboard shortcuts for triage actions?
+// - Show more task details inline (due date, list, etc)
+// - Confirmation for "Done triaging" if there are still new/due tasks?
+// - Mobile responsiveness testing and tweaks
+// - Accessibility review to ensure screen reader friendliness
+// - Performance optimizations for large inboxes
+
+// --- helpers (keep local, simple)
+function dateInputToIso(date: string) {
+  if (!date) return null;
+  return new Date(`${date}T00:00:00.000Z`).toISOString();
+}
+
+// Get current timezone
+const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+// Set today's date as default due date in YYYY-MM-DD format
+const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
 
 export function InboxPage() {
-  const { vm, loading, err, refreshData, refreshInbox } = useInboxPageData();
+  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState("New Task");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
+  const [newTaskPriority, setNewTaskPriority] = useState(TaskPriority.Medium);
+  const [draftTaskTitle, setDraftTaskTitle] = useState("");
+  const [draftTaskDescription, setDraftTaskDescription] = useState("");
+  const [draftTaskDueDate, setDraftTaskDueDate] = useState("");
+  const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
+  const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
+  const [saving, setSaving] = useState(false);
 
+  const { vm, lists, loading, err, refreshData, refreshInbox } = useInboxPageData();
+
+  const navigate = useNavigate();
+  const isDialogOpen = !!selectedTask;
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
+  const listById = useMemo(() => new Map(lists.map(l => [l.id, l])), [lists]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    if (!taskId || !nextStatus) return;
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
-    await taskmasterApi.updateTask({ id: taskId, status: nextStatus, completedAt });
-    await refreshData();
+
+    try {
+      await taskmasterApi.updateTask({
+        id: taskId,
+        status: nextStatus,
+        completedAt,
+      });
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      fireToast("error", "Error updating task", "There was an issue updating the task status.");
+    } finally {
+      refreshData();
+      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
+    };
+  };
+
+  const handleEditTask = async (task: any) => {
+    setSelectedTask(task);
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    await taskmasterApi.deleteTask({ id: taskId });
-    await refreshData();
+    if (!taskId) return;
+
+    try {
+      await taskmasterApi.deleteTask({
+        id: taskId
+      });
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
+    } finally {
+      refreshData();
+      fireToast("success", "Task deleted", "The task has been successfully deleted.");
+    }
+  };
+
+  const handleSave = async (selectedTask: any) => {
+    if (!selectedTask) return;
+
+    try {
+      setSaving(true);
+      await taskmasterApi.updateTask({
+        id: selectedTask.id,
+        title: draftTaskTitle.trim() || "Untitled Task",
+        description: draftTaskDescription,
+        // Cast to generated enums (type-level only) so TS stops screaming.
+        priority: draftTaskPriority as unknown as TaskPriority,
+        status: draftTaskStatus as unknown as TaskStatus,
+        dueAt: dateInputToIso(draftTaskDueDate),
+        completedAt:
+          draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
+      });
+    } catch (error) {
+      console.error("Error saving task:", error);
+      fireToast("error", "Error saving task", "There was an issue saving the task.");
+    } finally {
+      setSaving(false);
+      refreshData();
+      resetFormAndClose();
+      fireToast("success", "Task saved", "The task has been successfully updated.");
+    }
+  };
+
+  const acceptChanges = async () => {
+    console.log("Updating task:", selectedTask);
+    await handleSave(selectedTask)
+  };
+
+  const cancelEditTask = () => {
+    resetFormAndClose();
+    fireToast("info", "Edit cancelled", "Task edit has been cancelled.");
+  };
+
+  const prepAddTaskForm = () => {
+    if (showAddTaskForm) {
+      setShowAddTaskForm(false);
+      return;
+    } else {
+      setShowAddTaskForm(!showAddTaskForm);
+      let newTaskTitleUnique = newTaskTitle;
+      if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === ("New Task")) {
+        newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
+      }
+      setNewTaskTitle(newTaskTitleUnique);
+      setNewTaskDescription("");
+      setNewTaskDueDate(todayDate);
+      setNewTaskPriority(TaskPriority.Medium);
+    }
+  };
+
+  const resetFormAndClose = () => {
+    setDraftTaskTitle("");
+    setDraftTaskDescription("");
+    setDraftTaskDueDate("");
+    setDraftTaskPriority(TaskPriority.Medium);
+    setDraftTaskStatus(TaskStatus.Open);
+    setSelectedTask(null); // closes dialog
   };
 
   if (loading) return <div>Loading…</div>;
   if (err) return <div>Failed to load inbox data.</div>;
+
+  // Optional: if inboxListId is missing, nothing to show
+  // (in your hook, inboxTasks becomes [])
+  // if (!vm.newTasks.length && !vm.dueSoonTasks.length) {
+  //   return <div>Your inbox is empty. Hooray!</div>;
+  // }
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
@@ -75,29 +223,50 @@ export function InboxPage() {
           <Text color="gray.600">No new tasks since your last inbox pass. Nice. ✨</Text>
         ) : (
           <VStack align="stretch" gap={2}>
-            {vm.newTasks.map((t) => (
-              <HStack key={t.id} gap={2} align="stretch">
-                <Box flex="1">
-                  <TaskRow
-                    task={t}
-                    to={linkToTask(t.listId, t.id)}
-                    showLists
-                    onDelete={() => handleDeleteTask(t.id)}
-                    onToggleComplete={handleToggleComplete}
-                  />
-                </Box>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    inboxService.dismiss(t.id);
-                    refreshInbox();
-                  }}
+            {vm.newTasks.map((t) => {
+              const listForTask = listById.get(t.listId);
+              if (!listForTask) return null;
+              return (
+                <Flex
+                  key={t.id}
+                  gap={1}
+                  alignItems={"center"}
+                  width={"100%"}
                 >
-                  Dismiss
-                </Button>
-              </HStack>
-            ))}
+                  <Box flex="1">
+                    <TaskRow
+                      task={t}
+                      list={listForTask}
+                      to={linkToTask(t.listId, t.id)}
+                      showLists
+                      onToggleComplete={handleToggleComplete}
+                      onDelete={() => handleDeleteTask(t.id)}
+                    />
+                  </Box>
+                  <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        inboxService.dismiss(t.id);
+                        refreshInbox();
+                      }}
+                    >
+                      Dismiss
+                    </Button>
+                    <Button
+                      size="2xl"
+                      bg="orange.200"
+                      variant="outline"
+                      height={"36px"}
+                      onClick={() => handleEditTask(t)}
+                      _hover={{ bg: "orange.300", borderColor: "orange.400", color: "orange.700", fontWeight: "500", boxShadow: "lg" }}
+                    >
+                      Edit
+                    </Button>
+                  </VStack>
+                </Flex>
+            )})}
           </VStack>
         )}
       </Box>
@@ -113,29 +282,50 @@ export function InboxPage() {
           <Text color="gray.600">Nothing due soon. Future-you says thanks.</Text>
         ) : (
           <VStack align="stretch" gap={2}>
-            {vm.dueSoonTasks.map((t) => (
-              <HStack key={t.id} gap={2} align="stretch">
-                <Box flex="1">
-                  <TaskRow
-                    task={t}
-                    to={linkToTask(t.listId, t.id)}
-                    showLists
-                    onToggleComplete={handleToggleComplete}
-                    onDelete={() => handleDeleteTask(t.id)}
-                  />
-                </Box>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    inboxService.dismiss(t.id);
-                    refreshInbox();
-                  }}
+            {vm.dueSoonTasks.map((t) => {
+              const listForTask = listById.get(t.listId);
+              if (!listForTask) return null;
+              return (
+                <Flex
+                  key={t.id}
+                  gap={1}
+                  alignItems={"center"}
+                  width={"100%"}
                 >
-                  Acknowledge
-                </Button>
-              </HStack>
-            ))}
+                  <Box flex="1">
+                    <TaskRow
+                      task={t}
+                      list={listForTask}
+                      to={linkToTask(t.listId, t.id)}
+                      showLists
+                      onToggleComplete={handleToggleComplete}
+                      onDelete={() => handleDeleteTask(t.id)}
+                    />
+                  </Box>
+                  <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        inboxService.dismiss(t.id);
+                      refreshInbox();
+                    }}
+                  >
+                    Acknowledge
+                  </Button>
+                    <Button
+                      size="2xl"
+                      bg="orange.200"
+                      variant="outline"
+                      height={"36px"}
+                      onClick={() => handleEditTask(t)}
+                      _hover={{ bg: "orange.300", borderColor: "orange.400", color: "orange.700", fontWeight: "500", boxShadow: "lg" }}
+                    >
+                      Edit
+                    </Button>
+                </VStack>
+              </Flex>
+            )})}
           </VStack>
         )}
       </Box>
@@ -149,6 +339,60 @@ export function InboxPage() {
           First time here — everything counts as “new” once.
         </Text>
       )}
+      {!showAddTaskForm && (
+        <Button
+          bg="green.200"
+          variant="outline"
+          onClick={() => prepAddTaskForm()}
+        > Add New Task</Button>
+      )}
+      {showAddTaskForm && (
+        <Box w="50%" p={4} border="1px" borderColor="gray.200" borderRadius="md" boxShadow="sm" bg="gray.50">
+          <AddTaskForm
+            newTaskTitle={newTaskTitle}
+            setNewTaskTitle={setNewTaskTitle}
+            newTaskDescription={newTaskDescription}
+            setNewTaskDescription={setNewTaskDescription}
+            newTaskDueDate={newTaskDueDate}
+            setNewTaskDueDate={setNewTaskDueDate}
+            newTaskPriority={newTaskPriority}
+            setNewTaskPriority={setNewTaskPriority}
+            setShowAddTaskForm={setShowAddTaskForm}
+            navigate={navigate}
+            refresh={refreshData}
+            parentTaskId={undefined}
+          />
+        </Box>
+      )}
+      <DialogModal
+        title="Edit Task"
+        body={
+          selectedTask ? (
+          <EditTaskForm
+            task={selectedTask}
+            draftTaskTitle={draftTaskTitle}
+            setDraftTaskTitle={setDraftTaskTitle}
+            draftTaskDescription={draftTaskDescription}
+            setDraftTaskDescription={setDraftTaskDescription}
+            draftTaskPriority={draftTaskPriority}
+            setDraftTaskPriority={setDraftTaskPriority}
+            draftTaskStatus={draftTaskStatus}
+            setDraftTaskStatus={setDraftTaskStatus}
+            draftTaskDueDate={draftTaskDueDate}
+            setDraftTaskDueDate={setDraftTaskDueDate}
+            saving={saving}
+            setSaving={setSaving}
+            onSave={() => handleSave(selectedTask)}
+            onClose={cancelEditTask}
+            refresh={refreshData}
+          />
+          ) : null
+        }
+        open={isDialogOpen}
+        setOpen={(open) => { if (!open) setSelectedTask(null); }} // Keeps the close dialog button functional
+        onAccept={acceptChanges}
+        onCancel={cancelEditTask}
+      />
     </VStack>
   );
 }
