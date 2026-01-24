@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
+import type { Task } from "../types";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -36,6 +37,13 @@ function dateInputToIso(date: string) {
   return new Date(`${date}T00:00:00.000Z`).toISOString();
 }
 
+function isoToDateInput(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
@@ -43,7 +51,7 @@ const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZon
 
 export function InboxPage() {
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
@@ -81,7 +89,12 @@ export function InboxPage() {
     };
   };
 
-  const handleEditTask = async (task: any) => {
+  const handleEditTask = async (task: Task) => {
+    setDraftTaskTitle(task.title ?? "");
+    setDraftTaskDescription(task.description ?? "");
+    setDraftTaskDueDate(isoToDateInput(task.dueAt));
+    setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
+    setDraftTaskStatus(task.status ?? TaskStatus.Open);
     setSelectedTask(task);
   };
 
@@ -101,7 +114,7 @@ export function InboxPage() {
     }
   };
 
-  const handleSave = async (selectedTask: any) => {
+  const handleSave = async (selectedTask: Task | null) => {
     if (!selectedTask) return;
 
     try {
@@ -369,6 +382,7 @@ export function InboxPage() {
         body={
           selectedTask ? (
           <EditTaskForm
+            key={selectedTask.id}
             task={selectedTask}
             draftTaskTitle={draftTaskTitle}
             setDraftTaskTitle={setDraftTaskTitle}

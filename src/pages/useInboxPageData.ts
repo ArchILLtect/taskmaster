@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTaskIndex } from "../hooks/useTaskIndex";
 import { inboxService } from "../services/inboxService";
 import { TaskStatus } from "../API";
@@ -22,33 +22,31 @@ export function useInboxPageData() {
   const { lists, tasks, loading, err, refresh: refreshData } = useTaskIndex();
 
   // local “poke” for inbox-only state changes (dismiss/window/viewedAt)
-  const [inboxVersion, setInboxVersion] = useState(0);
+  const [, setInboxVersion] = useState(0);
   const refreshInbox = useCallback(() => setInboxVersion((v) => v + 1), []);
 
   const inboxListId = getInboxListId();
 
-  const vm = useMemo(() => {
-    const state = inboxService.getState();
-    const dismissed = new Set(state.dismissedTaskIds);
-    const nowMs = Date.now();
+  const state = inboxService.getState();
+  const dismissed = new Set(state.dismissedTaskIds);
+  const nowMs = state.lastComputedAtMs;
 
-    // Only tasks that belong to the Inbox list
-    const inboxTasks = inboxListId
-      ? tasks.filter((t) => t.listId === inboxListId)
-      : [];
+  // Only tasks that belong to the Inbox list
+  const inboxTasks = inboxListId
+    ? tasks.filter((t) => t.listId === inboxListId)
+    : [];
 
-    const newTasks = inboxTasks
-      .filter((t) => !dismissed.has(t.id))
-      .filter((t) => isNewTask(t.createdAt, state.lastViewedAt))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const newTasks = inboxTasks
+    .filter((t) => !dismissed.has(t.id))
+    .filter((t) => isNewTask(t.createdAt, state.lastViewedAt))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    const dueSoonTasks = inboxTasks
-      .filter((t) => !dismissed.has(t.id))
-      .filter((t) => isDueSoon(t.dueAt ?? null, t.status, nowMs, state.dueSoonWindowDays))
-      .sort((a, b) => new Date(a.dueAt ?? 0).getTime() - new Date(b.dueAt ?? 0).getTime());
+  const dueSoonTasks = inboxTasks
+    .filter((t) => !dismissed.has(t.id))
+    .filter((t) => isDueSoon(t.dueAt ?? null, t.status, nowMs, state.dueSoonWindowDays))
+    .sort((a, b) => new Date(a.dueAt ?? 0).getTime() - new Date(b.dueAt ?? 0).getTime());
 
-    return { state, newTasks, dueSoonTasks };
-  }, [tasks, inboxVersion, inboxListId]);
+  const vm = { state, newTasks, dueSoonTasks };
 
   return {
     lists,
