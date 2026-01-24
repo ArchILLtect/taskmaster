@@ -10,7 +10,9 @@ import { EditTaskForm } from "./EditTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
 import { fireToast } from "../hooks/useFireToast";
 import { Flex } from "@aws-amplify/ui-react";
+import type { Task } from "../types/task";
 
+// --- animations
 const pulse = keyframes`
   0%   { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
   30%  { box-shadow: 0 0 0 4px rgba(66,153,225,0.35); transform: translateY(-1px); }
@@ -21,6 +23,13 @@ const pulse = keyframes`
 function dateInputToIso(date: string) {
   if (!date) return null;
   return new Date(`${date}T00:00:00.000Z`).toISOString();
+}
+
+function isoToDateInput(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
 }
 
 // Get current timezone
@@ -111,7 +120,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     }
   };
 
-  const handleSave = async (selectedTask: any) => {
+  const handleSave = async (selectedTask: Task) => {
     if (!selectedTask) return;
 
     try {
@@ -182,13 +191,27 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 {selected.title}
               </Text>
 
-                <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (selected && !isEditing) {
+                      setDraftTaskTitle(selected.title ?? "");
+                      setDraftTaskDescription(selected.description ?? "");
+                      setDraftTaskPriority((selected.priority as TaskPriority) ?? TaskPriority.Medium);
+                      setDraftTaskStatus((selected.status as TaskStatus) ?? TaskStatus.Open);
+                      setDraftTaskDueDate(isoToDateInput(selected.dueAt));
+                    }
+                    setIsEditing((v) => !v);
+                  }}
+                >
                   {isEditing ? "Hide Edit" : "Edit"}
                 </Button>
             </HStack>
 
             {isEditing ? (
               <EditTaskForm
+                key={selected.id}
                 task={selected}
                 draftTaskTitle={draftTaskTitle}
                 setDraftTaskTitle={setDraftTaskTitle}
