@@ -9,7 +9,6 @@ import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
 import type { TaskList } from "../types";
-import { isInboxListId } from "../lists/listVisibility";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 
 function nextSortOrder(lists: TaskList[]) {
@@ -108,20 +107,25 @@ export const ListsPage = () => {
     const list = visibleLists.find(l => l.id === listId);
     
     if (!list || !listId) return;
-    if (isInboxListId(list.id, inboxListId)) return;
+    if (isInboxList(list, inboxListId)) return;
 
-    await taskmasterApi.deleteTaskListSafeById(listId);
-    await refresh();
-
-    // Fire toast notification for unimplemented feature
-    await fireToast("info", "List Deleted", "The list has been successfully deleted.");
+    try {
+      await taskmasterApi.deleteTaskListSafeById(listId);
+    } catch (error) {
+      console.error("Failed to delete list:", error);
+      await fireToast("error", "Failed to delete list", "An error occurred while deleting the list.");
+      return;
+    } finally {
+      await refresh();
+      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
+    }
   };
 
   const onToggleFavorite = async (listId: string, isFavorite: boolean) => {
     const list = visibleLists.find(l => l.id === listId);
 
     if (!list || !listId || isFavorite === undefined) return;
-    if (isInboxListId(list.id, inboxListId)) return;
+    if (isInboxList(list, inboxListId)) return;
 
     await taskmasterApi.updateTaskList({ id: listId, isFavorite });
 
