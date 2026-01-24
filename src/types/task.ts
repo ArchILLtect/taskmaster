@@ -1,4 +1,4 @@
-import { TaskStatus, TaskPriority } from "../API";
+import { TaskStatus, TaskPriority, type TaskList } from "../API";
 
 // export type Priority = "Low" | "Medium" | "High";
 // export type TaskStatus = "Open" | "Done";
@@ -43,8 +43,10 @@ export type TaskRowProps = {
   task: Task;
   to: string;
   showLists: boolean;
-  listName?: string;
+  list: TaskList;
 
+  // Make type for task parameter more strict later.
+  onMove?: (task: any) => void | Promise<void>;
   onDelete?: (taskId: string) => void;
 
   // parent owns API + refresh
@@ -55,6 +57,7 @@ export type SubTaskRowProps = {
   task: Task;
   to: string;
 
+  onMove?: (task: Task) => Promise<void> | void;
   onDelete?: (taskId: string) => void;
 
   // parent owns API + refresh
@@ -83,9 +86,9 @@ export type TaskDetailsPaneProps = {
 };
 
 export type AddTaskFormProps = {
-  listId: string;
-  stack: string[];
-  tasksInList: Task[];
+  listId?: string;
+  stack?: string[];
+  tasksInList?: Task[];
   newTaskTitle: string;
   setNewTaskTitle: (title: string) => void;
   newTaskDescription: string;
@@ -102,20 +105,20 @@ export type AddTaskFormProps = {
 
 export type EditTaskFormProps = {
     task: Task;
-    draftTitle: string;
-    setDraftTitle: (title: string) => void;
-    draftDescription: string;
-    setDraftDescription: (description: string) => void;
-    draftPriority: TaskPriority;
-    setDraftPriority: (priority: TaskPriority) => void;
-    draftStatus: TaskStatus;
-    setDraftStatus: (status: TaskStatus) => void;
-    draftDueDate: string;
-    setDraftDueDate: (dueDate: string) => void;
+    draftTaskTitle: string;
+    setDraftTaskTitle: (title: string) => void;
+    draftTaskDescription: string;
+    setDraftTaskDescription: (description: string) => void;
+    draftTaskPriority: TaskPriority;
+    setDraftTaskPriority: (priority: TaskPriority) => void;
+    draftTaskStatus: TaskStatus;
+    setDraftTaskStatus: (status: TaskStatus) => void;
+    draftTaskDueDate: string;
+    setDraftTaskDueDate: (dueDate: string) => void;
     saving: boolean;
     setSaving: (saving: boolean) => void;
     setIsEditing: (isEditing: boolean) => void;
+    onSave: (task: Task) => Promise<void> | void;
     onClose: () => void;
-    onChanged?: () => void;
     refresh: () => void;
 };
