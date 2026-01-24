@@ -22,7 +22,7 @@ type TaskIndex = {
   childrenByParentId: Record<string, Task[]>;
 };
 
-async function ensureInboxListExists(rawLists: any[]) {
+async function ensureInboxListExists(rawLists: TaskList[]) {
   // 1) Stored id path
   const storedId = getInboxListId();
 if (storedId && rawLists.some(l => l?.id === storedId)) {
@@ -52,6 +52,8 @@ if (storedId && rawLists.some(l => l?.id === storedId)) {
   return { lists: [...rawLists, created] };
 }
 
+// ignore any for linting purposes; pagination handles limits
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function fetchAllTasksForList(listId: string) {
   const all: any[] = [];
   let nextToken: string | null | undefined = null;
@@ -76,8 +78,8 @@ export function useTaskIndex(opts?: {
   tasksPerListLimit?: number; // not used (pagination does the real work), kept for future tuning
   autoLoad?: boolean;
 }) {
-  const [rawLists, setRawLists] = useState<any[]>([]);
-  const [rawTasks, setRawTasks] = useState<any[]>([]);
+  const [rawLists, setRawLists] = useState<TaskList[]>([]);
+  const [rawTasks, setRawTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<unknown>(null);
 
