@@ -8,12 +8,20 @@ import type { TaskDetailsPaneProps } from "../types/task";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { EditTaskForm } from "./EditTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
+import { fireToast } from "../hooks/useFireToast";
+import { Flex } from "@aws-amplify/ui-react";
 
 const pulse = keyframes`
   0%   { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
   30%  { box-shadow: 0 0 0 4px rgba(66,153,225,0.35); transform: translateY(-1px); }
   100% { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
 `;
+
+// --- helpers (keep local, simple)
+function dateInputToIso(date: string) {
+  if (!date) return null;
+  return new Date(`${date}T00:00:00.000Z`).toISOString();
+}
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -54,11 +62,11 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const selected = tasksInList.find((t) => t.id === taskId);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [draftTitle, setDraftTitle] = useState("");
-  const [draftDescription, setDraftDescription] = useState("");
-  const [draftPriority, setDraftPriority] = useState(TaskPriority.Medium);
-  const [draftStatus, setDraftStatus] = useState(TaskStatus.Open);
-  const [draftDueDate, setDraftDueDate] = useState(""); // YYYY-MM-DD
+  const [draftTaskTitle, setDraftTaskTitle] = useState("");
+  const [draftTaskDescription, setDraftTaskDescription] = useState("");
+  const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
+  const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
+  const [draftTaskDueDate, setDraftTaskDueDate] = useState(""); // YYYY-MM-DD
   const [saving, setSaving] = useState(false);
 
   const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
@@ -72,7 +80,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   ;
 
   // Initialize draft when selection changes
-  if (selected && draftTitle === "" && draftDescription === "" && !isEditing) {
+  if (selected && draftTaskTitle === "" && draftTaskDescription === "" && !isEditing) {
     // (This "guard" prevents re-init on every render; we’ll do it properly with useEffect below.)
   }
 
@@ -105,7 +113,42 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     }
   };
 
+  const handleSave = async (selectedTask: any) => {
+    if (!selectedTask) return;
 
+    try {
+      setSaving(true);
+      await taskmasterApi.updateTask({
+        id: selectedTask.id,
+        listId: selectedTask.listId,
+        title: draftTaskTitle.trim() || "Untitled Task",
+        description: draftTaskDescription,
+        // Cast to generated enums (type-level only) so TS stops screaming.
+        priority: draftTaskPriority as unknown as TaskPriority,
+        status: draftTaskStatus as unknown as TaskStatus,
+        dueAt: dateInputToIso(draftTaskDueDate),
+        completedAt:
+          draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
+      });
+    } catch (error) {
+      console.error("Error saving task:", error);
+      fireToast("error", "Error saving task", "There was an issue saving the task.");
+    } finally {
+      setSaving(false);
+      refresh();
+      resetFormAndClose();
+      fireToast("success", "Task saved", "The task has been successfully updated.");
+    }
+  };
+
+  const resetFormAndClose = () => {
+    setDraftTaskTitle("");
+    setDraftTaskDescription("");
+    setDraftTaskDueDate("");
+    setDraftTaskPriority(TaskPriority.Medium);
+    setDraftTaskStatus(TaskStatus.Open);
+    setIsEditing(false);
+  };
 
   return (
     <Box
@@ -142,42 +185,48 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 {selected.title}
               </Text>
 
-              <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
-                {isEditing ? "Hide Edit" : "Edit"}
-              </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
+                  {isEditing ? "Hide Edit" : "Edit"}
+                </Button>
             </HStack>
 
             {isEditing ? (
               <EditTaskForm
                 task={selected}
-                draftTitle={draftTitle}
-                setDraftTitle={setDraftTitle}
-                draftDescription={draftDescription}
-                setDraftDescription={setDraftDescription}
-                draftPriority={draftPriority}
-                setDraftPriority={setDraftPriority}
-                draftStatus={draftStatus}
-                setDraftStatus={setDraftStatus}
-                draftDueDate={draftDueDate}
-                setDraftDueDate={setDraftDueDate}
+                draftTaskTitle={draftTaskTitle}
+                setDraftTaskTitle={setDraftTaskTitle}
+                draftTaskDescription={draftTaskDescription}
+                setDraftTaskDescription={setDraftTaskDescription}
+                draftTaskPriority={draftTaskPriority}
+                setDraftTaskPriority={setDraftTaskPriority}
+                draftTaskStatus={draftTaskStatus}
+                setDraftTaskStatus={setDraftTaskStatus}
+                draftTaskDueDate={draftTaskDueDate}
+                setDraftTaskDueDate={setDraftTaskDueDate}
                 saving={saving}
                 setSaving={setSaving}
                 setIsEditing={setIsEditing}
+                onSave={() => handleSave(selected)}
                 onClose={() => setIsEditing(false)}
                 onChanged={onChanged}
                 refresh={refresh}
               />
             ) : (
               <>
-            <HStack>
-              <Badge>{selected.priority}</Badge>
-              <Badge variant="outline">{selected.status}</Badge>
-            </HStack>
+                <Box w="100%" pt={2} pb={4} marginTop={2} marginBottom={6} borderBottom="sm" borderColor="gray.200">
+                  <Text>{selected.description || <i>No description.</i>}</Text>
+                </Box>
+                <Flex gap={2} width="100%" justifyContent={"space-between"}>
+                  <HStack>
+                    <Badge>{selected.priority}</Badge>
+                    <Badge variant="outline">{selected.status}</Badge>
+                  </HStack>
 
-            <Text color="gray.600" fontSize="sm">
-              Due: {formatDue(selected.dueAt)}
-            </Text>
-            </>
+                  <Text color="gray.600" fontSize="sm">
+                    Due: {formatDue(selected.dueAt)}
+                  </Text>
+                </Flex>
+              </>
             )}
           </VStack>
 
