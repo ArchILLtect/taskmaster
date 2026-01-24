@@ -7,7 +7,6 @@ import {
   Button,
   Flex,
   Select,
-  Portal,
   useListCollection,
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
@@ -63,7 +62,6 @@ export const EditTaskForm = ({
   setDraftTaskStatus,
   saving,
   onSave,
-  setIsEditing,
   onClose,
 }: EditTaskFormProps) => {
 
@@ -71,6 +69,7 @@ export const EditTaskForm = ({
   const [selectedListId, setSelectedListId] = useState<string>(task.listId ? task.listId : inboxListId || "");
 
   const { visibleLists: allLists } = useTaskmasterData();
+  const hideButtons = Boolean(onSave);
 
   useEffect(() => {
     if (!task) return;
@@ -116,35 +115,23 @@ export const EditTaskForm = ({
     setListCollection(listItems);
   }, [listItems, setListCollection]);
 
-
-  const onCancel = () => {
-    resetFormAndClose();
-  };
-
-  const resetFormAndClose = () => {
-    setDraftTaskTitle("");
-    setDraftTaskDescription("");
-    setDraftTaskDueDate("");
-    setDraftTaskPriority(TaskPriority.Medium);
-    setDraftTaskStatus(TaskStatus.Open);
-    setIsEditing(false);
-  };
-
   return (
-  <Box w="100%" mt={2} p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
+  <Box w="100%" p={4} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
     <VStack align="start" gap={2}>
-      <Flex justify="space-between" align="center" width="100%">
-        <Heading size="sm" fontWeight="bold">Edit Task</Heading>
-        <CloseButton
-          onClick={() => { 
-            onClose();
-            onCancel();
-          }}
-          size="xs"
-        />
-      </Flex>
-
-      <div style={{height: "1px", width: "100%", backgroundColor: "gray"}} />
+      {!hideButtons ? (
+        <>
+          <Flex justify="space-between" align="center" width="100%">
+            <Heading size="sm" fontWeight="bold">Edit Task</Heading>
+            <CloseButton
+              onClick={() => { 
+                onClose();
+              }}
+              size="xs"
+            />
+          </Flex>
+          <Box height="1px" width="100%" bg="gray.400" />
+        </>
+      ) : null}
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
@@ -174,7 +161,7 @@ export const EditTaskForm = ({
           />
         </Flex>
       </FormControl>
-            <Select.Root
+      <Select.Root
         collection={listCollection}
         value={[selectedListId]}
         onValueChange={(e) => {setSelectedListId(e.value[0]);}}
@@ -189,22 +176,20 @@ export const EditTaskForm = ({
             </Select.Trigger>
           </Select.Control>
 
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {/* Renders all items in the collection */}
-                {listCollection.items.map((item) => (
-                  <Select.Item
-                    item={item}
-                    key={item.value}
-                  >
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
+          <Select.Positioner>
+            <Select.Content>
+              {/* Renders all items in the collection */}
+              {listCollection.items.map((item) => (
+                <Select.Item
+                  item={item}
+                  key={item.value}
+                >
+                  <Select.ItemText>{item.label}</Select.ItemText>
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
         </Flex>
       </Select.Root>
       <FormControl w="100%">
@@ -241,12 +226,11 @@ export const EditTaskForm = ({
             </Select.Trigger>
           </Select.Control>
 
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {/* Renders all items in the collection */}
-                {priorityCollection.items.map((item) => (
-                  <Select.Item
+          <Select.Positioner>
+            <Select.Content>
+              {/* Renders all items in the collection */}
+              {priorityCollection.items.map((item) => (
+                <Select.Item
                     item={item}
                     key={item.value}
                   >
@@ -256,7 +240,6 @@ export const EditTaskForm = ({
                 ))}
               </Select.Content>
             </Select.Positioner>
-          </Portal>
         </Flex>
       </Select.Root>
 
@@ -278,28 +261,26 @@ export const EditTaskForm = ({
             </Select.Trigger>
           </Select.Control>
 
-          <Portal>
-            <Select.Positioner>
-              <Select.Content>
-                {/* Renders all items in the collection */}
-                {statusCollection.items.map((item) => (
-                  <Select.Item
-                    item={item}
-                    key={item.value}
-                  >
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-          </Portal>
+          <Select.Positioner>
+            <Select.Content>
+              {/* Renders all items in the collection */}
+              {statusCollection.items.map((item) => (
+                <Select.Item
+                  item={item}
+                  key={item.value}
+                >
+                  <Select.ItemText>{item.label}</Select.ItemText>
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
         </Flex>
       </Select.Root>
 
-      {onSave && (
+      {!hideButtons ? (
         <Flex justify="space-between" align="center" width="100%">
-          <Button variant="ghost" onClick={onCancel} disabled={saving}>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
 
@@ -307,7 +288,7 @@ export const EditTaskForm = ({
             Save
           </Button>
         </Flex>
-      )}
+      ) : null}
     </VStack>
   </Box>
   );
