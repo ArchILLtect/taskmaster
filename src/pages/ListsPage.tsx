@@ -8,10 +8,10 @@ import { taskmasterApi } from "../api/taskmasterApi";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
-import type { TaskList } from "../types";
+import type { ListUI } from "../types";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 
-function nextSortOrder(lists: TaskList[]) {
+function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
 
   return max + 1;

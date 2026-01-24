@@ -10,7 +10,7 @@ import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { AddTaskForm } from "../components/AddTaskForm";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskPriority, TaskStatus } from "../API";
-import type { Task } from "../types/task";
+import type { TaskUI } from "../types/task";
 import { EditListForm } from "../components/EditListForm";
 import { getInboxListId, SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
@@ -146,7 +146,7 @@ export function ListDetailsPage() {
     }
   };
 
-  const handleSendToInbox = async (task: Task) => {
+  const handleSendToInbox = async (task: TaskUI) => {
     const inboxId = getInboxListId();
     if (!inboxId) return;
     if (task.listId === inboxId) return;

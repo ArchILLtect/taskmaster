@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
-import type { Task } from "../types";
+import type { TaskUI } from "../types";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -51,7 +51,7 @@ const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZon
 
 export function InboxPage() {
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskUI | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
@@ -89,7 +89,7 @@ export function InboxPage() {
     };
   };
 
-  const handleEditTask = async (task: Task) => {
+  const handleEditTask = async (task: TaskUI) => {
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
@@ -114,7 +114,7 @@ export function InboxPage() {
     }
   };
 
-  const handleSave = async (selectedTask: Task | null) => {
+  const handleSave = async (selectedTask: TaskUI | null) => {
     if (!selectedTask) return;
 
     try {

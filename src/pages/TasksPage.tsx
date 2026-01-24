@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Flex } from "@aws-amplify/ui-react";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
-import type { Task } from "../types/task";
+import type { TaskUI } from "../types/task";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -36,7 +36,7 @@ export function TasksPage() {
 
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskUI | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
@@ -72,7 +72,7 @@ export function TasksPage() {
     };
   };
 
-  const handleEditTask = async (task: Task) => {
+  const handleEditTask = async (task: TaskUI) => {
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
@@ -97,7 +97,7 @@ export function TasksPage() {
     }
   };
 
-  const handleSave = async (selectedTask: Task | null) => {
+  const handleSave = async (selectedTask: TaskUI | null) => {
     if (!selectedTask) return;
 
     try {
