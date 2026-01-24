@@ -11,10 +11,13 @@ import {
   useListCollection,
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
-import { taskmasterApi } from "../api/taskmasterApi";
 import type { EditTaskFormProps } from "../types/task";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TaskPriority, TaskStatus } from "../API";
+import { getInboxListId } from "../config/inboxSettings";
+import { useTaskmasterData } from "../hooks/useTaskmasterData";
+
+type Option<T extends string> = { label: string; value: T };
 
 // --- helpers (keep local, simple)
 function isoToDateInput(iso?: string | null) {
@@ -23,12 +26,6 @@ function isoToDateInput(iso?: string | null) {
   if (isNaN(d.getTime())) return "";
   return d.toISOString().slice(0, 10);
 }
-function dateInputToIso(date: string) {
-  if (!date) return null;
-  return new Date(`${date}T00:00:00.000Z`).toISOString();
-}
-
-type Option<T extends string> = { label: string; value: T };
 
 const isTaskPriority = (v: string): v is TaskPriority =>
   (Object.values(TaskPriority) as string[]).includes(v);
@@ -54,31 +51,36 @@ const STATUS_OPTIONS: Option<TaskStatus>[] = [
 
 export const EditTaskForm = ({
   task,
-  draftTitle,
-  setDraftTitle,
-  draftDescription,
-  setDraftDescription,
-  draftDueDate,
-  setDraftDueDate,
-  draftPriority,
-  setDraftPriority,
-  draftStatus,
-  setDraftStatus,
+  draftTaskTitle,
+  setDraftTaskTitle,
+  draftTaskDescription,
+  setDraftTaskDescription,
+  draftTaskDueDate,
+  setDraftTaskDueDate,
+  draftTaskPriority,
+  setDraftTaskPriority,
+  draftTaskStatus,
+  setDraftTaskStatus,
   saving,
-  setSaving,
+  onSave,
   setIsEditing,
   onClose,
-  refresh,
 }: EditTaskFormProps) => {
 
-    useEffect(() => {
+  const inboxListId = getInboxListId();
+  const [selectedListId, setSelectedListId] = useState<string>(task.listId ? task.listId : inboxListId || "");
+
+  const { visibleLists: allLists } = useTaskmasterData();
+
+  useEffect(() => {
     if (!task) return;
-    setDraftTitle(task.title ?? "");
-    setDraftDescription(task.description ?? "");
-    setDraftPriority((task.priority as TaskPriority) ?? TaskPriority.Medium);
-    setDraftStatus((task.status as TaskStatus) ?? TaskStatus.Open);
-    setDraftDueDate(isoToDateInput(task.dueAt));
-  }, [task?.id]); // only when task changes
+    setSelectedListId(task.listId);
+    setDraftTaskTitle(task.title ?? "");
+    setDraftTaskDescription(task.description ?? "");
+    setDraftTaskPriority((task.priority as TaskPriority) ?? TaskPriority.Medium);
+    setDraftTaskStatus((task.status as TaskStatus) ?? TaskStatus.Open);
+    setDraftTaskDueDate(isoToDateInput(task.dueAt));
+  }, [task?.id]);
 
   // ✅ Chakra v3 pattern: destructure `{ collection }`
   const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({
@@ -93,38 +95,39 @@ export const EditTaskForm = ({
     itemToString: (item) => item.label,
   });
 
+  const listItems = useMemo(() => {
+    const items: Option<string>[] = [];
+    if (inboxListId) {
+      items.push({ label: "Inbox", value: inboxListId });
+    }
+    allLists.forEach((list) => {
+      items.push({ label: list.name, value: list.id });
+    });
+    return items;
+  }, [allLists, inboxListId]);
+
+  const { collection: listCollection, set: setListCollection } = useListCollection<Option<string>>({
+    initialItems: listItems,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
+
+  useEffect(() => {
+    setListCollection(listItems);
+  }, [listItems, setListCollection]);
+
+
   const onCancel = () => {
-    if (!task) return;
-    setDraftTitle(task.title ?? "");
-    setDraftDescription(task.description ?? "");
-    setDraftPriority((task.priority as TaskPriority) ?? TaskPriority.Medium);
-    setDraftStatus((task.status as TaskStatus) ?? TaskStatus.Open);
-    setDraftDueDate(isoToDateInput(task.dueAt));
-    setIsEditing(false);
+    resetFormAndClose();
   };
 
-  const onSave = async () => {
-    if (!task) return;
-
-    setSaving(true);
-    try {
-      await taskmasterApi.updateTask({
-        id: task.id,
-        title: draftTitle.trim() || "Untitled Task",
-        description: draftDescription,
-        // Cast to generated enums (type-level only) so TS stops screaming.
-        priority: draftPriority as unknown as TaskPriority,
-        status: draftStatus as unknown as TaskStatus,
-        dueAt: dateInputToIso(draftDueDate),
-        completedAt:
-          draftStatus === TaskStatus.Done ? (task.completedAt ?? new Date().toISOString()) : null,
-      });
-
-      await refresh();
-      setIsEditing(false);
-    } finally {
-      setSaving(false);
-    }
+  const resetFormAndClose = () => {
+    setDraftTaskTitle("");
+    setDraftTaskDescription("");
+    setDraftTaskDueDate("");
+    setDraftTaskPriority(TaskPriority.Medium);
+    setDraftTaskStatus(TaskStatus.Open);
+    setIsEditing(false);
   };
 
   return (
@@ -152,8 +155,8 @@ export const EditTaskForm = ({
             id="task-title"
             bg="white"
             placeholder="Task Title"
-            value={draftTitle}
-            onChange={(e) => setDraftTitle(e.target.value)}
+            value={draftTaskTitle}
+            onChange={(e) => setDraftTaskTitle(e.target.value)}
           />
         </Flex>
       </FormControl>
@@ -166,11 +169,44 @@ export const EditTaskForm = ({
             id="task-description"
             bg="white"
             placeholder="Task Description (optional)"
-            value={draftDescription}
-            onChange={(e) => setDraftDescription(e.target.value)}
+            value={draftTaskDescription}
+            onChange={(e) => setDraftTaskDescription(e.target.value)}
           />
         </Flex>
       </FormControl>
+            <Select.Root
+        collection={listCollection}
+        value={[selectedListId]}
+        onValueChange={(e) => {setSelectedListId(e.value[0]);}}
+      >
+        <Flex justify="space-between" align="center" width="100%">
+          <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-list">List</Select.Label>
+
+          <Select.Control bg="white" minW="200px" maxW="200px" id="task-list">
+            <Select.Trigger>
+              <Select.ValueText placeholder="Select a list" />
+              <Select.Indicator />
+            </Select.Trigger>
+          </Select.Control>
+
+          <Portal>
+            <Select.Positioner>
+              <Select.Content>
+                {/* Renders all items in the collection */}
+                {listCollection.items.map((item) => (
+                  <Select.Item
+                    item={item}
+                    key={item.value}
+                  >
+                    <Select.ItemText>{item.label}</Select.ItemText>
+                    <Select.ItemIndicator />
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Positioner>
+          </Portal>
+        </Flex>
+      </Select.Root>
       <FormControl w="100%">
         <Flex justify="space-between" align="center" width="100%">
           <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor="task-due-date">Due Date</FormLabel>
@@ -182,17 +218,17 @@ export const EditTaskForm = ({
             id="task-due-date"
             bg="white"
             placeholder="Due Date (optional)"
-            value={draftDueDate}
-            onChange={(e) => setDraftDueDate(e.target.value)}
+            value={draftTaskDueDate}
+            onChange={(e) => setDraftTaskDueDate(e.target.value)}
           />
         </Flex>
       </FormControl>
       <Select.Root
         collection={priorityCollection}
-        value={[draftPriority]}
+        value={[draftTaskPriority]}
         onValueChange={(e) => {
           const raw = e.value[0];
-          setDraftPriority(raw && isTaskPriority(raw) ? raw : TaskPriority.Medium);
+          setDraftTaskPriority(raw && isTaskPriority(raw) ? raw : TaskPriority.Medium);
         }}
       >
         <Flex justify="space-between" align="center" width="100%">
@@ -226,10 +262,10 @@ export const EditTaskForm = ({
 
       <Select.Root
         collection={statusCollection}
-        value={[draftStatus]}
+        value={[draftTaskStatus]}
         onValueChange={(e) => {
           const raw = e.value[0];
-          setDraftStatus(raw && isTaskStatus(raw) ? raw : TaskStatus.Open);
+          setDraftTaskStatus(raw && isTaskStatus(raw) ? raw : TaskStatus.Open);
         }}
       >
         <Flex justify="space-between" align="center" width="100%">
@@ -261,15 +297,17 @@ export const EditTaskForm = ({
         </Flex>
       </Select.Root>
 
-      <Flex justify="space-between" align="center" width="100%">
-        <Button variant="ghost" onClick={onCancel} disabled={saving}>
-          Cancel
-        </Button>
+      {onSave && (
+        <Flex justify="space-between" align="center" width="100%">
+          <Button variant="ghost" onClick={onCancel} disabled={saving}>
+            Cancel
+          </Button>
 
-        <Button colorScheme="green" onClick={onSave} loading={saving}>
-          Save
-        </Button>
-      </Flex>
+          <Button colorScheme="green" onClick={() => onSave(task)} loading={saving}>
+            Save
+          </Button>
+        </Flex>
+      )}
     </VStack>
   </Box>
   );

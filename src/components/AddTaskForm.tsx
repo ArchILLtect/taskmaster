@@ -15,7 +15,9 @@ import { buildTaskStackPath } from "../routes/taskStack";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskStatus, TaskPriority } from "../API";
 import type { Task, AddTaskFormProps } from "../types/task";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getInboxListId } from "../config/inboxSettings";
+import { useTaskmasterData } from "../hooks/useTaskmasterData";
 
 type Option<T extends string> = { label: string; value: T };
 
@@ -75,6 +77,10 @@ export const AddTaskForm = ({
 
   const [saving, setSaving] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>(TaskStatus.Open);
+  const inboxListId = getInboxListId();
+  const [selectedListId, setSelectedListId] = useState<string>(listId ? listId : inboxListId || "");
+
+  const { visibleLists: allLists } = useTaskmasterData();
 
   //  Chakra v3 pattern: destructure `{ collection }`
   const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({
@@ -89,13 +95,30 @@ export const AddTaskForm = ({
     itemToString: (item) => item.label,
   });
 
+  const listItems = useMemo(() => {
+    const items: Option<string>[] = [];
+    if (inboxListId) {
+      items.push({ label: "Inbox", value: inboxListId });
+    }
+    allLists.forEach((list) => {
+      items.push({ label: list.name, value: list.id });
+    });
+    return items;
+  }, [allLists, inboxListId]);
+
+  const { collection: listCollection, set: setListCollection } = useListCollection<Option<string>>({
+    initialItems: listItems,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
+
+  useEffect(() => {
+    setListCollection(listItems);
+  }, [listItems, setListCollection]);
+
   const onCancel = () => {
     setShowAddTaskForm?.(false);
-    setNewTaskTitle("");
-    setNewTaskDescription("");
-    setNewTaskDueDate("");
-    setNewTaskPriority(TaskPriority.Medium);
-    setNewTaskStatus(TaskStatus.Open);
+    resetFormAndClose();
   };
 
   const onCreate = async () => {
@@ -109,8 +132,10 @@ export const AddTaskForm = ({
       const completedAt = status === TaskStatus.Done ? new Date().toISOString() : null;
 
       const created = await taskmasterApi.createTask({
-        listId,
-        sortOrder: nextSortOrder(tasksInList, parent),
+        listId: selectedListId,
+        // sortOrder: nextSortOrder(tasksInList, parent), --was the previous line--
+        // TODO: Will the refactored line break anything?
+        sortOrder: tasksInList ? nextSortOrder(tasksInList, parent) : 1,
         parentTaskId: parent,
         title: newTaskTitle.trim() || "Untitled Task",
         description: newTaskDescription,
@@ -126,12 +151,35 @@ export const AddTaskForm = ({
       await refresh();
 
       // navigate same as before (open the task pane for top-level tasks)
-      const nextStack = parentTaskId ? stack : [...stack, created.id];
-      navigate(buildTaskStackPath(listId, nextStack));
-      setShowAddTaskForm?.(false);
+      // const nextStack = parentTaskId ? stack : [...stack, created.id]; was the previous line
+      // TODO: will the refactored line break anything?
+      const nextStack = parentTaskId ? stack : [...(stack || []), created.id];
+
+      // navigate to inbox if no listId
+      if (!listId) {
+        navigate("/inbox");
+      } else {
+        // TODO: Had to add " || []" to fix TS error here--will it break anything?
+        navigate(buildTaskStackPath(listId, nextStack || []));
+      }
+
+      // reset form + close
+      resetFormAndClose();
+
+    } catch (error) {
+      console.error("Error creating task:", error);
     } finally {
       setSaving(false);
     }
+  };
+
+  const resetFormAndClose = () => {
+    setNewTaskTitle("");
+    setNewTaskDescription("");
+    setNewTaskDueDate("");
+    setNewTaskPriority(TaskPriority.Medium);
+    setNewTaskStatus(TaskStatus.Open);
+    setShowAddTaskForm?.(false);
   };
 
   return (
@@ -175,6 +223,41 @@ export const AddTaskForm = ({
           />
         </Flex>
       </FormControl>
+
+      <Select.Root
+        collection={listCollection}
+        value={[selectedListId]}
+        onValueChange={(e) => {setSelectedListId(e.value[0]);}}
+      >
+        <Flex justify="space-between" align="center" width="100%">
+          <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-list">List</Select.Label>
+
+          <Select.Control bg="white" minW="200px" maxW="200px" id="task-list">
+            <Select.Trigger>
+              <Select.ValueText placeholder="Select a list" />
+              <Select.Indicator />
+            </Select.Trigger>
+          </Select.Control>
+
+          <Portal>
+            <Select.Positioner>
+              <Select.Content>
+                {/* Renders all items in the collection */}
+                {listCollection.items.map((item) => (
+                  <Select.Item
+                    item={item}
+                    key={item.value}
+                  >
+                    <Select.ItemText>{item.label}</Select.ItemText>
+                    <Select.ItemIndicator />
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Positioner>
+          </Portal>
+        </Flex>
+      </Select.Root>
+
       <FormControl w="100%">
         <Flex justify="space-between" align="center" width="100%">
           <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor="task-due-date">Due Date</FormLabel>
