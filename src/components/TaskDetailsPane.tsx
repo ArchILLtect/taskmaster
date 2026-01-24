@@ -54,7 +54,6 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     refresh,
     navigate,
     onCloseAll,
-    onChanged,
     onDelete }, ref
   ) {
   
@@ -208,7 +207,6 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 setIsEditing={setIsEditing}
                 onSave={() => handleSave(selected)}
                 onClose={() => setIsEditing(false)}
-                onChanged={onChanged}
                 refresh={refresh}
               />
             ) : (
