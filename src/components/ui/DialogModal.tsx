@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { Dialog, Button, Portal } from "@chakra-ui/react"
+import { Dialog, Button, Portal, CloseButton } from "@chakra-ui/react"
 import { fireToast } from "../../hooks/useFireToast";
 
 type DialogModalProps = {
@@ -14,12 +13,6 @@ type DialogModalProps = {
 }
 
 export const DialogModal = ({ list, title, body, open, setOpen, onAccept, onCancel } : DialogModalProps) => {
-
-useEffect(() => {
-  if (open) {
-    console.log("DialogModal opened with:", { list, title });
-  }
-}, [open, list, title]);
 
   const handleAccept = () => {
     try {
@@ -42,10 +35,10 @@ useEffect(() => {
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>
+            <Dialog.Header paddingX={4} paddingTop={4} paddingBottom={2}>
               <Dialog.Title>{title}</Dialog.Title>
             </Dialog.Header>
-            <Dialog.Body>
+            <Dialog.Body paddingX={4} paddingY={2} >
               {body}
             </Dialog.Body>
             <Dialog.Footer>
@@ -55,7 +48,7 @@ useEffect(() => {
               <Button onClick={handleAccept}>Accept</Button>
             </Dialog.Footer>
             <Dialog.CloseTrigger asChild>
-              <Button onClick={onCancel} size={"xs"}>X</Button>
+              <CloseButton aria-label="Close" onClick={onCancel} />
             </Dialog.CloseTrigger>
           </Dialog.Content>
         </Dialog.Positioner>
