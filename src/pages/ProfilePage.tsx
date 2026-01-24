@@ -1,8 +1,20 @@
-import { Heading, Text, VStack } from "@chakra-ui/react";
+import { Heading, Text, VStack, Center, Spinner } from "@chakra-ui/react";
 import { currentUser } from "../mocks/currentUser";
+import { useProfilePageData } from "./useProfilePageData";
 
 export function ProfilePage() {
   const signedIn = Boolean(currentUser);
+
+    const { loading } = useProfilePageData();
+  
+    // Add a spinner for loading state
+    if (loading) {
+      return (
+        <Center width={"100%"} height={"75vh"}>
+          <Spinner size={"xl"} />
+        </Center>
+      );
+    }
 
   if (!signedIn) {
     return (
