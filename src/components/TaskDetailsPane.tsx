@@ -10,7 +10,7 @@ import { EditTaskForm } from "./EditTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
 import { fireToast } from "../hooks/useFireToast";
 import { Flex } from "@aws-amplify/ui-react";
-import type { Task } from "../types/task";
+import type { TaskUI } from "../types/task";
 
 // --- animations
 const pulse = keyframes`
@@ -120,7 +120,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     }
   };
 
-  const handleSave = async (selectedTask: Task) => {
+  const handleSave = async (selectedTask: TaskUI) => {
     if (!selectedTask) return;
 
     try {

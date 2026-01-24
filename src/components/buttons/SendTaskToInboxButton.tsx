@@ -1,5 +1,5 @@
 import { Button, Center } from "@chakra-ui/react";
-import type { Task } from "../../types";
+import type { TaskUI } from "../../types";
 import { Tooltip } from "../ui/Tooltip";
 // TODO: Remove toaster import and fireToast later--only used for debugging right now, but they cannot
 // be used in this component directly because it would create multiple toasters in the app.
@@ -7,9 +7,9 @@ import { Tooltip } from "../ui/Tooltip";
 // import { Toaster } from "../ui/Toaster";
 
 type SendToInboxButtonProps = {
-  task: Task;
+  task: TaskUI;
   isActive?: boolean;
-  onSend?: (e: React.MouseEvent<HTMLButtonElement>, task: Task) => void;
+  onSend?: (e: React.MouseEvent<HTMLButtonElement>, task: TaskUI) => void;
   disabled: boolean;
 }
 

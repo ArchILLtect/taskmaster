@@ -3,7 +3,7 @@ import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./ui/Tooltip";
 import { SendTaskToInboxButton } from "./buttons/SendTaskToInboxButton"
-import type { Task, TaskRowProps } from "../types";
+import type { TaskUI, TaskRowProps } from "../types";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useMemo } from "react";
@@ -30,7 +30,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
     await onDelete?.(task.id);
   };
 
-  const handleSendToInbox = async (e: React.MouseEvent<HTMLButtonElement>, task: Task) => {
+  const handleSendToInbox = async (e: React.MouseEvent<HTMLButtonElement>, task: TaskUI) => {
     e.preventDefault();
     e.stopPropagation();
 

@@ -13,7 +13,7 @@ import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskStatus, TaskPriority } from "../API";
-import type { Task, AddTaskFormProps } from "../types/task";
+import type { TaskUI, AddTaskFormProps } from "../types/task";
 import { useEffect, useMemo, useState } from "react";
 import { getInboxListId } from "../config/inboxSettings";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
@@ -48,7 +48,7 @@ const STATUS_OPTIONS: Option<TaskStatus>[] = [
   { label: "Done", value: TaskStatus.Done },
 ];
 
-function nextSortOrder(tasks: Task[], parentTaskId: string | null) {
+function nextSortOrder(tasks: TaskUI[], parentTaskId: string | null) {
   const max = tasks
     .filter(t => (t.parentTaskId ?? null) === parentTaskId)
     .reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
