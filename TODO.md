@@ -102,6 +102,9 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
     - TasksPage
   - When Zustand lands, refresh() disappears and components re-render via selectors
 
+- [ ] TODO(P3) Find a way to ensure refreshing of favorites sidebar section upon starring/un-starring lists for favorites.
+- [ ] TODO(P3) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage.
+
 ---
 
 ## Testing & Quality
