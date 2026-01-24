@@ -1,7 +1,7 @@
 import { Box, HStack, Text, Badge, Button, Flex } from "@chakra-ui/react";
 import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react-icons/io5";
 import { RouterLink } from "./RouterLink";
-import { Tooltip } from "./Tooltip";
+import { Tooltip } from "./ui/Tooltip";
 import type { SubTaskRowProps } from "../types/task";
 import { TaskStatus } from "../API";
 

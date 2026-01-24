@@ -1,7 +1,7 @@
 import { Box, HStack, Text, Button, Flex } from "@chakra-ui/react";
 import { IoTrash, IoStar, IoStarSharp } from "react-icons/io5";
 import { RouterLink } from "./RouterLink";
-import { Tooltip } from "./Tooltip";
+import { Tooltip } from "./ui/Tooltip";
 import type { ListRowProps } from "../types";
 
 export const ListRow = ({ list, setSelectedList, to, isEditable, isEditing, setIsEditing, onDelete, onToggleFavorite }: ListRowProps) => {
