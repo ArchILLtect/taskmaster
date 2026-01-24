@@ -33,7 +33,3 @@ export function countUserVisibleFavorites(lists: TaskList[], opts?: { inboxListI
 export function countUserVisibleNonFavorites(lists: TaskList[], opts?: { inboxListId?: string | null }) {
   return getUserVisibleNonFavorites(lists, opts).length;
 }
-
-export function isInboxListId(listId: string, inboxListId?: string | null) {
-  return !!inboxListId && listId === inboxListId;
-}
