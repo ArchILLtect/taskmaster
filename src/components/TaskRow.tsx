@@ -5,13 +5,14 @@ import { Tooltip } from "./ui/Tooltip";
 import { SendTaskToInboxButton } from "./buttons/SendTaskToInboxButton"
 import type { Task, TaskRowProps } from "../types";
 import { TaskStatus } from "../API";
-// import { fireToast } from "../hooks/useFireToast";
 import { getInboxListId } from "../config/inboxSettings";
+import { useMemo } from "react";
 
-export const TaskRow = ({ task, list, to, showLists, onMove, onDelete, onToggleComplete }: TaskRowProps) => {
+export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, onDelete }: TaskRowProps) => {
 
-  const inboxListId = getInboxListId();
-  const isOffLimits = inboxListId ? task.listId === inboxListId : false;
+  const inboxListId = useMemo(() => getInboxListId(), []);
+
+  const isOffLimits = task.listId === (inboxListId ?? "");
 
   const onComplete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
