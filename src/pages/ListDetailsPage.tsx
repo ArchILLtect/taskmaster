@@ -9,10 +9,11 @@ import { TaskRow } from "../components/TaskRow";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { AddTaskForm } from "../components/AddTaskForm";
 import { taskmasterApi } from "../api/taskmasterApi";
-import { TaskPriority, TaskStatus } from "../API";
+import { TaskPriority, TaskStatus, type Task } from "../API";
 import { EditListForm } from "../components/EditListForm";
-import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
+import { getInboxListId, SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
+import { Tooltip } from "../components/ui/Tooltip"
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -36,8 +37,11 @@ export function ListDetailsPage() {
 
   const { listId } = useParams<{ listId: string }>();
   const { lists, tasks, loading, err, refresh } = useListDetailsPageData(listId);
-  const list = lists.find(l => l.id === listId);
-  const listName = list?.name || "Unknown List";
+  const listById = useMemo(() => new Map(lists.map(l => [l.id, l])), [lists]);
+  const currentList = listId ? listById.get(listId) : null;
+  const listName = currentList?.name || "Unknown List";
+
+  const isOffLimits = currentList?.id === (getInboxListId() ?? "");
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -88,19 +92,26 @@ export function ListDetailsPage() {
   }, [activeTaskId]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
+    if (!taskId || !nextStatus) return;
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
-    await taskmasterApi.updateTask({
-      id: taskId,
-      status: nextStatus,
-      completedAt,
-    });
-
-    await refresh();
+    try {
+      await taskmasterApi.updateTask({
+        id: taskId,
+        status: nextStatus,
+        completedAt,
+      });
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      fireToast("error", "Error updating task", "There was an issue updating the task status.");
+    } finally {
+      refresh();
+      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
+    };
   };
 
   const handleSave = async () => {
-    if (!list) return;
+    if (!currentList) return;
 
     const trimmed = draftListName.trim();
     const isInvalidName =
@@ -117,7 +128,7 @@ export function ListDetailsPage() {
     try {
   
       await taskmasterApi.updateTaskList({
-        id: list.id,
+        id: currentList.id,
         name: draftListName.trim() || "Untitled List",
         // description: draftDescription,
       });
@@ -134,22 +145,46 @@ export function ListDetailsPage() {
     }
   };
 
+  const handleSendToInbox = async (task: Task) => {
+    const inboxId = getInboxListId();
+    if (!inboxId) return;
+    if (task.listId === inboxId) return;
+
+    try {
+      await taskmasterApi.sendTaskToInbox(task.id);
+      refresh();
+    } catch (error) {
+      console.error("Error sending task to inbox:", error);
+      fireToast("error", "Failed to send to Inbox", "An error occurred while sending the task to the Inbox.");
+    } finally {
+      console.log("Task sent to Inbox successfully.");
+      fireToast("success", "Task sent to Inbox", "The task has been successfully sent to your Inbox.");
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => {
-    if (!listId) return;
+    if (!taskId) return;
 
+    try {
     await taskmasterApi.deleteTask({ id: taskId }); // input: DeleteTaskInput
-    await refresh();
-
-    const idx = stack.indexOf(taskId);
-    if (idx !== -1) {
-      const nextStack = stack.slice(0, idx);
-      navigate(buildTaskStackPath(listId, nextStack), { replace: true });
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
+    } finally {
+      await refresh();
+      fireToast("success", "Task deleted", "The task has been successfully deleted.");
+      const idx = stack.indexOf(taskId);
+      if (idx !== -1) {
+        const nextStack = stack.slice(0, idx);
+        navigate(buildTaskStackPath(currentList?.id ?? listId ?? "", nextStack), { replace: true });
+      }
     }
   };
 
   const handleCancel = () => {
-    setDraftListName(list?.name ?? "");
-    setDraftListDescription(list?.description ?? "");
+    if (!currentList) return;
+    setDraftListName(currentList.name ?? "");
+    setDraftListDescription(currentList.description ?? "");
     setIsEditing(false);
 
     // Fire toast notification for canceled edit
@@ -187,11 +222,12 @@ export function ListDetailsPage() {
     }
   };
 
-  if (!listId) return <Navigate to="/lists" replace />;
-  // TODO add Chakra UI loading and error states:
+  // Note: `lists` comes from an async hook; don't redirect until loading is finished.
   if (loading) return <div>Loading…</div>;
-  // TODO use ErrorBoundary for errors:
   if (err) return <div>Failed to load list data.</div>;
+
+  if (!listId) return <Navigate to="/lists" replace />;
+  if (!currentList) return <Navigate to="/lists" replace />;
 
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
@@ -204,15 +240,19 @@ export function ListDetailsPage() {
               <Heading size="lg">List:</Heading>
               <Badge variant="outline" size={"lg"}>{listName}</Badge>
             </HStack>
-            <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)}>
+            
+            <Tooltip content={isOffLimits ? "Editing is disabled for the system Inbox list." : "Edit list details for list " + listName}>
+            <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)} disabled={isOffLimits}>
               {isEditing ? "Hide Edit" : "Edit"}
             </Button>
+            </Tooltip>
+
             <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={toggleShowCompletedTasks} />
           </Flex>
 
-          {isEditing &&
+          {isEditing && currentList &&
             <EditListForm
-              list={list!}
+              list={currentList}
               draftName={draftListName}
               setDraftName={setDraftListName}
               draftDescription={draftListDescription}
@@ -234,18 +274,22 @@ export function ListDetailsPage() {
               </Text>
               </Flex>
               <VStack align="stretch" gap={2} mt={2} width="100%">
-                {visibleTasks.map(task => (
+                {visibleTasks.map(task => {
+                  if (!currentList) return null;
+                  return (
                   <Box key={task.id} w="100%">
                     <TaskRow
                       task={task}
-                      listName={listName}
-                      to={buildTaskStackPath(listId, [task.id])}
+                      list={currentList}
+                      to={buildTaskStackPath(currentList.id, [task.id])}
                       showLists={false}
+                      onMove={handleSendToInbox}
                       onDelete={handleDeleteTask}
                       onToggleComplete={handleToggleComplete}
                     />
                   </Box>
-                ))}
+                );
+              })}
               </VStack>
             </>
           )}
@@ -280,7 +324,7 @@ export function ListDetailsPage() {
               </VStack>
               {showAddTaskForm && (
                 <AddTaskForm
-                  listId={listId}
+                  listId={currentList?.id}
                   stack={stack}
                   tasksInList={tasksInList}
                   newTaskTitle={newTaskTitle}
@@ -311,7 +355,7 @@ export function ListDetailsPage() {
       {stack.map((taskId, idx) => (
         <TaskDetailsPane
           key={taskId}
-          listId={listId}
+          listId={currentList.id}
           ref={idx === stack.length - 1 ? lastPaneRef : undefined}
           taskId={taskId}
           stack={stack}
@@ -328,7 +372,6 @@ export function ListDetailsPage() {
           navigate={navigate}
           refresh={refresh}
           onCloseAll={closeAll}
-          onChanged={refresh}
           onDelete={handleDeleteTask}
         />
       ))}
