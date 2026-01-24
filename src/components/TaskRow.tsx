@@ -1,11 +1,17 @@
 import { Box, HStack, VStack, Text, Badge, Button, Flex } from "@chakra-ui/react";
 import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react-icons/io5";
 import { RouterLink } from "./RouterLink";
-import { Tooltip } from "./Tooltip";
-import type { TaskRowProps } from "../types";
+import { Tooltip } from "./ui/Tooltip";
+import { SendTaskToInboxButton } from "./buttons/SendTaskToInboxButton"
+import type { Task, TaskRowProps } from "../types";
 import { TaskStatus } from "../API";
+// import { fireToast } from "../hooks/useFireToast";
+import { getInboxListId } from "../config/inboxSettings";
 
-export const TaskRow = ({ task, listName, to, showLists, onDelete, onToggleComplete }: TaskRowProps) => {
+export const TaskRow = ({ task, list, to, showLists, onMove, onDelete, onToggleComplete }: TaskRowProps) => {
+
+  const inboxListId = getInboxListId();
+  const isOffLimits = inboxListId ? task.listId === inboxListId : false;
 
   const onComplete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -17,12 +23,20 @@ export const TaskRow = ({ task, listName, to, showLists, onDelete, onToggleCompl
     await onToggleComplete?.(task.id, nextStatus);
   };
 
-  const onDeleteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const onDeleteClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    onDelete?.(task.id);
+    await onDelete?.(task.id);
   };
-  
+
+  const handleSendToInbox = async (e: React.MouseEvent<HTMLButtonElement>, task: Task) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    await onMove?.(task);
+    // fireToast("success", "Task sent to Inbox", "The task has been moved to your Inbox.");
+  };
+
   return (
     <RouterLink key={task.id} to={to}>
       {({ isActive }) => (
@@ -44,12 +58,17 @@ export const TaskRow = ({ task, listName, to, showLists, onDelete, onToggleCompl
                 </Text>
               ) : null}
             </Box>
-
+            <SendTaskToInboxButton
+              task={task}
+              isActive={isActive}
+              onSend={handleSendToInbox}
+              disabled={isOffLimits}
+            />
             <HStack align="center" gap={1}>
               {showLists ? (
                 <Box w="75px" textAlign="right">
                   <Badge fontSize="sm" color="gray.500">
-                    {listName || "Unknown List"}
+                    {list.name || "Unknown List"}
                   </Badge>
                 </Box>
               ) : null}
