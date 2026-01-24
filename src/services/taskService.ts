@@ -1,37 +1,37 @@
-import type { Task } from "../types/task";
+import type { TaskUI } from "../types/task";
 import { mockTasks } from "../mocks/tasks";
 import { taskPatchStore } from "./taskPatchStore";
 import { updatesEventStore } from "./updatesEventStore";
 import { TaskPriority, TaskStatus } from "../API";
 
 export const taskService = {
-  getAll(): Task[] {
+  getAll(): TaskUI[] {
     return taskPatchStore.applyAll(mockTasks);
   },
 
-  getByListId(listId: string): Task[] {
+  getByListId(listId: string): TaskUI[] {
     return this.getAll().filter((t) => t.listId === listId);
   },
 
-  getById(taskId: string): Task | undefined {
+  getById(taskId: string): TaskUI | undefined {
     return this.getAll().find((t) => t.id === taskId);
   },
 
-  getChildren(tasks: Task[], parentId: string): Task[] {
+  getChildren(tasks: TaskUI[], parentId: string): TaskUI[] {
     return tasks
       .filter((t) => t.parentTaskId === parentId)
       .slice()
       .sort((a, b) => a.sortOrder - b.sortOrder);
   },
 
-  getTopLevel(tasks: Task[]): Task[] {
+  getTopLevel(tasks: TaskUI[]): TaskUI[] {
     return tasks
       .filter((t) => t.parentTaskId == null)
       .slice()
       .sort((a, b) => a.sortOrder - b.sortOrder);
   },
 
-  setStatus(taskId: string, status: Task["status"]) {
+  setStatus(taskId: string, status: TaskUI["status"]) {
     const prev = this.getById(taskId)?.status;
     taskPatchStore.setStatus(taskId, status);
     const task = this.getById(taskId);
@@ -56,7 +56,7 @@ export const taskService = {
     }
   },
 
-  create(data: Partial<Task>): Task {
+  create(data: Partial<TaskUI>): TaskUI {
     const now = new Date().toISOString();
     const listId = data.listId || "default";
     const all = this.getAll();
@@ -69,7 +69,7 @@ export const taskService = {
       .filter((t) => t.listId === listId)
       .reduce((acc, t) => Math.max(acc, t.sortOrder), 0);
 
-    const newTask: Task = {
+    const newTask: TaskUI = {
       id,
       listId,
       parentTaskId: data.parentTaskId ?? null,

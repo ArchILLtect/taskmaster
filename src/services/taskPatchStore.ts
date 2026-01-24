@@ -1,14 +1,14 @@
-import type { Task } from "../types/task";
+import type { TaskUI } from "../types/task";
 import { readJson, writeJson, isoNow } from "./storage";
 
 const KEY = "taskmaster.taskPatches.v1";
 
 type TaskPatch = Partial<
-  Pick<Task, "status" | "completedAt" | "updatedAt" | "dueAt" | "title" | "description">
+  Pick<TaskUI, "status" | "completedAt" | "updatedAt" | "dueAt" | "title" | "description">
 >;
 
 type TaskPatchStore = {
-  created: Record<string, Task>;
+  created: Record<string, TaskUI>;
   patches: Record<string, TaskPatch>;
   deletedIds: string[];
 };
@@ -17,24 +17,24 @@ const DEFAULTS: TaskPatchStore = { patches: {}, deletedIds: [], created: {} };
 
 function getStore(): TaskPatchStore {
   const raw = readJson<Partial<TaskPatchStore>>(KEY, DEFAULTS);
-  const created = (raw.created ?? {}) as Record<string, Task>;
+  const created = (raw.created ?? {}) as Record<string, TaskUI>;
   const patches = (raw.patches ?? {}) as Record<string, TaskPatch>;
 
   // Migration: older versions stored the full created Task object in `patches`.
   // Move any "task-shaped" patch entries into `created` so created tasks remain visible.
   let migrated = false;
   
-  const toMove: Array<{ taskId: string; task: Task }> = [];
+  const toMove: Array<{ taskId: string; task: TaskUI }> = [];
 
   for (const [taskId, patch] of Object.entries(patches)) {
-    const maybeTask = patch as unknown as Partial<Task>;
+    const maybeTask = patch as unknown as Partial<TaskUI>;
     if (
       maybeTask &&
       typeof maybeTask === "object" &&
       typeof maybeTask.listId === "string" &&
       typeof maybeTask.title === "string"
     ) {
-      toMove.push({ taskId, task: { ...(maybeTask as Task), id: taskId } });
+      toMove.push({ taskId, task: { ...(maybeTask as TaskUI), id: taskId } });
     }
   }
   
@@ -61,7 +61,7 @@ function setStore(next: TaskPatchStore) {
 }
 
 export const taskPatchStore = {
-  applyAll(base: Task[]): Task[] {
+  applyAll(base: TaskUI[]): TaskUI[] {
     const store = getStore();
     const created = Object.values(store.created ?? {});
     const deleted = new Set(store.deletedIds);
@@ -92,7 +92,7 @@ export const taskPatchStore = {
     setStore(store);
   },
 
-  setStatus(taskId: string, status: Task["status"]) {
+  setStatus(taskId: string, status: TaskUI["status"]) {
     const store = getStore();
     const now = isoNow();
     const prev = store.patches[taskId] ?? {};
@@ -105,7 +105,7 @@ export const taskPatchStore = {
     setStore(store);
   },
 
-  addPatch(patch: { type: "create"; task: Task }) {
+  addPatch(patch: { type: "create"; task: TaskUI }) {
     // Back-compat: older callers used addPatch for create; treat as created task.
     const store = getStore();
     store.created[patch.task.id] = patch.task;
@@ -114,7 +114,7 @@ export const taskPatchStore = {
     setStore(store);
   },
 
-  addCreated(task: Task) {
+  addCreated(task: TaskUI) {
     const store = getStore();
     store.created[task.id] = task;
     store.deletedIds = store.deletedIds.filter((id) => id !== task.id);

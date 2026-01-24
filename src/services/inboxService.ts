@@ -1,5 +1,5 @@
 // TODO: Switch to using API enums for consistency when possible
-import type { Task } from "../types/task";
+import type { TaskUI } from "../types/task";
 import { taskService } from "./taskService";
 import { isoNow, readJson, writeJson } from "./storage";
 
@@ -34,13 +34,13 @@ function setState(next: InboxState) {
   writeJson(KEY, next);
 }
 
-function isNewTask(t: Task, lastViewedAt: string | null): boolean {
+function isNewTask(t: TaskUI, lastViewedAt: string | null): boolean {
   // If never viewed, treat everything as “new” once (good MVP behavior).
   if (!lastViewedAt) return true;
   return new Date(t.createdAt).getTime() > new Date(lastViewedAt).getTime();
 }
 
-function isDueSoon(t: Task, nowMs: number, windowDays: number): boolean {
+function isDueSoon(t: TaskUI, nowMs: number, windowDays: number): boolean {
   if (t.status !== "Open") return false;
   if (!t.dueAt) return false;
 
