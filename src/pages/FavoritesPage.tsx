@@ -7,7 +7,6 @@ import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useState } from "react";
-import { isInboxListId } from "../lists/listVisibility";
 
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -18,13 +17,19 @@ export function FavoritesPage() {
   const handleDeleteList = async (listId: string) => {   
     const list = visibleFavorites.find(l => l.id === listId);
     if (!list || !listId) return;
-    if (isInboxListId(list.id, inboxListId)) return;
+    if (isInboxList(list, inboxListId)) return;
 
+    try {
     await taskmasterApi.deleteTaskListSafeById(listId);
-    await refresh();
-
-    // Fire toast notification for unimplemented feature
-    await fireToast("info", "List Deleted", "The list has been successfully deleted.");
+    } catch (error) {
+      console.error("Error deleting list:", error);
+      fireToast("error", "Error deleting list", "There was an issue deleting the list.");
+    } finally {
+      console.log("List deleted successfully.");
+      // Fire toast notification for list deletion
+      fireToast("info", "List Deleted", "The list has been successfully deleted.");
+      refresh();
+    }
   };
 
   const confirmUnfavorite = (id: string, isFavorite: boolean) => {
@@ -34,27 +39,35 @@ export function FavoritesPage() {
     setIsDialogOpen(true);
   }
 
-  const handleUnFavorite = async (listId: string, isFavorite: boolean) => {
+  const handleUnFavorite = async (listId?: string, isFavorite?: boolean) => {
+    const list = visibleFavorites.find(l => l.id === listId);
 
-    console.log("Toggling favorite for list:", listId, "to", isFavorite);
+    if (!list || !listId || isFavorite === undefined) return;
+    if (isInboxList(list, inboxListId)) return;
 
     const reverseFavorite = !isFavorite;
 
-    // Prevent changing favorite status of the inbox list
-    const list = visibleFavorites.find(l => l.id === listId);
-    if (!list || !listId || isFavorite === undefined) return;
-    if (isInboxListId(list.id, inboxListId)) return;
-
-    // Update favorite status
-    await taskmasterApi.updateTaskList({ id: listId, isFavorite: reverseFavorite });
-    await refresh();
-
-    // Fire toast notification for unimplemented feature
-    await fireToast("warning", "Favorite Toggled", `The list has been ${isFavorite ? "added to" : "removed from"} favorites.`);
+    try {
+      await taskmasterApi.updateTaskList({
+        id: listId,
+        isFavorite: reverseFavorite
+      });
+    } catch (error) {
+      console.error("Error updating favorite status:", error);
+      fireToast("error", "Error updating favorite", "There was an issue updating the favorite status.");
+    } finally {
+      console.log("Favorite status updated successfully.");
+      // Fire toast notification for favorite toggle
+      fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
+      refresh();
+    }
   };
 
-  const acceptUnfavorite = async (id: string, isFavorite: boolean) => {
+  const acceptUnfavorite = async (id?: string, isFavorite?: boolean) => {
     console.log("Accepting unfavorite for list:", id);
+    const list = visibleFavorites.find(l => l.id === id);
+    if (!list || !id || isFavorite === undefined) return;
+    if (isInboxList(list, inboxListId)) return;
     await handleUnFavorite(id, isFavorite)
     setIsDialogOpen(false);
   }
