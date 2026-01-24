@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex, Center, Spinner } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
@@ -12,6 +12,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types";
+import { Toaster } from "../components/ui/Toaster";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -177,7 +178,15 @@ export function InboxPage() {
     setSelectedTask(null); // closes dialog
   };
 
-  if (loading) return <div>Loading…</div>;
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Center width={"100%"} height={"75vh"}>
+        <Spinner size={"xl"} />
+      </Center>
+    );
+  }
+
   if (err) return <div>Failed to load inbox data.</div>;
 
   // Optional: if inboxListId is missing, nothing to show
@@ -188,6 +197,7 @@ export function InboxPage() {
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+      <Toaster />
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <Heading size="md">Inbox</Heading>

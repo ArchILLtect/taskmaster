@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button, Spinner } from "@chakra-ui/react";
 import { Toaster } from "../components/ui/Toaster";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
@@ -224,7 +224,19 @@ export function ListDetailsPage() {
   };
 
   // Note: `lists` comes from an async hook; don't redirect until loading is finished.
-  if (loading) return <div>Loading…</div>;
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
+        <Center width={"40vw"} height={"75vh"}>
+          <Spinner size={"xl"} />
+        </Center>
+        <Box h="89.5vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
+          <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
+        </Box>
+      </Flex>
+    );
+  }
   if (err) return <div>Failed to load list data.</div>;
 
   if (!listId) return <Navigate to="/lists" replace />;

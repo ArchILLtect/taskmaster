@@ -1,5 +1,5 @@
 import { forwardRef, useState } from "react";
-import { Box, Button, Heading, HStack, Text, VStack, Badge } from "@chakra-ui/react";
+import { Box, Flex, Button, Heading, HStack, Text, VStack, Badge, Center, Spinner } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { buildTaskStackPath, nextStackFromLevel } from "../routes/taskStack";
 import { AddTaskForm } from "./AddTaskForm";
@@ -9,8 +9,8 @@ import { taskmasterApi } from "../api/taskmasterApi";
 import { EditTaskForm } from "./EditTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
 import { fireToast } from "../hooks/useFireToast";
-import { Flex } from "@aws-amplify/ui-react";
 import type { TaskUI } from "../types/task";
+import { useTaskmasterData } from "../hooks/useTaskmasterData";
 
 // --- animations
 const pulse = keyframes`
@@ -76,7 +76,9 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [draftTaskDueDate, setDraftTaskDueDate] = useState(""); // YYYY-MM-DD
   const [saving, setSaving] = useState(false);
+
   const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
+  const { loading } = useTaskmasterData();
 
   const children = selected
     ? tasksInList
@@ -156,13 +158,24 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     setDraftTaskStatus(TaskStatus.Open);
   };
 
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Flex align={"start"} gap={4} p={4} bg="white" rounded="md" minHeight="100%" borderWidth="1px" className="ListPageMain" w="max-content">
+        <Center width={"40vw"} height={"85vh"}>
+          <Spinner size={"xl"} />
+        </Center>
+      </Flex>
+    );
+  }
+
   return (
     <Box
       borderWidth="1px"
       rounded="md"
       ref={ref}
       p={4}
-      minH="85vh"
+      minH="88.5vh"
       w="38.5vw"
       flexShrink={0}
       animation={isPulsing ? `${pulse} 1s ease-out` : undefined}

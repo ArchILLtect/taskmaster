@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, Text, VStack, Center, Spinner } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { updatesService } from "../services/updatesService";
@@ -10,7 +10,7 @@ import { fireToast } from "../hooks/useFireToast";
 
 export function UpdatesPage() {
 
-  const { allTasks, lists, refreshData } = useUpdatesPageData();
+  const { allTasks, lists, loading, refreshData } = useUpdatesPageData();
   const vm = updatesService.getViewModel();
 
   const taskById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
@@ -51,6 +51,15 @@ export function UpdatesPage() {
       fireToast("success", "Task deleted", "The task has been successfully deleted.");
     }
   };
+
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Center width={"100%"} height={"75vh"}>
+        <Spinner size={"xl"} />
+      </Center>
+    );
+  }
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">

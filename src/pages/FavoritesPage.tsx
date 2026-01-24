@@ -1,4 +1,4 @@
-import { VStack, HStack, Box, Flex, Heading, Text } from "@chakra-ui/react";
+import { VStack, HStack, Box, Flex, Heading, Text, Center, Spinner } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { taskmasterApi } from "../api/taskmasterApi";
@@ -11,7 +11,7 @@ import { useState } from "react";
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [favorite, setFavorite] = useState<{ id: string; isFavorite: boolean }>({ id: "", isFavorite: true });
-  const { visibleFavorites, refresh } = useListsPageData();
+  const { visibleFavorites, loading, refresh } = useListsPageData();
   const inboxListId = getInboxListId();
 
   const handleDeleteList = async (listId: string) => {   
@@ -74,6 +74,15 @@ export function FavoritesPage() {
 
   const cancelUnfavorite = () => {
     setIsDialogOpen(false);
+  }
+
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Center width={"100%"} height={"75vh"}>
+        <Spinner size={"xl"} />
+      </Center>
+    );
   }
 
   return (

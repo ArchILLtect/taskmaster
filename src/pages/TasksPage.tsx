@@ -1,4 +1,4 @@
-import { Box, Heading, HStack, Text, VStack, Button } from "@chakra-ui/react";
+import { Box, Heading, HStack, Text, VStack, Button, Center, Spinner } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
@@ -48,7 +48,7 @@ export function TasksPage() {
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [saving, setSaving] = useState(false);
 
-  const { allTasks, lists, refreshData } = useTasksPageData();
+  const { allTasks, lists, loading, refreshData } = useTasksPageData();
   const navigate = useNavigate();
 
   const isDialogOpen = !!selectedTask;
@@ -159,6 +159,15 @@ export function TasksPage() {
     setDraftTaskStatus(TaskStatus.Open);
     setSelectedTask(null);
   };
+
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Center width={"100%"} height={"75vh"}>
+        <Spinner size={"xl"} />
+      </Center>
+    );
+  }
   
   return (
     <VStack minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">

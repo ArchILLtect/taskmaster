@@ -1,4 +1,4 @@
-import { Box, Flex, VStack, HStack, Heading, Text, Button } from "@chakra-ui/react";
+import { Box, Flex, VStack, HStack, Heading, Text, Button, Center, Spinner } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { useState } from "react";
@@ -174,6 +174,15 @@ export const ListsPage = () => {
     // Fire toast notification for canceled edit
     fireToast("success", source === "edit" ? "Edit Canceled" : "Add Canceled", "Your changes have been discarded.");
   };
+
+  // Add a spinner for loading state
+  if (loading) {
+    return (
+      <Center width={"100%"} height={"75vh"}>
+        <Spinner size={"xl"} />
+      </Center>
+    );
+  }
 
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
