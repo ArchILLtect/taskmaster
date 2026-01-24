@@ -12,11 +12,19 @@ import { useNavigate } from "react-router-dom";
 import { Flex } from "@aws-amplify/ui-react";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
+import type { Task } from "../types/task";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
   if (!date) return null;
   return new Date(`${date}T00:00:00.000Z`).toISOString();
+}
+
+function isoToDateInput(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
 }
 
 // Get current timezone
@@ -28,7 +36,7 @@ export function TasksPage() {
 
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
@@ -64,7 +72,12 @@ export function TasksPage() {
     };
   };
 
-  const handleEditTask = async (task: any) => {
+  const handleEditTask = async (task: Task) => {
+    setDraftTaskTitle(task.title ?? "");
+    setDraftTaskDescription(task.description ?? "");
+    setDraftTaskDueDate(isoToDateInput(task.dueAt));
+    setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
+    setDraftTaskStatus(task.status ?? TaskStatus.Open);
     setSelectedTask(task);
   };
 
@@ -84,7 +97,7 @@ export function TasksPage() {
     }
   };
 
-  const handleSave = async (selectedTask: any) => {
+  const handleSave = async (selectedTask: Task | null) => {
     if (!selectedTask) return;
 
     try {
@@ -292,6 +305,7 @@ export function TasksPage() {
         body={
           selectedTask ? (
           <EditTaskForm
+            key={selectedTask.id}
             task={selectedTask}
             draftTaskTitle={draftTaskTitle}
             setDraftTaskTitle={setDraftTaskTitle}
