@@ -115,6 +115,7 @@ export type EditTaskFormProps = {
     setDraftTaskStatus: (status: TaskStatus) => void;
     draftTaskDueDate: string;
     setDraftTaskDueDate: (dueDate: string) => void;
+    skipModal?: boolean;
     saving: boolean;
     setSaving: (saving: boolean) => void;
     onSave: (task: Task) => Promise<void> | void;

@@ -60,6 +60,7 @@ export const EditTaskForm = ({
   setDraftTaskPriority,
   draftTaskStatus,
   setDraftTaskStatus,
+  skipModal,
   saving,
   onSave,
   onClose,
@@ -69,7 +70,7 @@ export const EditTaskForm = ({
   const [selectedListId, setSelectedListId] = useState<string>(task.listId ? task.listId : inboxListId || "");
 
   const { visibleLists: allLists } = useTaskmasterData();
-  const hideButtons = Boolean(onSave);
+  const hideButtons = skipModal !== true;
 
   useEffect(() => {
     if (!task) return;
@@ -79,7 +80,7 @@ export const EditTaskForm = ({
     setDraftTaskPriority((task.priority as TaskPriority) ?? TaskPriority.Medium);
     setDraftTaskStatus((task.status as TaskStatus) ?? TaskStatus.Open);
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
-  }, [task?.id]);
+  }, [task, task?.id, setDraftTaskTitle, setDraftTaskDescription, setDraftTaskPriority, setDraftTaskStatus, setDraftTaskDueDate ]); // only when task changes
 
   // ✅ Chakra v3 pattern: destructure `{ collection }`
   const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({

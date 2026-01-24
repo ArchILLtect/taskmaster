@@ -26,7 +26,7 @@ export const EditListForm = ({
     if (!list) return;
     setDraftName(list.name ?? "");
     setDraftDescription(list.description ?? "");
-  }, [list?.id]); // only when list changes
+  }, [list, list?.id, setDraftName, setDraftDescription ]); // only when list changes
 
   return (
   <Box w="100%" p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">

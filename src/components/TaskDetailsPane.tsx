@@ -67,7 +67,6 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [draftTaskDueDate, setDraftTaskDueDate] = useState(""); // YYYY-MM-DD
   const [saving, setSaving] = useState(false);
-
   const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
 
   const children = selected
@@ -146,7 +145,6 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
-    setIsEditing(false);
   };
 
   return (
@@ -202,9 +200,9 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 setDraftTaskStatus={setDraftTaskStatus}
                 draftTaskDueDate={draftTaskDueDate}
                 setDraftTaskDueDate={setDraftTaskDueDate}
+                skipModal={true}
                 saving={saving}
                 setSaving={setSaving}
-                setIsEditing={setIsEditing}
                 onSave={() => handleSave(selected)}
                 onClose={() => setIsEditing(false)}
                 refresh={refresh}
