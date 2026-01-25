@@ -1,6 +1,3 @@
-// TODO: Switch to using API enums for consistency when possible
-import type { TaskUI } from "../types/task";
-import { taskService } from "./taskService";
 import { isoNow, readJson, writeJson } from "./storage";
 
 const KEY = "taskmaster.inbox.v1";
@@ -34,22 +31,6 @@ function setState(next: InboxState) {
   writeJson(KEY, next);
 }
 
-function isNewTask(t: TaskUI, lastViewedAt: string | null): boolean {
-  // If never viewed, treat everything as “new” once (good MVP behavior).
-  if (!lastViewedAt) return true;
-  return new Date(t.createdAt).getTime() > new Date(lastViewedAt).getTime();
-}
-
-function isDueSoon(t: TaskUI, nowMs: number, windowDays: number): boolean {
-  if (t.status !== "Open") return false;
-  if (!t.dueAt) return false;
-
-  const dueMs = new Date(t.dueAt).getTime();
-  const endMs = nowMs + windowDays * 24 * 60 * 60 * 1000;
-
-  return dueMs >= nowMs && dueMs <= endMs;
-}
-
 export const inboxService = {
   getState,
 
@@ -78,29 +59,5 @@ export const inboxService = {
   markViewedNow() {
     const s = getState();
     setState({ ...s, lastViewedAt: isoNow(), lastComputedAtMs: Date.now() });
-  },
-
-  getViewModel() {
-    const s = getState();
-    const all = taskService.getAll();
-
-    const dismissed = new Set(s.dismissedTaskIds);
-    const nowMs = Date.now();
-
-    const newTasks = all
-      .filter((t) => !dismissed.has(t.id))
-      .filter((t) => isNewTask(t, s.lastViewedAt))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    const dueSoonTasks = all
-      .filter((t) => !dismissed.has(t.id))
-      .filter((t) => isDueSoon(t, nowMs, s.dueSoonWindowDays))
-      .sort((a, b) => new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime());
-
-    return {
-      state: s,
-      newTasks,
-      dueSoonTasks,
-    };
   },
 };
