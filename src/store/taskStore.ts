@@ -30,14 +30,29 @@ export type TaskStoreState = {
   error: string | null;
   lastLoadedAtMs?: number;
 
+  // Non-persisted refresh metadata (debug/demo-friendly)
+  lastRefreshSource?: "cache" | "network";
+  lastRefreshReason?: "hydrate" | "ttl" | "manual" | "mutation";
+  lastRefreshAtMs?: number;
+
   listsById: Record<string, ListUI>;
   tasksById: Record<string, TaskUI>;
   tasksByListId: Record<string, TaskUI[]>;
   childrenByParentId: Record<string, TaskUI[]>;
 
-  refreshAll: (opts?: { listLimit?: number }) => Promise<void>;
+  refreshAll: (
+    opts?: { listLimit?: number },
+    meta?: { reason?: "ttl" | "manual" | "mutation" }
+  ) => Promise<void>;
   hydrateAndRefreshIfStale: (opts?: { listLimit?: number }) => Promise<void>;
   expireTaskCache: () => void;
+
+  // Internal helper (not persisted)
+  setRefreshMeta: (meta: {
+    source: "cache" | "network";
+    reason: "hydrate" | "ttl" | "manual" | "mutation";
+    atMs?: number;
+  }) => void;
 
   createTask: (input: Parameters<typeof taskmasterApi.createTask>[0]) => Promise<{ id: string }>;
   updateTask: (input: Parameters<typeof taskmasterApi.updateTask>[0]) => Promise<void>;
@@ -251,10 +266,21 @@ export const useTaskStore = create<TaskStoreState>()(
       loading: false,
       error: null,
       lastLoadedAtMs: undefined,
+      lastRefreshSource: undefined,
+      lastRefreshReason: undefined,
+      lastRefreshAtMs: undefined,
       listsById: emptyIndexes.listsById,
       tasksById: emptyIndexes.tasksById,
       tasksByListId: emptyIndexes.tasksByListId,
       childrenByParentId: emptyIndexes.childrenByParentId,
+
+      setRefreshMeta: (meta) => {
+        set({
+          lastRefreshSource: meta.source,
+          lastRefreshReason: meta.reason,
+          lastRefreshAtMs: meta.atMs ?? Date.now(),
+        });
+      },
 
       expireTaskCache: () => {
         // Force TTL to treat the cache as stale while keeping the cached data.
@@ -263,11 +289,14 @@ export const useTaskStore = create<TaskStoreState>()(
       },
 
       hydrateAndRefreshIfStale: async (opts) => {
-        if (isCacheFresh(get().lastLoadedAtMs)) return;
-        await get().refreshAll(opts);
+        if (isCacheFresh(get().lastLoadedAtMs)) {
+          get().setRefreshMeta({ source: "cache", reason: "ttl" });
+          return;
+        }
+        await get().refreshAll(opts, { reason: "ttl" });
       },
 
-      refreshAll: async (opts) => {
+      refreshAll: async (opts, meta) => {
         if (refreshInFlight) return refreshInFlight;
 
         refreshInFlight = (async () => {
@@ -301,6 +330,9 @@ export const useTaskStore = create<TaskStoreState>()(
               loading: false,
               error: null,
               lastLoadedAtMs: Date.now(),
+              lastRefreshSource: "network",
+              lastRefreshReason: meta?.reason ?? "manual",
+              lastRefreshAtMs: Date.now(),
             });
           } catch (err) {
             const prev = get();
@@ -334,38 +366,38 @@ export const useTaskStore = create<TaskStoreState>()(
 
       createTask: async (input) => {
         const created = await taskmasterApi.createTask(input);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
         return { id: String((created as { id?: unknown } | null | undefined)?.id ?? "") };
       },
 
       updateTask: async (input) => {
         await taskmasterApi.updateTask(input);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
       },
 
       deleteTask: async (input) => {
         await taskmasterApi.deleteTask(input);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
       },
 
       sendTaskToInbox: async (taskId) => {
         await taskmasterApi.sendTaskToInbox(taskId);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
       },
 
       createTaskList: async (input) => {
         await taskmasterApi.createTaskList(input);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
       },
 
       updateTaskList: async (input) => {
         await taskmasterApi.updateTaskList(input);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
       },
 
       deleteTaskListSafeById: async (listId) => {
         await taskmasterApi.deleteTaskListSafeById(listId);
-        await get().refreshAll();
+        await get().refreshAll(undefined, { reason: "mutation" });
       },
     }),
     {
@@ -373,6 +405,13 @@ export const useTaskStore = create<TaskStoreState>()(
       version: TASK_STORE_PERSIST_VERSION,
       migrate: migrateTaskStoreState,
       storage: taskStoreStorage,
+      onRehydrateStorage: (state) => {
+        return (_hydratedState, error) => {
+          if (error) return;
+          // Mark that we are rendering from persisted cache after hydration.
+          state?.setRefreshMeta({ source: "cache", reason: "hydrate" });
+        };
+      },
       partialize: (s) => ({
         lists: s.lists,
         tasks: s.tasks,
@@ -410,6 +449,9 @@ export function useTaskIndexView(): {
   loading: boolean;
   error: string | null;
   lastLoadedAtMs?: number;
+  lastRefreshSource?: TaskStoreState["lastRefreshSource"];
+  lastRefreshReason?: TaskStoreState["lastRefreshReason"];
+  lastRefreshAtMs?: number;
   refreshAll: TaskStoreState["refreshAll"];
   hydrateAndRefreshIfStale: TaskStoreState["hydrateAndRefreshIfStale"];
 } {
@@ -424,6 +466,9 @@ export function useTaskIndexView(): {
       loading: s.loading,
       error: s.error,
       lastLoadedAtMs: s.lastLoadedAtMs,
+      lastRefreshSource: s.lastRefreshSource,
+      lastRefreshReason: s.lastRefreshReason,
+      lastRefreshAtMs: s.lastRefreshAtMs,
       refreshAll: s.refreshAll,
       hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
     }))

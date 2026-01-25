@@ -16,22 +16,32 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number }) {
         }
       | undefined;
 
-    let prevRefreshing = false;
-    const unsubscribeRefreshing = useTaskStore.subscribe((s) => {
+    let prevLoading = useTaskStore.getState().loading;
+    const unsubscribeRefreshComplete = useTaskStore.subscribe((s) => {
       if (!import.meta.env.DEV) return;
-      const refreshing = Boolean(s.loading && (s.lists.length > 0 || s.tasks.length > 0));
-      if (refreshing === prevRefreshing) return;
-      prevRefreshing = refreshing;
 
-      if (refreshing) {
+      // Log only when a refresh completes (loading flips true -> false).
+      if (prevLoading && !s.loading) {
+        const refreshAtIso =
+          typeof s.lastRefreshAtMs === "number" && Number.isFinite(s.lastRefreshAtMs)
+            ? new Date(s.lastRefreshAtMs).toISOString()
+            : null;
+        const loadedAtIso =
+          typeof s.lastLoadedAtMs === "number" && Number.isFinite(s.lastLoadedAtMs)
+            ? new Date(s.lastLoadedAtMs).toISOString()
+            : null;
+        const fresh = isCacheFresh(s.lastLoadedAtMs);
+
         console.debug(
-          `[taskStore] refreshing=true lists=${s.lists.length} tasks=${s.tasks.length} lastLoadedAtMs=${String(
-            s.lastLoadedAtMs
-          )}`
+          `[taskStore] refresh complete source=${s.lastRefreshSource ?? "unknown"} reason=${
+            s.lastRefreshReason ?? "unknown"
+          } refreshAt=${refreshAtIso ?? "n/a"} loadedAt=${loadedAtIso ?? "n/a"} fresh=${String(
+            fresh
+          )} error=${s.error ? JSON.stringify(s.error) : "null"} lists=${s.lists.length} tasks=${s.tasks.length}`
         );
-      } else {
-        console.debug(`[taskStore] refreshing=false error=${s.error ? JSON.stringify(s.error) : "null"}`);
       }
+
+      prevLoading = s.loading;
     });
 
     const logStatus = (phase: string) => {
@@ -47,29 +57,42 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number }) {
 
     logStatus("start");
 
+    const markHydratedFromCache = () => {
+      // Fallback: mark hydration as cache render (onRehydrateStorage should also do this).
+      const s = useTaskStore.getState();
+      s.setRefreshMeta?.({ source: "cache", reason: "hydrate" });
+    };
+
     const run = () => {
       logStatus("run");
       void hydrateAndRefreshIfStale({ listLimit: opts?.listLimit });
     };
 
     if (!persistApi) {
+      markHydratedFromCache();
       run();
-      return;
+      return () => {
+        unsubscribeRefreshComplete();
+      };
     }
 
     if (persistApi.hasHydrated?.()) {
       logStatus("already-hydrated");
+      markHydratedFromCache();
       run();
-      return;
+      return () => {
+        unsubscribeRefreshComplete();
+      };
     }
 
     const unsub = persistApi.onFinishHydration?.(() => {
       logStatus("finish-hydration");
+      markHydratedFromCache();
       run();
     });
 
     return () => {
-      unsubscribeRefreshing();
+      unsubscribeRefreshComplete();
       if (typeof unsub === "function") unsub();
     };
   }, [hydrateAndRefreshIfStale, opts?.listLimit]);
