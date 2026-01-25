@@ -54,6 +54,9 @@ export type TaskStoreState = {
     atMs?: number;
   }) => void;
 
+  // Internal helper (not persisted)
+  rebuildIndexes: () => void;
+
   createTask: (input: Parameters<typeof taskmasterApi.createTask>[0]) => Promise<{ id: string }>;
   updateTask: (input: Parameters<typeof taskmasterApi.updateTask>[0]) => Promise<void>;
   deleteTask: (input: Parameters<typeof taskmasterApi.deleteTask>[0]) => Promise<void>;
@@ -78,13 +81,7 @@ export function isCacheFresh(lastLoadedAtMs?: number): boolean {
 
 export type TaskStorePersistedState = Pick<
   TaskStoreState,
-  | "lists"
-  | "tasks"
-  | "lastLoadedAtMs"
-  | "listsById"
-  | "tasksById"
-  | "tasksByListId"
-  | "childrenByParentId"
+  "lists" | "tasks" | "lastLoadedAtMs"
 >;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -100,13 +97,6 @@ function isValidTaskStorePersistedState(value: unknown): value is TaskStorePersi
   if ("lastLoadedAtMs" in value && value.lastLoadedAtMs !== undefined) {
     if (typeof value.lastLoadedAtMs !== "number" || !Number.isFinite(value.lastLoadedAtMs)) return false;
   }
-
-  // Indexes are always persisted by `partialize`, but tolerate older/malformed caches by only
-  // validating them when present.
-  if ("listsById" in value && value.listsById !== undefined && !isRecord(value.listsById)) return false;
-  if ("tasksById" in value && value.tasksById !== undefined && !isRecord(value.tasksById)) return false;
-  if ("tasksByListId" in value && value.tasksByListId !== undefined && !isRecord(value.tasksByListId)) return false;
-  if ("childrenByParentId" in value && value.childrenByParentId !== undefined && !isRecord(value.childrenByParentId)) return false;
 
   return true;
 }
@@ -165,7 +155,13 @@ export function migrateTaskStoreState(persistedState: unknown, _version: number)
     return undefined;
   }
 
-  return persistedState;
+  // Persist only the minimal stable slice; older caches may include derived indexes.
+  const s = persistedState as TaskStorePersistedState;
+  return {
+    lists: s.lists,
+    tasks: s.tasks,
+    lastLoadedAtMs: s.lastLoadedAtMs,
+  } satisfies TaskStorePersistedState;
 }
 
 const emptyIndexes: TaskIndexes = {
@@ -279,6 +275,17 @@ export const useTaskStore = create<TaskStoreState>()(
           lastRefreshSource: meta.source,
           lastRefreshReason: meta.reason,
           lastRefreshAtMs: meta.atMs ?? Date.now(),
+        });
+      },
+
+      rebuildIndexes: () => {
+        const s = get();
+        const indexes = buildIndexes(s.lists, s.tasks);
+        set({
+          listsById: indexes.listsById,
+          tasksById: indexes.tasksById,
+          tasksByListId: indexes.tasksByListId,
+          childrenByParentId: indexes.childrenByParentId,
         });
       },
 
@@ -408,6 +415,8 @@ export const useTaskStore = create<TaskStoreState>()(
       onRehydrateStorage: (state) => {
         return (_hydratedState, error) => {
           if (error) return;
+          // After hydration, rebuild derived indexes from the cached arrays.
+          state?.rebuildIndexes();
           // Mark that we are rendering from persisted cache after hydration.
           state?.setRefreshMeta({ source: "cache", reason: "hydrate" });
         };
@@ -415,10 +424,6 @@ export const useTaskStore = create<TaskStoreState>()(
       partialize: (s) => ({
         lists: s.lists,
         tasks: s.tasks,
-        listsById: s.listsById,
-        tasksById: s.tasksById,
-        tasksByListId: s.tasksByListId,
-        childrenByParentId: s.childrenByParentId,
         lastLoadedAtMs: s.lastLoadedAtMs,
       }),
     }
