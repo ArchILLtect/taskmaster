@@ -16,6 +16,7 @@ export function useTaskIndex(opts?: {
     loading,
     error,
     refreshAll,
+    hydrateAndRefreshIfStale,
   } = useTaskIndexView();
 
   const refresh = useCallback(async () => {
@@ -24,8 +25,8 @@ export function useTaskIndex(opts?: {
 
   useEffect(() => {
     if (opts?.autoLoad === false) return;
-    void refresh();
-  }, [refresh, opts?.autoLoad]);
+    void hydrateAndRefreshIfStale({ listLimit: opts?.listLimit });
+  }, [hydrateAndRefreshIfStale, opts?.autoLoad, opts?.listLimit]);
 
   return {
     lists,

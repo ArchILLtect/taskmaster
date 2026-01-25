@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 
 import { taskmasterApi } from "../api/taskmasterApi";
@@ -34,6 +35,8 @@ export type TaskStoreState = {
   childrenByParentId: Record<string, TaskUI[]>;
 
   refreshAll: (opts?: { listLimit?: number }) => Promise<void>;
+  hydrateAndRefreshIfStale: (opts?: { listLimit?: number }) => Promise<void>;
+  expireTaskCache: () => void;
 
   createTask: (input: Parameters<typeof taskmasterApi.createTask>[0]) => Promise<{ id: string }>;
   updateTask: (input: Parameters<typeof taskmasterApi.updateTask>[0]) => Promise<void>;
@@ -49,12 +52,18 @@ export type TaskStoreState = {
 // Keep the persisted slice fully serializable: plain objects/arrays only.
 export const TASK_STORE_PERSIST_VERSION = 1 as const;
 
+export const TASK_STORE_TTL_MS = 5 * 60 * 1000;
+
+export function isCacheFresh(lastLoadedAtMs?: number): boolean {
+  if (typeof lastLoadedAtMs !== "number") return false;
+  if (!Number.isFinite(lastLoadedAtMs)) return false;
+  return Date.now() - lastLoadedAtMs < TASK_STORE_TTL_MS;
+}
+
 export type TaskStorePersistedState = Pick<
   TaskStoreState,
   | "lists"
   | "tasks"
-  | "loading"
-  | "error"
   | "lastLoadedAtMs"
   | "listsById"
   | "tasksById"
@@ -158,108 +167,138 @@ function buildIndexes(lists: ListUI[], tasks: TaskUI[]): TaskIndexes {
 
 let refreshInFlight: Promise<void> | null = null;
 
-export const useTaskStore = create<TaskStoreState>((set, get) => ({
-  lists: [],
-  tasks: [],
-  loading: true,
-  error: null,
-  lastLoadedAtMs: undefined,
-  listsById: emptyIndexes.listsById,
-  tasksById: emptyIndexes.tasksById,
-  tasksByListId: emptyIndexes.tasksByListId,
-  childrenByParentId: emptyIndexes.childrenByParentId,
+export const useTaskStore = create<TaskStoreState>()(
+  persist(
+    (set, get) => ({
+      lists: [],
+      tasks: [],
+      loading: false,
+      error: null,
+      lastLoadedAtMs: undefined,
+      listsById: emptyIndexes.listsById,
+      tasksById: emptyIndexes.tasksById,
+      tasksByListId: emptyIndexes.tasksByListId,
+      childrenByParentId: emptyIndexes.childrenByParentId,
 
-  refreshAll: async (opts) => {
-    if (refreshInFlight) return refreshInFlight;
+      expireTaskCache: () => {
+        // Force TTL to treat the cache as stale while keeping the cached data.
+        // Using 0 (instead of undefined) ensures the persisted value is overwritten.
+        set({ lastLoadedAtMs: 0 });
+      },
 
-    refreshInFlight = (async () => {
-      set({ loading: true, error: null });
+      hydrateAndRefreshIfStale: async (opts) => {
+        if (isCacheFresh(get().lastLoadedAtMs)) return;
+        await get().refreshAll(opts);
+      },
 
-      try {
-        const listPage = await taskmasterApi.listTaskLists({ limit: opts?.listLimit ?? 200 });
-        const fetchedLists = listPage.items
-          .filter((l): l is NonNullable<typeof l> => !!l)
-          .map(toListUI);
+      refreshAll: async (opts) => {
+        if (refreshInFlight) return refreshInFlight;
 
-        const ensured = await ensureInboxListExists(fetchedLists);
-        const ensuredListsSorted = ensured.lists
-          .slice()
-          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        refreshInFlight = (async () => {
+          set({ loading: true, error: null });
 
-        const tasksNested = await Promise.all(ensuredListsSorted.map((l) => fetchAllTasksForList(l.id)));
-        const fetchedTasks = tasksNested.flat().map((t) => toTaskUI(t as Parameters<typeof toTaskUI>[0]));
+          try {
+            const listPage = await taskmasterApi.listTaskLists({ limit: opts?.listLimit ?? 200 });
+            const fetchedLists = listPage.items
+              .filter((l): l is NonNullable<typeof l> => !!l)
+              .map(toListUI);
 
-        const tasksSorted = fetchedTasks.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+            const ensured = await ensureInboxListExists(fetchedLists);
+            const ensuredListsSorted = ensured.lists
+              .slice()
+              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-        const indexes = buildIndexes(ensuredListsSorted, tasksSorted);
+            const tasksNested = await Promise.all(ensuredListsSorted.map((l) => fetchAllTasksForList(l.id)));
+            const fetchedTasks = tasksNested.flat().map((t) => toTaskUI(t as Parameters<typeof toTaskUI>[0]));
 
-        set({
-          lists: ensuredListsSorted,
-          tasks: tasksSorted,
-          listsById: indexes.listsById,
-          tasksById: indexes.tasksById,
-          tasksByListId: indexes.tasksByListId,
-          childrenByParentId: indexes.childrenByParentId,
-          loading: false,
-          error: null,
-          lastLoadedAtMs: Date.now(),
+            const tasksSorted = fetchedTasks.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+            const indexes = buildIndexes(ensuredListsSorted, tasksSorted);
+
+            set({
+              lists: ensuredListsSorted,
+              tasks: tasksSorted,
+              listsById: indexes.listsById,
+              tasksById: indexes.tasksById,
+              tasksByListId: indexes.tasksByListId,
+              childrenByParentId: indexes.childrenByParentId,
+              loading: false,
+              error: null,
+              lastLoadedAtMs: Date.now(),
+            });
+          } catch (err) {
+            set({
+              lists: [],
+              tasks: [],
+              listsById: emptyIndexes.listsById,
+              tasksById: emptyIndexes.tasksById,
+              tasksByListId: emptyIndexes.tasksByListId,
+              childrenByParentId: emptyIndexes.childrenByParentId,
+              loading: false,
+              error: errorToMessage(err),
+              lastLoadedAtMs: undefined,
+            });
+          }
+        })().finally(() => {
+          refreshInFlight = null;
         });
-      } catch (err) {
-        set({
-          lists: [],
-          tasks: [],
-          listsById: emptyIndexes.listsById,
-          tasksById: emptyIndexes.tasksById,
-          tasksByListId: emptyIndexes.tasksByListId,
-          childrenByParentId: emptyIndexes.childrenByParentId,
-          loading: false,
-          error: errorToMessage(err),
-          lastLoadedAtMs: undefined,
-        });
-      }
-    })().finally(() => {
-      refreshInFlight = null;
-    });
 
-    return refreshInFlight;
-  },
+        return refreshInFlight;
+      },
 
-  createTask: async (input) => {
-    const created = await taskmasterApi.createTask(input);
-    await get().refreshAll();
-    return { id: String((created as { id?: unknown } | null | undefined)?.id ?? "") };
-  },
+      createTask: async (input) => {
+        const created = await taskmasterApi.createTask(input);
+        await get().refreshAll();
+        return { id: String((created as { id?: unknown } | null | undefined)?.id ?? "") };
+      },
 
-  updateTask: async (input) => {
-    await taskmasterApi.updateTask(input);
-    await get().refreshAll();
-  },
+      updateTask: async (input) => {
+        await taskmasterApi.updateTask(input);
+        await get().refreshAll();
+      },
 
-  deleteTask: async (input) => {
-    await taskmasterApi.deleteTask(input);
-    await get().refreshAll();
-  },
+      deleteTask: async (input) => {
+        await taskmasterApi.deleteTask(input);
+        await get().refreshAll();
+      },
 
-  sendTaskToInbox: async (taskId) => {
-    await taskmasterApi.sendTaskToInbox(taskId);
-    await get().refreshAll();
-  },
+      sendTaskToInbox: async (taskId) => {
+        await taskmasterApi.sendTaskToInbox(taskId);
+        await get().refreshAll();
+      },
 
-  createTaskList: async (input) => {
-    await taskmasterApi.createTaskList(input);
-    await get().refreshAll();
-  },
+      createTaskList: async (input) => {
+        await taskmasterApi.createTaskList(input);
+        await get().refreshAll();
+      },
 
-  updateTaskList: async (input) => {
-    await taskmasterApi.updateTaskList(input);
-    await get().refreshAll();
-  },
+      updateTaskList: async (input) => {
+        await taskmasterApi.updateTaskList(input);
+        await get().refreshAll();
+      },
 
-  deleteTaskListSafeById: async (listId) => {
-    await taskmasterApi.deleteTaskListSafeById(listId);
-    await get().refreshAll();
-  },
-}));
+      deleteTaskListSafeById: async (listId) => {
+        await taskmasterApi.deleteTaskListSafeById(listId);
+        await get().refreshAll();
+      },
+    }),
+    {
+      name: "taskmaster:taskStore",
+      version: TASK_STORE_PERSIST_VERSION,
+      migrate: migrateTaskStoreState,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        lists: s.lists,
+        tasks: s.tasks,
+        listsById: s.listsById,
+        tasksById: s.tasksById,
+        tasksByListId: s.tasksByListId,
+        childrenByParentId: s.childrenByParentId,
+        lastLoadedAtMs: s.lastLoadedAtMs,
+      }),
+    }
+  )
+);
 
 // Selectors (prefer these over inline `(s) => s.x` to keep consumption consistent)
 export const selectLists = (s: TaskStoreState) => s.lists;
@@ -284,7 +323,9 @@ export function useTaskIndexView(): {
   childrenByParentId: Record<string, TaskUI[]>;
   loading: boolean;
   error: string | null;
+  lastLoadedAtMs?: number;
   refreshAll: TaskStoreState["refreshAll"];
+  hydrateAndRefreshIfStale: TaskStoreState["hydrateAndRefreshIfStale"];
 } {
   return useTaskStore(
     useShallow((s) => ({
@@ -296,7 +337,9 @@ export function useTaskIndexView(): {
       childrenByParentId: s.childrenByParentId,
       loading: s.loading,
       error: s.error,
+      lastLoadedAtMs: s.lastLoadedAtMs,
       refreshAll: s.refreshAll,
+      hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
     }))
   );
 }
@@ -308,6 +351,8 @@ export function useTaskStoreView() {
 type TaskActions = Pick<
   TaskStoreState,
   | "refreshAll"
+  | "hydrateAndRefreshIfStale"
+  | "expireTaskCache"
   | "createTask"
   | "updateTask"
   | "deleteTask"
@@ -321,6 +366,8 @@ export function useTaskActions(): TaskActions {
   return useTaskStore(
     useShallow((s) => ({
       refreshAll: s.refreshAll,
+      hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
+      expireTaskCache: s.expireTaskCache,
       createTask: s.createTask,
       updateTask: s.updateTask,
       deleteTask: s.deleteTask,
