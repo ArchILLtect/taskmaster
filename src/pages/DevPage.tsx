@@ -51,6 +51,57 @@ export function DevPage() {
           >
             Expire + refresh now
           </Button>
+
+          {import.meta.env.DEV ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const key = "taskmaster:taskStore";
+                const raw = localStorage.getItem(key);
+
+                if (!raw) {
+                  console.info(`[dev] ${key} not found in localStorage.`);
+                  fireToast("info", "No persisted cache", `${key} is not present in localStorage.`);
+                  return;
+                }
+
+                try {
+                  const parsed = JSON.parse(raw) as unknown;
+                  const envelope = parsed as { state?: unknown; version?: unknown };
+                  const state = envelope?.state as Record<string, unknown> | undefined;
+
+                  const stateKeys = state && typeof state === "object" ? Object.keys(state) : [];
+                  const allowedKeys = ["lists", "tasks", "lastLoadedAtMs"];
+                  const extraKeys = stateKeys.filter((k) => !allowedKeys.includes(k));
+
+                  const listsCount = Array.isArray(state?.lists) ? state?.lists.length : null;
+                  const tasksCount = Array.isArray(state?.tasks) ? state?.tasks.length : null;
+
+                  console.log(`[dev] ${key} persist envelope`, {
+                    version: envelope?.version,
+                    stateKeys,
+                    extraKeys,
+                    listsCount,
+                    tasksCount,
+                    lastLoadedAtMs: state?.lastLoadedAtMs ?? null,
+                    rawBytes: raw.length,
+                  });
+
+                  fireToast(
+                    "success",
+                    "Logged persisted cache",
+                    `state keys: ${stateKeys.join(", ") || "(none)"}${extraKeys.length ? ` (extra: ${extraKeys.join(", ")})` : ""}`
+                  );
+                } catch (err) {
+                  console.error(`[dev] Failed to parse ${key} from localStorage`, err);
+                  fireToast("error", "Parse failed", `Failed to parse ${key} persisted JSON. See console.`);
+                }
+              }}
+            >
+              Log persisted keys
+            </Button>
+          ) : null}
         </HStack>
       </VStack>
 
