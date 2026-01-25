@@ -8,7 +8,6 @@ import {
   setInboxListId,
   SYSTEM_INBOX_NAME,
 } from "../config/inboxSettings";
-import { taskService } from "../services/taskService";
 import type { ListUI, TaskUI } from "../types";
 
 export type TaskIndexes = {
@@ -33,8 +32,10 @@ export type TaskStoreState = {
 
   refreshAll: (opts?: { listLimit?: number }) => Promise<void>;
 
+  createTask: (input: Parameters<typeof taskmasterApi.createTask>[0]) => Promise<{ id: string }>;
   updateTask: (input: Parameters<typeof taskmasterApi.updateTask>[0]) => Promise<void>;
   deleteTask: (input: Parameters<typeof taskmasterApi.deleteTask>[0]) => Promise<void>;
+  sendTaskToInbox: (taskId: string) => Promise<void>;
 
   createTaskList: (input: Parameters<typeof taskmasterApi.createTaskList>[0]) => Promise<void>;
   updateTaskList: (input: Parameters<typeof taskmasterApi.updateTaskList>[0]) => Promise<void>;
@@ -166,9 +167,6 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
 
         const indexes = buildIndexes(ensuredListsSorted, tasksSorted);
 
-        // Keep legacy taskService in sync for now (UI behavior must not change yet)
-        taskService.setBaseTasks(tasksSorted);
-
         set({
           lists: ensuredListsSorted,
           tasks: tasksSorted,
@@ -181,8 +179,6 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
           lastLoadedAtMs: Date.now(),
         });
       } catch (err) {
-        taskService.setBaseTasks([]);
-
         set({
           lists: [],
           tasks: [],
@@ -202,6 +198,12 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
     return refreshInFlight;
   },
 
+  createTask: async (input) => {
+    const created = await taskmasterApi.createTask(input);
+    await get().refreshAll();
+    return { id: String((created as { id?: unknown } | null | undefined)?.id ?? "") };
+  },
+
   updateTask: async (input) => {
     await taskmasterApi.updateTask(input);
     await get().refreshAll();
@@ -209,6 +211,11 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
 
   deleteTask: async (input) => {
     await taskmasterApi.deleteTask(input);
+    await get().refreshAll();
+  },
+
+  sendTaskToInbox: async (taskId) => {
+    await taskmasterApi.sendTaskToInbox(taskId);
     await get().refreshAll();
   },
 
