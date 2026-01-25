@@ -1,20 +1,29 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { updatesService } from "../services/updatesService";
+import { updatesEventStore } from "../services/updatesEventStore";
 import { TaskStatus } from "../API";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { useUpdatesPageData } from "./useUpdatesPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { DialogModal } from "../components/ui/DialogModal";
 
 export function UpdatesPage() {
 
   const { allTasks, lists, loading, refreshData } = useUpdatesPageData();
   const vm = updatesService.getViewModel();
 
+  const [isClearAllOpen, setIsClearAllOpen] = useState(false);
+
   const taskById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
+  const listById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
+
+  const hasMissingTaskEvents = useMemo(() => {
+    return vm.events.some((e) => e.type !== "task_deleted" && !!e.taskId && !taskById.has(e.taskId));
+  }, [vm.events, taskById]);
 
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
 
@@ -68,6 +77,16 @@ export function UpdatesPage() {
         </VStack>
 
         <HStack>
+          {import.meta.env.DEV && hasMissingTaskEvents ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsClearAllOpen(true);
+              }}
+            >
+              Clear all
+            </Button>
+          ) : null}
           <Button
             variant="outline"
             onClick={() => {
@@ -93,10 +112,8 @@ export function UpdatesPage() {
       ) : (
         <VStack align="stretch" gap={2} w="100%">
           {vm.events.map((e) => {
-            if (e.taskId === null) return null;
             const task = e.taskId ? taskById.get(e.taskId) : null;
-            if (!task) return null;
-            const list = lists.find((l) => l.id === task.listId)
+            const list = task ? listById.get(task.listId) : listById.get(e.listId);
             return (
               <Box key={e.id} borderWidth="1px" rounded="md" p={3}>
                 <HStack justify="space-between" align="start">
@@ -121,12 +138,44 @@ export function UpdatesPage() {
                       onDelete={handleDeleteTask}
                     />
                   </Box>
-                ) : null}
+                ) : (
+                  <Text mt={2} color="gray.600" fontSize="sm">
+                    {e.type === "task_deleted"
+                      ? "This update references a task that was deleted."
+                      : "This update references a task that isn't available (likely stale after data migration or reset)."}
+                    {e.taskId ? ` (taskId: ${e.taskId})` : null}
+                  </Text>
+                )}
               </Box>
             );
           })}
         </VStack>
       )}
+
+      <DialogModal
+        title="Clear all updates?"
+        body={
+          <VStack align="start" gap={2}>
+            <Text>
+              This removes all update history stored locally in this browser.
+            </Text>
+            <Text color="gray.600" fontSize="sm">
+              Tasks and lists in your backend are not affected.
+            </Text>
+          </VStack>
+        }
+        open={isClearAllOpen}
+        setOpen={setIsClearAllOpen}
+        onCancel={() => setIsClearAllOpen(false)}
+        onAccept={async () => {
+          updatesEventStore.clearAll();
+          await refreshData?.();
+          // TODO: If an opportunity presents itself again, test if this modal closes on acceptance
+          // if not, uncomment the following code:
+          // setIsClearAllOpen(false);
+          fireToast("success", "Updates cleared", "All update events have been removed.");
+        }}
+      />
 
       <Text color="gray.500" fontSize="sm">
         Tip: Events are captured from task actions and stored locally (will move into Zustand persistence later).
