@@ -1,15 +1,9 @@
-import { useTaskIndex } from "../hooks/useTaskIndex";
+import { useUserUI } from "../hooks/useUserUI";
 
-export function useProfilePageData() {
-  const { tasks, lists, loading, err, refresh: refreshData } = useTaskIndex();
-
-  const allTasks = tasks;
-
-  return {
-    allTasks,
-    lists,
-    loading,
-    err,
-    refreshData,
-  };
+export function useProfilePageData(): {
+  userUI: ReturnType<typeof useUserUI>["userUI"];
+  loading: ReturnType<typeof useUserUI>["loading"];
+  error: ReturnType<typeof useUserUI>["error"];
+} {
+  return useUserUI();
 }
