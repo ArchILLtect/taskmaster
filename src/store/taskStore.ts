@@ -45,6 +45,29 @@ export type TaskStoreState = {
   deleteTaskListSafeById: (listId: string) => Promise<void>;
 };
 
+// Persistence readiness (no persistence enabled yet)
+// Keep the persisted slice fully serializable: plain objects/arrays only.
+export const TASK_STORE_PERSIST_VERSION = 1 as const;
+
+export type TaskStorePersistedState = Pick<
+  TaskStoreState,
+  | "lists"
+  | "tasks"
+  | "loading"
+  | "error"
+  | "lastLoadedAtMs"
+  | "listsById"
+  | "tasksById"
+  | "tasksByListId"
+  | "childrenByParentId"
+>;
+
+// Zustand persist-style migrate signature.
+// Stub for now; once persistence is enabled, evolve this to transform older shapes.
+export function migrateTaskStoreState(persistedState: unknown, _version: number): unknown {
+  return persistedState;
+}
+
 const emptyIndexes: TaskIndexes = {
   listsById: {},
   tasksById: {},
