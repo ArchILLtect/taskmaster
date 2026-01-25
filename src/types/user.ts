@@ -6,3 +6,9 @@ export type User = {
     email: string;
     role: UserRole;
 };
+
+export type UserUI = {
+    username: string;
+    email?: string;
+    role?: string;
+};
