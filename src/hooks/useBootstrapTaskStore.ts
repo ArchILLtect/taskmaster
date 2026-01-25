@@ -16,6 +16,24 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number }) {
         }
       | undefined;
 
+    let prevRefreshing = false;
+    const unsubscribeRefreshing = useTaskStore.subscribe((s) => {
+      if (!import.meta.env.DEV) return;
+      const refreshing = Boolean(s.loading && (s.lists.length > 0 || s.tasks.length > 0));
+      if (refreshing === prevRefreshing) return;
+      prevRefreshing = refreshing;
+
+      if (refreshing) {
+        console.debug(
+          `[taskStore] refreshing=true lists=${s.lists.length} tasks=${s.tasks.length} lastLoadedAtMs=${String(
+            s.lastLoadedAtMs
+          )}`
+        );
+      } else {
+        console.debug(`[taskStore] refreshing=false error=${s.error ? JSON.stringify(s.error) : "null"}`);
+      }
+    });
+
     const logStatus = (phase: string) => {
       if (!import.meta.env.DEV) return;
       const s = useTaskStore.getState();
@@ -51,6 +69,7 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number }) {
     });
 
     return () => {
+      unsubscribeRefreshing();
       if (typeof unsub === "function") unsub();
     };
   }, [hydrateAndRefreshIfStale, opts?.listLimit]);
