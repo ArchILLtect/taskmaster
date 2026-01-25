@@ -3,11 +3,11 @@ import { Box, Flex } from "@chakra-ui/react";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
+import type { AuthUserLike } from "../types";
 
 const TOPBAR_H = "64px";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function AppShell({ user, onSignOut }: { user?: any; onSignOut?: () => void }) {
+export function AppShell({ user, onSignOut }: { user?: AuthUserLike | null; onSignOut?: () => void }) {
   // TEMP: mocked user until Amplify Auth is wired
   
   return (
