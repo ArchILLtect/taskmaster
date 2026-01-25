@@ -8,8 +8,6 @@ import type { AuthUserLike } from "../types";
 const TOPBAR_H = "64px";
 
 export function AppShell({ user, onSignOut }: { user?: AuthUserLike | null; onSignOut?: () => void }) {
-  // TEMP: mocked user until Amplify Auth is wired
-  
   return (
     <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell">
 
