@@ -26,17 +26,14 @@ export function FavoritesPage() {
       await deleteTaskListSafeById(listId);
     } catch (error) {
       console.error("Error deleting list:", error);
-      fireToast("error", "Error deleting list", "There was an issue deleting the list.");
+      await fireToast("error", "Error deleting list", "There was an issue deleting the list.");
     } finally {
-      console.log("List deleted successfully.");
       // Fire toast notification for list deletion
-      fireToast("info", "List Deleted", "The list has been successfully deleted.");
+      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
     }
   };
 
   const confirmUnfavorite = (id: string, isFavorite: boolean) => {
-    console.log("Opening unfavorite dialog for list:", id);
-    console.log("Current favorite status:", isFavorite);
     setFavorite({ id, isFavorite });
     setIsDialogOpen(true);
   }
@@ -56,16 +53,13 @@ export function FavoritesPage() {
       });
     } catch (error) {
       console.error("Error updating favorite status:", error);
-      fireToast("error", "Error updating favorite", "There was an issue updating the favorite status.");
+      await fireToast("error", "Error updating favorite", "There was an issue updating the favorite status.");
     } finally {
-      console.log("Favorite status updated successfully.");
-      // Fire toast notification for favorite toggle
-      fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
+      await fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
     }
   };
 
   const acceptUnfavorite = async (id?: string, isFavorite?: boolean) => {
-    console.log("Accepting unfavorite for list:", id);
     const list = visibleFavorites.find(l => l.id === id);
     if (!list || !id || isFavorite === undefined) return;
     if (isInboxList(list, inboxListId)) return;
@@ -73,8 +67,9 @@ export function FavoritesPage() {
     setIsDialogOpen(false);
   }
 
-  const cancelUnfavorite = () => {
+  const cancelUnfavorite = async () => {
     setIsDialogOpen(false);
+    await fireToast("info", "Unfavorite Cancelled", "The unfavorite action has been cancelled.");
   }
 
   if (loading) return <BasicSpinner />;

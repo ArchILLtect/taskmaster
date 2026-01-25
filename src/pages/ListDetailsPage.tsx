@@ -105,9 +105,9 @@ export function ListDetailsPage() {
       });
     } catch (error) {
       console.error("Error updating task status:", error);
-      fireToast("error", "Error updating task", "There was an issue updating the task status.");
+      await fireToast("error", "Error updating task", "There was an issue updating the task status.");
     } finally {
-      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
+      await fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     };
   };
 
@@ -121,7 +121,7 @@ export function ListDetailsPage() {
 
       if (saving || isInvalidName) {
         // Toast notification for unimplemented feature
-        fireToast("error", "List not saved", (saving ? "Please wait until the current save is complete." : "List name is invalid.")  );
+        await fireToast("error", "List not saved", (saving ? "Please wait until the current save is complete." : "List name is invalid.")  );
         return;
       };
   
@@ -138,7 +138,7 @@ export function ListDetailsPage() {
       // Fire toast notification for unimplemented feature
       await fireToast("error", "Save Failed", "There was an error saving the list. Please try again. Error details: " + (error instanceof Error ? error.message : String(error)));
     } finally {
-      fireToast("success", "List Saved", "Your changes have been saved successfully.");
+      await fireToast("success", "List Saved", "Your changes have been saved successfully.");
       setSaving(false);
     }
   };
@@ -152,10 +152,9 @@ export function ListDetailsPage() {
       await sendTaskToInbox(task.id);
     } catch (error) {
       console.error("Error sending task to inbox:", error);
-      fireToast("error", "Failed to send to Inbox", "An error occurred while sending the task to the Inbox.");
+      await fireToast("error", "Failed to send to Inbox", "An error occurred while sending the task to the Inbox.");
     } finally {
-      console.log("Task sent to Inbox successfully.");
-      fireToast("success", "Task sent to Inbox", "The task has been successfully sent to your Inbox.");
+      await fireToast("success", "Task sent to Inbox", "The task has been successfully sent to your Inbox.");
     }
   };
 
@@ -166,9 +165,9 @@ export function ListDetailsPage() {
       await deleteTask({ id: taskId }); // input: DeleteTaskInput
     } catch (error) {
       console.error("Failed to delete task:", error);
-      fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
+      await fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
     } finally {
-      fireToast("success", "Task deleted", "The task has been successfully deleted.");
+      await fireToast("success", "Task deleted", "The task has been successfully deleted.");
       const idx = stack.indexOf(taskId);
       if (idx !== -1) {
         const nextStack = stack.slice(0, idx);
@@ -177,14 +176,14 @@ export function ListDetailsPage() {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!currentList) return;
     setDraftListName(currentList.name ?? "");
     setDraftListDescription(currentList.description ?? "");
     setIsEditing(false);
 
     // Fire toast notification for canceled edit
-    fireToast("info", "Edit Canceled", "Your changes have been discarded.");
+    await fireToast("info", "Edit Canceled", "Your changes have been discarded.");
 
     refresh();
   };
@@ -195,10 +194,10 @@ export function ListDetailsPage() {
     }
   };
 
-  const toggleShowCompletedTasks = () => {
+  const toggleShowCompletedTasks = async () => {
     setShowCompletedTasks((prev) => !prev);
 
-    fireToast("info", "Toggle Completed Tasks", `Completed tasks are now ${showCompletedTasks ? "hidden" : "visible"}.`);
+    await fireToast("info", "Toggle Completed Tasks", `Completed tasks are now ${showCompletedTasks ? "hidden" : "visible"}.`);
   }
 
   const prepAddTaskForm = () => {
