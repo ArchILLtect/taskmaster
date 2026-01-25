@@ -8,7 +8,10 @@ export function useTaskIndex(opts?: {
 }) {
   const lists = useTaskStore((s) => s.lists);
   const tasks = useTaskStore((s) => s.tasks);
-  const indexes = useTaskStore((s) => s.indexes);
+  const listsById = useTaskStore((s) => s.listsById);
+  const tasksById = useTaskStore((s) => s.tasksById);
+  const tasksByListId = useTaskStore((s) => s.tasksByListId);
+  const childrenByParentId = useTaskStore((s) => s.childrenByParentId);
   const loading = useTaskStore((s) => s.loading);
   const error = useTaskStore((s) => s.error);
   const refreshAll = useTaskStore((s) => s.refreshAll);
@@ -25,7 +28,10 @@ export function useTaskIndex(opts?: {
   return {
     lists,
     tasks,
-    ...indexes,
+    listsById,
+    tasksById,
+    tasksByListId,
+    childrenByParentId,
     loading,
     err: error,
     refresh,
