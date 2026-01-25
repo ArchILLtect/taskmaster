@@ -25,6 +25,7 @@ import {
 import type { ListTaskListsQuery, TasksByListQuery } from "../API";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
+import { updatesEventStore } from "../services/updatesEventStore";
 
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
@@ -144,19 +145,96 @@ export const taskmasterApi = {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   async createTask(input: CreateTaskInput) {
     const data = await runMutation(createTaskMinimal as any, { input });
-    return (data as any).createTask;
+    const created = (data as any).createTask;
+
+    if (created?.id && created?.listId) {
+      updatesEventStore.append({
+        type: "task_created",
+        taskId: created.id,
+        listId: created.listId,
+        title: `Task created: ${created.title ?? "(untitled)"}`,
+        parentTaskId: created.parentTaskId ?? null,
+      });
+    }
+
+    return created;
   },
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   async updateTask(input: UpdateTaskInput) {
     const data = await runMutation(updateTaskMinimal as any, { input });
-    return (data as any).updateTask;
+    const updated = (data as any).updateTask;
+
+    if (updated?.id && updated?.listId) {
+      const hasOwn = (k: keyof UpdateTaskInput) => Object.prototype.hasOwnProperty.call(input, k);
+
+      // Many UI “edit task” forms submit status + completedAt even when status didn’t change.
+      // So we only emit completed/reopened when the update appears to be status-only.
+      const hasContentFields =
+        hasOwn("title") ||
+        hasOwn("description") ||
+        hasOwn("priority") ||
+        hasOwn("dueAt") ||
+        hasOwn("assigneeId") ||
+        hasOwn("tagIds");
+
+      const hasMoveFields = hasOwn("listId") || hasOwn("parentTaskId") || hasOwn("sortOrder");
+
+      const isStatusOnly = hasOwn("status") && !hasContentFields && !hasMoveFields;
+      const isMoveOnly = !hasOwn("status") && hasMoveFields && !hasContentFields;
+
+      const type: "task_completed" | "task_reopened" | "task_updated" = isStatusOnly
+        ? input.status === TaskStatus.Done
+          ? "task_completed"
+          : input.status === TaskStatus.Open
+            ? "task_reopened"
+            : "task_updated"
+        : "task_updated";
+
+      const prefix = isMoveOnly ? "Task moved" : type === "task_completed"
+        ? "Task completed"
+        : type === "task_reopened"
+          ? "Task reopened"
+          : "Task updated";
+
+      updatesEventStore.append({
+        type,
+        taskId: updated.id,
+        listId: updated.listId,
+        title: `${prefix}: ${updated.title ?? "(untitled)"}`,
+        parentTaskId: updated.parentTaskId ?? null,
+      });
+    }
+
+    return updated;
   },
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   async deleteTask(input: DeleteTaskInput) {
     const data = await runMutation(deleteTaskMinimal as any, { input });
-    return (data as any).deleteTask;
+    const deleted = (data as any).deleteTask;
+
+    // Note: delete mutation selection set must include listId/title for this to be informative.
+    if (deleted?.id && deleted?.listId) {
+      updatesEventStore.append({
+        type: "task_deleted",
+        taskId: deleted.id,
+        listId: deleted.listId,
+        title: `Task deleted: ${deleted.title ?? "(untitled)"}`,
+        parentTaskId: deleted.parentTaskId ?? null,
+      });
+    } else if (input?.id) {
+      // Fallback: still record something, even if the mutation didn't return enough data.
+      updatesEventStore.append({
+        type: "task_deleted",
+        taskId: input.id,
+        listId: "unknown",
+        title: "Task deleted",
+        parentTaskId: null,
+      });
+    }
+
+    return deleted;
   },
 
   async setTaskStatus(taskId: string, status: TaskStatus ) {
