@@ -195,8 +195,8 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - Deleted legacy overlay files (taskService/taskPatchStore) and removed dependencies.
   - Goal met: Zustand is the single source of truth for tasks/lists and edits.
 
-
+</Suspense>
 - [ ] Add CI enforcement: run `npm run lint` + `npm run build` on PRs to keep the UI-layer API import restrictions enforced.
-- [ ] If we add more generated enums later (e.g., `TaskSomethingElse`), update ESLint allowlist in `eslint.config.js` (`allowImportNames`).
+- [ ] TODO(P4) ESLint guardrail: if we introduce additional Amplify enums used by UI (beyond TaskStatus/TaskPriority), expand the allowlist in `eslint.config.js` (`no-restricted-imports` → allowImportNames) so UI can import those enums from `../API` without importing generated models.
 - [ ] Consider tightening architecture: optionally forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`, forcing all API access through store/hooks (commented-out rule block exists in eslint.config.js).
 - [ ] Consider replacing `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type for better editor help and safer mapping.

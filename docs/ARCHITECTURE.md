@@ -73,3 +73,31 @@ Auth is wired via Amplify UI’s `Authenticator` (app-level `user` + `signOut`).
 User display info (email/role) is fetched client-side via:
 - [src/services/authService.ts](../src/services/authService.ts)
 - [src/hooks/useUserUI.ts](../src/hooks/useUserUI.ts)
+
+## UI, Hooks, and API Boundaries (Intentional)
+
+This project intentionally treats **React hooks (`src/hooks/**`) as part of the UI layer**, alongside
+`src/pages/**` and `src/components/**`.
+
+As a result, UI and hooks:
+- ❌ MUST NOT import API wrapper modules from `src/api/**`
+- ❌ MUST NOT import generated Amplify models from `../API` or `@/API`
+- ✅ MAY import **only** UI-safe enums (`TaskStatus`, `TaskPriority`) from the generated API
+- ✅ MUST interact with backend data exclusively through Zustand stores and store actions
+
+### Rationale
+
+- Zustand is the **single source of truth** for application state and network interactions.
+- Hooks are treated as **composition helpers**, not data-fetching layers.
+- This prevents hidden coupling where UI logic bypasses the store and calls the API directly.
+- All network behavior, caching, persistence, and invalidation is centralized and observable.
+
+### Trade-off
+
+This approach is slightly more restrictive than allowing hooks to call APIs directly, but it:
+- Improves architectural clarity
+- Reduces accidental regressions
+- Makes data flow easier to reason about in a showcase codebase
+
+If the application grows, a future evolution may introduce a separate
+`domain/` or `services/` layer for non-UI hooks, but that is intentionally out of scope for this version.
