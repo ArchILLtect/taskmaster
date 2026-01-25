@@ -1,12 +1,17 @@
 import type { TaskUI } from "../types/task";
-import { mockTasks } from "../mocks/tasks";
 import { taskPatchStore } from "./taskPatchStore";
 import { updatesEventStore } from "./updatesEventStore";
 import { TaskPriority, TaskStatus } from "../API";
 
+let baseTasks: TaskUI[] = [];
+
 export const taskService = {
+  setBaseTasks(tasks: TaskUI[]) {
+    baseTasks = tasks;
+  },
+
   getAll(): TaskUI[] {
-    return taskPatchStore.applyAll(mockTasks);
+    return taskPatchStore.applyAll(baseTasks);
   },
 
   getByListId(listId: string): TaskUI[] {
