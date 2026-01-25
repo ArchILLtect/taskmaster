@@ -3,7 +3,6 @@ import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
 import { TaskPriority, TaskStatus } from "../API";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { useInboxPageData } from "./useInboxPageData";
 import { useMemo, useState } from "react";
 import { AddTaskForm } from "../components/AddTaskForm";
@@ -14,6 +13,7 @@ import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types";
 import { Toaster } from "../components/ui/Toaster";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { useTaskStore } from "../store/taskStore";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -67,6 +67,9 @@ export function InboxPage() {
 
   const { vm, lists, loading, err, refreshData, refreshInbox } = useInboxPageData();
 
+  const updateTask = useTaskStore((s) => s.updateTask);
+  const deleteTask = useTaskStore((s) => s.deleteTask);
+
   const navigate = useNavigate();
   const isDialogOpen = !!selectedTask;
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
@@ -77,7 +80,7 @@ export function InboxPage() {
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
     try {
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: taskId,
         status: nextStatus,
         completedAt,
@@ -86,7 +89,6 @@ export function InboxPage() {
       console.error("Error updating task status:", error);
       fireToast("error", "Error updating task", "There was an issue updating the task status.");
     } finally {
-      refreshData();
       fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     };
   };
@@ -104,14 +106,13 @@ export function InboxPage() {
     if (!taskId) return;
 
     try {
-      await taskmasterApi.deleteTask({
+      await deleteTask({
         id: taskId
       });
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
     } finally {
-      refreshData();
       fireToast("success", "Task deleted", "The task has been successfully deleted.");
     }
   };
@@ -121,7 +122,7 @@ export function InboxPage() {
 
     try {
       setSaving(true);
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: selectedTask.id,
         title: draftTaskTitle.trim() || "Untitled Task",
         description: draftTaskDescription,
@@ -137,7 +138,6 @@ export function InboxPage() {
       fireToast("error", "Error saving task", "There was an issue saving the task.");
     } finally {
       setSaving(false);
-      refreshData();
       resetFormAndClose();
       fireToast("success", "Task saved", "The task has been successfully updated.");
     }

@@ -4,13 +4,13 @@ import { ListRow } from "../components/ListRow";
 import { useState } from "react";
 import { EditListForm } from "../components/EditListForm";
 import { AddListForm } from "../components/AddListForm";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
 import type { ListUI } from "../types";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { useTaskStore } from "../store/taskStore";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -29,6 +29,9 @@ export const ListsPage = () => {
   const [saving, setSaving] = useState(false);
 
   const { visibleLists, loading, err, refresh } = useListsPageData();
+  const createTaskList = useTaskStore((s) => s.createTaskList);
+  const updateTaskList = useTaskStore((s) => s.updateTaskList);
+  const deleteTaskListSafeById = useTaskStore((s) => s.deleteTaskListSafeById);
   const selected = visibleLists.find((l) => l.id === selectedList);
   const inboxListId = getInboxListId();
 
@@ -47,14 +50,12 @@ export const ListsPage = () => {
 
     setSaving(true);
     try {
-      await taskmasterApi.createTaskList({
+      await createTaskList({
         name: trimmed || "Untitled List",
         isFavorite: false,
         sortOrder: nextSortOrder(visibleLists),
         // description: newListDescription,
       });
-
-      await refresh();
       setShowAddListForm(false);
 
       // Fire toast notification for unimplemented feature
@@ -86,13 +87,11 @@ export const ListsPage = () => {
 
     try {
       setSaving(true);
-      await taskmasterApi.updateTaskList({
+      await updateTaskList({
         id: selected.id,
         name: draftListName.trim() || "Untitled List",
         // description: draftDescription,
       });
-
-      await refresh();
       setIsEditing(false);
     } catch (error) {
       // Fire toast notification for unimplemented feature
@@ -111,13 +110,12 @@ export const ListsPage = () => {
     if (isInboxList(list, inboxListId)) return;
 
     try {
-      await taskmasterApi.deleteTaskListSafeById(listId);
+      await deleteTaskListSafeById(listId);
     } catch (error) {
       console.error("Failed to delete list:", error);
       await fireToast("error", "Failed to delete list", "An error occurred while deleting the list.");
       return;
     } finally {
-      await refresh();
       await fireToast("info", "List Deleted", "The list has been successfully deleted.");
     }
   };
@@ -128,9 +126,7 @@ export const ListsPage = () => {
     if (!list || !listId || isFavorite === undefined) return;
     if (isInboxList(list, inboxListId)) return;
 
-    await taskmasterApi.updateTaskList({ id: listId, isFavorite });
-
-    await refresh();
+    await updateTaskList({ id: listId, isFavorite });
 
     // Fire toast notification for unimplemented feature
     await fireToast("warning", "Favorite Toggled", `The list has been ${isFavorite ? "added to" : "removed from"} favorites.`);

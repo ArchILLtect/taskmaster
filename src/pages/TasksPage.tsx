@@ -3,7 +3,6 @@ import { TaskRow } from "../components/TaskRow";
 import { useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { TaskPriority, TaskStatus } from "../API";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { useTasksPageData } from "./useTasksPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
@@ -14,6 +13,7 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types/task";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { useTaskStore } from "../store/taskStore";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -52,6 +52,9 @@ export function TasksPage() {
   const { allTasks, lists, loading, refreshData } = useTasksPageData();
   const navigate = useNavigate();
 
+  const updateTask = useTaskStore((s) => s.updateTask);
+  const deleteTask = useTaskStore((s) => s.deleteTask);
+
   const isDialogOpen = !!selectedTask;
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
@@ -59,17 +62,15 @@ export function TasksPage() {
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
     try {
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: taskId,
         status: nextStatus,
         completedAt,
       });
+      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     } catch (error) {
       console.error("Error updating task status:", error);
       fireToast("error", "Error updating task", "There was an issue updating the task status.");
-    } finally {
-      refreshData();
-      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     };
   };
 
@@ -86,15 +87,13 @@ export function TasksPage() {
     if (!taskId) return;
 
     try {
-      await taskmasterApi.deleteTask({
+      await deleteTask({
         id: taskId
       });
+      fireToast("success", "Task deleted", "The task has been successfully deleted.");
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
-    } finally {
-      refreshData();
-      fireToast("success", "Task deleted", "The task has been successfully deleted.");
     }
   };
 
@@ -103,7 +102,7 @@ export function TasksPage() {
 
     try {
       setSaving(true);
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: selectedTask.id,
         title: draftTaskTitle.trim() || "Untitled Task",
         description: draftTaskDescription,
@@ -114,14 +113,13 @@ export function TasksPage() {
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
       });
+      fireToast("success", "Task saved", "The task has been successfully updated.");
     } catch (error) {
       console.error("Error saving task:", error);
       fireToast("error", "Error saving task", "There was an issue saving the task.");
     } finally {
       setSaving(false);
-      refreshData();
       resetFormAndClose();
-      fireToast("success", "Task saved", "The task has been successfully updated.");
     }
   };
 

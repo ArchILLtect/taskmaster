@@ -1,19 +1,22 @@
 import { VStack, HStack, Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { useTaskStore } from "../store/taskStore";
 
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [favorite, setFavorite] = useState<{ id: string; isFavorite: boolean }>({ id: "", isFavorite: true });
-  const { visibleFavorites, loading, refresh } = useListsPageData();
+  const { visibleFavorites, loading } = useListsPageData();
   const inboxListId = getInboxListId();
+
+  const deleteTaskListSafeById = useTaskStore((s) => s.deleteTaskListSafeById);
+  const updateTaskList = useTaskStore((s) => s.updateTaskList);
 
   const handleDeleteList = async (listId: string) => {   
     const list = visibleFavorites.find(l => l.id === listId);
@@ -21,7 +24,7 @@ export function FavoritesPage() {
     if (isInboxList(list, inboxListId)) return;
 
     try {
-    await taskmasterApi.deleteTaskListSafeById(listId);
+      await deleteTaskListSafeById(listId);
     } catch (error) {
       console.error("Error deleting list:", error);
       fireToast("error", "Error deleting list", "There was an issue deleting the list.");
@@ -29,7 +32,6 @@ export function FavoritesPage() {
       console.log("List deleted successfully.");
       // Fire toast notification for list deletion
       fireToast("info", "List Deleted", "The list has been successfully deleted.");
-      refresh();
     }
   };
 
@@ -49,7 +51,7 @@ export function FavoritesPage() {
     const reverseFavorite = !isFavorite;
 
     try {
-      await taskmasterApi.updateTaskList({
+      await updateTaskList({
         id: listId,
         isFavorite: reverseFavorite
       });
@@ -60,7 +62,6 @@ export function FavoritesPage() {
       console.log("Favorite status updated successfully.");
       // Fire toast notification for favorite toggle
       fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
-      refresh();
     }
   };
 

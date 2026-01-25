@@ -1,7 +1,7 @@
 import { useTaskIndex } from "../hooks/useTaskIndex";
 
 export function useUpdatesPageData() {
-  const { tasks, lists, loading, err, refresh: refreshData } = useTaskIndex();
+  const { tasks, lists, loading, err } = useTaskIndex();
 
   const allTasks = tasks;
 
@@ -10,6 +10,5 @@ export function useUpdatesPageData() {
     lists,
     loading,
     err,
-    refreshData,
   };
 }

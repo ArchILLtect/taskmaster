@@ -5,18 +5,23 @@ import { buildTaskStackPath } from "../routes/taskStack";
 import { updatesService } from "../services/updatesService";
 import { updatesEventStore } from "../services/updatesEventStore";
 import { TaskStatus } from "../API";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { useUpdatesPageData } from "./useUpdatesPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { DialogModal } from "../components/ui/DialogModal";
+import { useTaskStore } from "../store/taskStore";
 
 export function UpdatesPage() {
 
-  const { allTasks, lists, loading, refreshData } = useUpdatesPageData();
+  const { allTasks, lists, loading } = useUpdatesPageData();
   const vm = updatesService.getViewModel();
 
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
+  const [, setUpdatesVersion] = useState(0);
+  const refreshUpdates = () => setUpdatesVersion((v) => v + 1);
+
+  const updateTask = useTaskStore((s) => s.updateTask);
+  const deleteTask = useTaskStore((s) => s.deleteTask);
 
   const taskById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
   const listById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
@@ -32,7 +37,7 @@ export function UpdatesPage() {
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
     try {
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: taskId,
         status: nextStatus,
         completedAt,
@@ -41,7 +46,6 @@ export function UpdatesPage() {
       console.error("Error updating task status:", error);
       fireToast("error", "Error updating task", "There was an issue updating the task status.");
     } finally {
-      refreshData();
       fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     };
   };
@@ -50,14 +54,13 @@ export function UpdatesPage() {
     if (!taskId) return;
 
     try {
-      await taskmasterApi.deleteTask({
+      await deleteTask({
         id: taskId
       });
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
     } finally {
-      refreshData();
       fireToast("success", "Task deleted", "The task has been successfully deleted.");
     }
   };
@@ -91,7 +94,7 @@ export function UpdatesPage() {
             variant="outline"
             onClick={() => {
               updatesService.clearRead();
-              refreshData();
+              refreshUpdates();
             }}
           >
             Clear read
@@ -99,7 +102,7 @@ export function UpdatesPage() {
           <Button
             onClick={() => {
               updatesService.markAllReadNow();
-              refreshData();
+              refreshUpdates();
             }}
           >
             Mark all read
@@ -169,7 +172,7 @@ export function UpdatesPage() {
         onCancel={() => setIsClearAllOpen(false)}
         onAccept={async () => {
           updatesEventStore.clearAll();
-          await refreshData?.();
+          refreshUpdates();
           // TODO: If an opportunity presents itself again, test if this modal closes on acceptance
           // if not, uncomment the following code:
           // setIsClearAllOpen(false);

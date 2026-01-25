@@ -8,13 +8,13 @@ import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { AddTaskForm } from "../components/AddTaskForm";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskPriority, TaskStatus } from "../API";
 import type { TaskUI } from "../types/task";
 import { EditListForm } from "../components/EditListForm";
 import { getInboxListId, SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Tooltip } from "../components/ui/Tooltip"
+import { useTaskStore } from "../store/taskStore";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -38,6 +38,10 @@ export function ListDetailsPage() {
 
   const { listId } = useParams<{ listId: string }>();
   const { lists, tasks, loading, err, refresh } = useListDetailsPageData(listId);
+  const updateTask = useTaskStore((s) => s.updateTask);
+  const updateTaskList = useTaskStore((s) => s.updateTaskList);
+  const deleteTask = useTaskStore((s) => s.deleteTask);
+  const sendTaskToInbox = useTaskStore((s) => s.sendTaskToInbox);
   const listById = useMemo(() => new Map(lists.map(l => [l.id, l])), [lists]);
   const currentList = listId ? listById.get(listId) : null;
   const listName = currentList?.name || "Unknown List";
@@ -97,7 +101,7 @@ export function ListDetailsPage() {
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
     try {
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: taskId,
         status: nextStatus,
         completedAt,
@@ -106,7 +110,6 @@ export function ListDetailsPage() {
       console.error("Error updating task status:", error);
       fireToast("error", "Error updating task", "There was an issue updating the task status.");
     } finally {
-      refresh();
       fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     };
   };
@@ -127,14 +130,11 @@ export function ListDetailsPage() {
   
     setSaving(true);
     try {
-  
-      await taskmasterApi.updateTaskList({
+      await updateTaskList({
         id: currentList.id,
         name: draftListName.trim() || "Untitled List",
         // description: draftDescription,
       });
-
-      await refresh();
       setIsEditing(false);
 
     } catch (error) {
@@ -152,8 +152,7 @@ export function ListDetailsPage() {
     if (task.listId === inboxId) return;
 
     try {
-      await taskmasterApi.sendTaskToInbox(task.id);
-      refresh();
+      await sendTaskToInbox(task.id);
     } catch (error) {
       console.error("Error sending task to inbox:", error);
       fireToast("error", "Failed to send to Inbox", "An error occurred while sending the task to the Inbox.");
@@ -167,12 +166,11 @@ export function ListDetailsPage() {
     if (!taskId) return;
 
     try {
-    await taskmasterApi.deleteTask({ id: taskId }); // input: DeleteTaskInput
+      await deleteTask({ id: taskId }); // input: DeleteTaskInput
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
     } finally {
-      await refresh();
       fireToast("success", "Task deleted", "The task has been successfully deleted.");
       const idx = stack.indexOf(taskId);
       if (idx !== -1) {
