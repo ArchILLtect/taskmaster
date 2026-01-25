@@ -3,6 +3,7 @@ import { useProfilePageData } from "./useProfilePageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 // import type { User } from "../types";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type ProfilePageProps = {
   user?: any;
   onSignOut?: () => void;
