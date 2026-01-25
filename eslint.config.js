@@ -38,11 +38,34 @@ export default defineConfig([
     files: [
       "src/components/**/*.{ts,tsx}",
       "src/pages/**/*.{ts,tsx}",
+      "src/hooks/**/*.{ts,tsx}",
     ],
     rules: {
       "no-restricted-imports": [
         "error",
         {
+          paths: [
+            {
+              name: "../api",
+              message: "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
+            },
+            {
+              name: "../../api",
+              message: "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
+            },
+            {
+              name: "../../../api",
+              message: "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
+            },
+            {
+              name: "../../../../api",
+              message: "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
+            },
+            {
+              name: "@/api",
+              message: "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
+            },
+          ],
           patterns: [
             // Disallow API subpath imports entirely (../API/* or @/API/*)
             {
