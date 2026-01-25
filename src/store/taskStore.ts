@@ -26,7 +26,10 @@ export type TaskStoreState = {
   error: string | null;
   lastLoadedAtMs?: number;
 
-  indexes: TaskIndexes;
+  listsById: Record<string, ListUI>;
+  tasksById: Record<string, TaskUI>;
+  tasksByListId: Record<string, TaskUI[]>;
+  childrenByParentId: Record<string, TaskUI[]>;
 
   refreshAll: (opts?: { listLimit?: number }) => Promise<void>;
 
@@ -116,6 +119,9 @@ function buildIndexes(lists: ListUI[], tasks: TaskUI[]): TaskIndexes {
   }
 
   // Keep subtasks sorted too (tasks are already globally sorted by sortOrder, but be explicit)
+  for (const k of Object.keys(tasksByListId)) {
+    tasksByListId[k].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }
   for (const k of Object.keys(childrenByParentId)) {
     childrenByParentId[k].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }
@@ -131,7 +137,10 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
   loading: true,
   error: null,
   lastLoadedAtMs: undefined,
-  indexes: emptyIndexes,
+  listsById: emptyIndexes.listsById,
+  tasksById: emptyIndexes.tasksById,
+  tasksByListId: emptyIndexes.tasksByListId,
+  childrenByParentId: emptyIndexes.childrenByParentId,
 
   refreshAll: async (opts) => {
     if (refreshInFlight) return refreshInFlight;
@@ -163,7 +172,10 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
         set({
           lists: ensuredListsSorted,
           tasks: tasksSorted,
-          indexes,
+          listsById: indexes.listsById,
+          tasksById: indexes.tasksById,
+          tasksByListId: indexes.tasksByListId,
+          childrenByParentId: indexes.childrenByParentId,
           loading: false,
           error: null,
           lastLoadedAtMs: Date.now(),
@@ -174,7 +186,10 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
         set({
           lists: [],
           tasks: [],
-          indexes: emptyIndexes,
+          listsById: emptyIndexes.listsById,
+          tasksById: emptyIndexes.tasksById,
+          tasksByListId: emptyIndexes.tasksByListId,
+          childrenByParentId: emptyIndexes.childrenByParentId,
           loading: false,
           error: errorToMessage(err),
           lastLoadedAtMs: undefined,
