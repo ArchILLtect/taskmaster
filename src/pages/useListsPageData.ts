@@ -4,7 +4,7 @@ import { getUserVisibleLists, getUserVisibleFavorites } from "../lists/listVisib
 import { getInboxListId } from "../config/inboxSettings";
 
 export function useListsPageData() {
-  const { lists, loading, err, refresh } = useTaskIndex();
+  const { lists, initialLoading, err, refresh } = useTaskIndex();
 
   const inboxListId = getInboxListId();
 
@@ -16,5 +16,5 @@ export function useListsPageData() {
     return getUserVisibleFavorites(lists, { inboxListId });
   }, [lists, inboxListId]);
 
-  return { lists, visibleLists, visibleFavorites, loading, err, refresh };
+  return { lists, visibleLists, visibleFavorites, loading: initialLoading, err, refresh };
 }

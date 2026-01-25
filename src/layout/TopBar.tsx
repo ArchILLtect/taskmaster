@@ -1,8 +1,9 @@
-import { HStack, Heading, Spacer, Badge, Button, Box } from "@chakra-ui/react";
+import { HStack, Heading, Spacer, Badge, Button, Box, Spinner, Text } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
 import type { AuthUserLike, UserUI } from "../types";
 import { IoSettingsSharp } from "react-icons/io5";
 import { useUserUI } from "../hooks/useUserUI";
+import { useTaskStoreView } from "../store/taskStore";
 
 type TopBarProps = {
   user?: AuthUserLike | null;
@@ -14,6 +15,9 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
   const { userUI: hookUserUI } = useUserUI();
   const effectiveUserUI = userUI ?? hookUserUI;
 
+  const { loading, lists, tasks } = useTaskStoreView();
+  const refreshing = loading && (lists.length > 0 || tasks.length > 0);
+
   const username = effectiveUserUI?.username ?? user?.username ?? user?.userId;
   const role = effectiveUserUI?.role ?? user?.role;
   const signedIn = Boolean(username);
@@ -24,6 +28,12 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
       <Spacer />
 
       <HStack gap={3}>
+        {refreshing ? (
+          <HStack gap={2} color="gray.600">
+            <Spinner size="sm" />
+            <Text fontSize="sm">Refreshing…</Text>
+          </HStack>
+        ) : null}
         {signedIn ? (
           <>
             {/* Username link to Profile */}

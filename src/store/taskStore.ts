@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import type { PersistStorage, StorageValue } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 
 import { taskmasterApi } from "../api/taskmasterApi";
@@ -100,13 +101,26 @@ let didWarnTaskStoreBadShape = false;
 
 // Persist storage wrapper that is resilient to corrupted/invalid JSON values.
 // This prevents a bad localStorage entry from breaking app startup.
-const taskStoreStorage = createJSONStorage(() => ({
+const taskStoreStorage: PersistStorage<unknown, unknown> = {
   getItem: (name: string) => {
     const raw = localStorage.getItem(name);
     if (raw == null) return null;
 
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw) as unknown;
+
+      // Persist expects an envelope: { state, version }. If it's not shaped like that,
+      // treat it as corrupted and clear it.
+      if (!isRecord(parsed) || !("state" in parsed)) {
+        if (import.meta.env.DEV && !didWarnTaskStoreBadJson) {
+          didWarnTaskStoreBadJson = true;
+          console.warn(`[taskStore] Invalid persisted JSON for "${name}"; clearing and using defaults.`);
+        }
+        localStorage.removeItem(name);
+        return null;
+      }
+
+      return parsed as StorageValue<unknown>;
     } catch {
       if (import.meta.env.DEV && !didWarnTaskStoreBadJson) {
         didWarnTaskStoreBadJson = true;
@@ -116,13 +130,13 @@ const taskStoreStorage = createJSONStorage(() => ({
       return null;
     }
   },
-  setItem: (name: string, value: string) => {
-    localStorage.setItem(name, value);
+  setItem: (name: string, value: StorageValue<unknown>) => {
+    localStorage.setItem(name, JSON.stringify(value));
   },
   removeItem: (name: string) => {
     localStorage.removeItem(name);
   },
-}));
+};
 
 // Zustand persist-style migrate signature.
 // Stub for now; once persistence is enabled, evolve this to transform older shapes.
@@ -289,17 +303,27 @@ export const useTaskStore = create<TaskStoreState>()(
               lastLoadedAtMs: Date.now(),
             });
           } catch (err) {
-            set({
-              lists: [],
-              tasks: [],
-              listsById: emptyIndexes.listsById,
-              tasksById: emptyIndexes.tasksById,
-              tasksByListId: emptyIndexes.tasksByListId,
-              childrenByParentId: emptyIndexes.childrenByParentId,
-              loading: false,
-              error: errorToMessage(err),
-              lastLoadedAtMs: undefined,
-            });
+            const prev = get();
+            const hasCachedData = prev.lists.length > 0 || prev.tasks.length > 0;
+
+            set(
+              hasCachedData
+                ? {
+                    loading: false,
+                    error: errorToMessage(err),
+                  }
+                : {
+                    lists: [],
+                    tasks: [],
+                    listsById: emptyIndexes.listsById,
+                    tasksById: emptyIndexes.tasksById,
+                    tasksByListId: emptyIndexes.tasksByListId,
+                    childrenByParentId: emptyIndexes.childrenByParentId,
+                    loading: false,
+                    error: errorToMessage(err),
+                    lastLoadedAtMs: undefined,
+                  }
+            );
           }
         })().finally(() => {
           refreshInFlight = null;

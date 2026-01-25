@@ -24,9 +24,13 @@ export function useTaskIndex(opts?: {
   }, [refreshAll, opts?.listLimit]);
 
   useEffect(() => {
-    if (opts?.autoLoad === false) return;
+    if (opts?.autoLoad !== true) return;
     void hydrateAndRefreshIfStale({ listLimit: opts?.listLimit });
   }, [hydrateAndRefreshIfStale, opts?.autoLoad, opts?.listLimit]);
+
+  const hasCachedData = lists.length > 0 || tasks.length > 0;
+  const initialLoading = loading && !hasCachedData;
+  const refreshing = loading && hasCachedData;
 
   return {
     lists,
@@ -36,6 +40,8 @@ export function useTaskIndex(opts?: {
     tasksByListId,
     childrenByParentId,
     loading,
+    initialLoading,
+    refreshing,
     err: error,
     refresh,
   };

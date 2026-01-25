@@ -19,7 +19,7 @@ function isDueSoon(dueAt: string | null | undefined, status: TaskStatus, nowMs: 
 }
 
 export function useInboxPageData() {
-  const { lists, tasks, loading, err, refresh: refreshData } = useTaskIndex();
+  const { lists, tasks, initialLoading, err, refresh: refreshData } = useTaskIndex();
 
   // local “poke” for inbox-only state changes (dismiss/window/viewedAt)
   const [, setInboxVersion] = useState(0);
@@ -52,7 +52,7 @@ export function useInboxPageData() {
     lists,
     inboxListId,
     vm,
-    loading,
+    loading: initialLoading,
     err,
     refreshData,   // network refresh
     refreshInbox,  // local refresh

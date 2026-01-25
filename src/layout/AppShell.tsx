@@ -4,10 +4,13 @@ import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import type { AuthUserLike } from "../types";
+import { useBootstrapTaskStore } from "../hooks/useBootstrapTaskStore";
 
 const TOPBAR_H = "64px";
 
 export function AppShell({ user, onSignOut }: { user?: AuthUserLike | null; onSignOut?: () => void }) {
+  useBootstrapTaskStore();
+
   return (
     <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell">
 
