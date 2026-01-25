@@ -17,6 +17,13 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 
 ## Data & Services
 
+- [ ] TODO(stretch) Make Updates logging “perfect” by comparing before/after task status
+  - Today: `taskmasterApi.updateTask()` infers completed/reopened vs updated based on which fields are present in the payload
+  - Ideal: compare previous task state vs next task state (e.g., status transition) before emitting `task_completed` / `task_reopened`
+  - Options:
+    - Pass `prevStatus` (or a snapshot) from UI to the API wrapper as metadata
+    - Fetch the task before update (extra round-trip; be careful about latency)
+
 - [ ] TODO(P1) Zustand state (post-MVP)
   - [ ] tasks (GraphQL-backed, cached client-side)
   - [ ] taskLists
