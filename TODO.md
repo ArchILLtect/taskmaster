@@ -158,8 +158,32 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
     - Non-blocking for MVP
     - Safe to defer until performance tuning phase
 
+- [ ] TODO(P4) Route-level code splitting (React.lazy + Suspense)
+  - Lazy-load routes first (highest impact):
+    - ListDetailsPage / list task stack route
+    - UpdatesPage
+    - TasksPage
+    - InboxPage
+  - Lazy-load later (lower impact / smaller):
+    - ListsPage
+    - FavoritesPage
+    - ProfilePage / SettingsPage / MonthPage
+    - DevPage (tiny; defer)
+  - Suspense fallback:
+    - Place the primary `<Suspense fallback={...}>` in AppShell’s main content area wrapping the `<Outlet />` region
+    - Keep the sidebar/topbar always-rendered so navigation remains responsive while a page chunk loads
+  - Error handling / boundaries:
+    - Preserve existing ErrorBoundary behavior for route renders (don’t move the boundary inside a lazy-loaded component)
+    - Ensure the ErrorBoundary still wraps whatever renders the lazy route element so dynamic import failures and render errors surface consistently
+
 
 ### Specify later:
+
+- [x] TODO(P1) Remove legacy task overlay bridge:
+  - Removed taskStore.refreshAll() glue (taskService.setBaseTasks).
+  - Deleted legacy overlay files (taskService/taskPatchStore) and removed dependencies.
+  - Goal met: Zustand is the single source of truth for tasks/lists and edits.
+
 
 - [ ] Add CI enforcement: run `npm run lint` + `npm run build` on PRs to keep the UI-layer API import restrictions enforced.
 - [ ] If we add more generated enums later (e.g., `TaskSomethingElse`), update ESLint allowlist in `eslint.config.js` (`allowImportNames`).
