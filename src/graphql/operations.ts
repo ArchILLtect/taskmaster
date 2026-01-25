@@ -152,6 +152,9 @@ export const deleteTaskMinimal = /* GraphQL */ `
   mutation DeleteTask($input: DeleteTaskInput!) {
     deleteTask(input: $input) {
       id
+      listId
+      parentTaskId
+      title
       owner
     }
   }
