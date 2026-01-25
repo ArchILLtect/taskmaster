@@ -15,6 +15,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { ListDetailsPage } from "./pages/ListDetailsPage";
 import { lazy, Suspense } from "react";
+import { BasicSpinner } from "./components/ui/BasicSpinner";
 
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
@@ -39,13 +40,13 @@ export default function App() {
               <Route path="/lists/:listId/tasks/*" element={<ListDetailsPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile" element={<ProfilePage user={user} onSignOut={signOut} />} />
               <Route path="/settings" element={<SettingsPage />} />
               {import.meta.env.DEV ? (
                 <Route
                   path="/dev"
                   element={
-                    <Suspense fallback={<div>Loading...</div>}>
+                    <Suspense fallback={<BasicSpinner />}>
                       <DevPage />
                     </Suspense>
                   }
