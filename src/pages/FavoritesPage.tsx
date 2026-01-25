@@ -1,4 +1,4 @@
-import { VStack, HStack, Box, Flex, Heading, Text, Center, Spinner } from "@chakra-ui/react";
+import { VStack, HStack, Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { taskmasterApi } from "../api/taskmasterApi";
@@ -7,6 +7,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useState } from "react";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -76,14 +77,7 @@ export function FavoritesPage() {
     setIsDialogOpen(false);
   }
 
-  // Add a spinner for loading state
-  if (loading) {
-    return (
-      <Center width={"100%"} height={"75vh"}>
-        <Spinner size={"xl"} />
-      </Center>
-    );
-  }
+  if (loading) return <BasicSpinner />;
 
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">

@@ -1,4 +1,4 @@
-import { Box, Flex, VStack, HStack, Heading, Text, Button, Center, Spinner } from "@chakra-ui/react";
+import { Box, Flex, VStack, HStack, Heading, Text, Button } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
 import type { ListUI } from "../types";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -175,14 +176,7 @@ export const ListsPage = () => {
     fireToast("success", source === "edit" ? "Edit Canceled" : "Add Canceled", "Your changes have been discarded.");
   };
 
-  // Add a spinner for loading state
-  if (loading) {
-    return (
-      <Center width={"100%"} height={"75vh"}>
-        <Spinner size={"xl"} />
-      </Center>
-    );
-  }
+  if (loading) return <BasicSpinner />;
 
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">

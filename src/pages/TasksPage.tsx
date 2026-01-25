@@ -1,4 +1,4 @@
-import { Box, Heading, HStack, Text, VStack, Button, Center, Spinner } from "@chakra-ui/react";
+import { Box, Heading, HStack, Text, VStack, Button } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
@@ -13,6 +13,7 @@ import { Flex } from "@aws-amplify/ui-react";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types/task";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -160,14 +161,7 @@ export function TasksPage() {
     setSelectedTask(null);
   };
 
-  // Add a spinner for loading state
-  if (loading) {
-    return (
-      <Center width={"100%"} height={"75vh"}>
-        <Spinner size={"xl"} />
-      </Center>
-    );
-  }
+  if (loading) return <BasicSpinner />;
   
   return (
     <VStack minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">

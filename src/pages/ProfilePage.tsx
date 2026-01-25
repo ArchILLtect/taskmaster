@@ -1,20 +1,19 @@
-import { Heading, Text, VStack, Center, Spinner } from "@chakra-ui/react";
-import { currentUser } from "../mocks/currentUser";
+import { Heading, Text, VStack, Button } from "@chakra-ui/react";
 import { useProfilePageData } from "./useProfilePageData";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
+// import type { User } from "../types";
 
-export function ProfilePage() {
-  const signedIn = Boolean(currentUser);
-
-    const { loading } = useProfilePageData();
+type ProfilePageProps = {
+  user?: any;
+  onSignOut?: () => void;
+}
   
-    // Add a spinner for loading state
-    if (loading) {
-      return (
-        <Center width={"100%"} height={"75vh"}>
-          <Spinner size={"xl"} />
-        </Center>
-      );
-    }
+export function ProfilePage({ user, onSignOut }: ProfilePageProps) {
+  const signedIn = user ? Boolean(user) : false;
+
+  const { loading } = useProfilePageData();
+
+  if (loading) return <BasicSpinner />;
 
   if (!signedIn) {
     return (
@@ -25,13 +24,20 @@ export function ProfilePage() {
     );
   } else {
     return (
+      <>
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
-        <Text>{currentUser?.id}</Text>
-        <Text>{currentUser?.username}</Text>
-        <Text>{currentUser?.email}</Text>
-        <Text>{currentUser?.role}</Text>
+        <Text>{user?.id}</Text>
+        <Text>{user?.username}</Text>
+        <Text>{user?.email}</Text>
+        <Text>{user?.role}</Text>
       </VStack>
-    )
+      {onSignOut ? (
+        <Button size="sm" variant="outline" onClick={onSignOut}>
+          Sign out
+        </Button>
+      ) : null}
+      </>
+    );
   }
 }

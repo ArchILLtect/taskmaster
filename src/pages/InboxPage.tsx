@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex, Center, Spinner } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { inboxService } from "../services/inboxService";
@@ -13,6 +13,7 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types";
 import { Toaster } from "../components/ui/Toaster";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -178,14 +179,7 @@ export function InboxPage() {
     setSelectedTask(null); // closes dialog
   };
 
-  // Add a spinner for loading state
-  if (loading) {
-    return (
-      <Center width={"100%"} height={"75vh"}>
-        <Spinner size={"xl"} />
-      </Center>
-    );
-  }
+  if (loading) return <BasicSpinner />;
 
   if (err) return <div>Failed to load inbox data.</div>;
 
