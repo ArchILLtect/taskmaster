@@ -1,18 +1,19 @@
 import { Heading, Text, VStack, Button } from "@chakra-ui/react";
 import { useProfilePageData } from "./useProfilePageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-// import type { User } from "../types";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 type ProfilePageProps = {
-  user?: any;
+  user?: { username?: string; userId?: string } | null;
   onSignOut?: () => void;
-}
+};
   
 export function ProfilePage({ user, onSignOut }: ProfilePageProps) {
-  const signedIn = user ? Boolean(user) : false;
+  const { userUI, loading, error } = useProfilePageData();
+  const signedIn = Boolean(userUI?.username ?? user?.username ?? user?.userId);
 
-  const { loading } = useProfilePageData();
+  const username = userUI?.username ?? user?.username;
+  const email = userUI?.email;
+  const role = userUI?.role;
 
   if (loading) return <BasicSpinner />;
 
@@ -28,10 +29,10 @@ export function ProfilePage({ user, onSignOut }: ProfilePageProps) {
       <>
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
-        <Text>{user?.id}</Text>
-        <Text>{user?.username}</Text>
-        <Text>{user?.email}</Text>
-        <Text>{user?.role}</Text>
+        <Text>Username: {username ?? "(unknown)"}</Text>
+        {email ? <Text>Email: {email}</Text> : null}
+        {role ? <Text>Role: {role}</Text> : null}
+        {error ? <Text color="orange.600">{error}</Text> : null}
       </VStack>
       {onSignOut ? (
         <Button size="sm" variant="outline" onClick={onSignOut}>
