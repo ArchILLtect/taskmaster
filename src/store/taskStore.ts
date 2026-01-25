@@ -278,6 +278,37 @@ export function useTaskIndexView(): {
   );
 }
 
+export function useTaskStoreView() {
+  return useTaskIndexView();
+}
+
+type TaskActions = Pick<
+  TaskStoreState,
+  | "refreshAll"
+  | "createTask"
+  | "updateTask"
+  | "deleteTask"
+  | "sendTaskToInbox"
+  | "createTaskList"
+  | "updateTaskList"
+  | "deleteTaskListSafeById"
+>;
+
+export function useTaskActions(): TaskActions {
+  return useTaskStore(
+    useShallow((s) => ({
+      refreshAll: s.refreshAll,
+      createTask: s.createTask,
+      updateTask: s.updateTask,
+      deleteTask: s.deleteTask,
+      sendTaskToInbox: s.sendTaskToInbox,
+      createTaskList: s.createTaskList,
+      updateTaskList: s.updateTaskList,
+      deleteTaskListSafeById: s.deleteTaskListSafeById,
+    }))
+  );
+}
+
 export function getTaskStoreState() {
   return useTaskStore.getState();
 }

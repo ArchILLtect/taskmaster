@@ -9,7 +9,7 @@ import { useUpdatesPageData } from "./useUpdatesPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { DialogModal } from "../components/ui/DialogModal";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 export function UpdatesPage() {
 
@@ -20,8 +20,7 @@ export function UpdatesPage() {
   const [, setUpdatesVersion] = useState(0);
   const refreshUpdates = () => setUpdatesVersion((v) => v + 1);
 
-  const updateTask = useTaskStore((s) => s.updateTask);
-  const deleteTask = useTaskStore((s) => s.deleteTask);
+  const { updateTask, deleteTask } = useTaskActions();
 
   const taskById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
   const listById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);

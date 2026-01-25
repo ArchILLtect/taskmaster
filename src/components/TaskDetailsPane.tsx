@@ -10,7 +10,7 @@ import { TaskPriority, TaskStatus } from "../API";
 import { fireToast } from "../hooks/useFireToast";
 import type { TaskUI } from "../types/task";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 // --- animations
 const pulse = keyframes`
@@ -79,7 +79,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
   const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
   const { loading } = useTaskmasterData();
-  const updateTask = useTaskStore((s) => s.updateTask);
+  const { updateTask } = useTaskActions();
 
   const children = selected
     ? tasksInList

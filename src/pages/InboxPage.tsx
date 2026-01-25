@@ -13,7 +13,7 @@ import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types";
 import { Toaster } from "../components/ui/Toaster";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -67,8 +67,7 @@ export function InboxPage() {
 
   const { vm, lists, loading, err, refreshData, refreshInbox } = useInboxPageData();
 
-  const updateTask = useTaskStore((s) => s.updateTask);
-  const deleteTask = useTaskStore((s) => s.deleteTask);
+  const { updateTask, deleteTask } = useTaskActions();
 
   const navigate = useNavigate();
   const isDialogOpen = !!selectedTask;

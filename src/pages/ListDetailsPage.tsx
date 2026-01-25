@@ -14,7 +14,7 @@ import { EditListForm } from "../components/EditListForm";
 import { getInboxListId, SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Tooltip } from "../components/ui/Tooltip"
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 // Get current timezone
 const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -38,10 +38,7 @@ export function ListDetailsPage() {
 
   const { listId } = useParams<{ listId: string }>();
   const { lists, tasks, loading, err, refresh } = useListDetailsPageData(listId);
-  const updateTask = useTaskStore((s) => s.updateTask);
-  const updateTaskList = useTaskStore((s) => s.updateTaskList);
-  const deleteTask = useTaskStore((s) => s.deleteTask);
-  const sendTaskToInbox = useTaskStore((s) => s.sendTaskToInbox);
+  const { updateTask, updateTaskList, deleteTask, sendTaskToInbox } = useTaskActions();
   const listById = useMemo(() => new Map(lists.map(l => [l.id, l])), [lists]);
   const currentList = listId ? listById.get(listId) : null;
   const listName = currentList?.name || "Unknown List";

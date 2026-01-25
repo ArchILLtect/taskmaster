@@ -13,7 +13,7 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types/task";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -52,8 +52,7 @@ export function TasksPage() {
   const { allTasks, lists, loading, refreshData } = useTasksPageData();
   const navigate = useNavigate();
 
-  const updateTask = useTaskStore((s) => s.updateTask);
-  const deleteTask = useTaskStore((s) => s.deleteTask);
+  const { updateTask, deleteTask } = useTaskActions();
 
   const isDialogOpen = !!selectedTask;
 

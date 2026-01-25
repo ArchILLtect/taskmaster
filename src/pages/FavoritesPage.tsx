@@ -7,7 +7,7 @@ import { Toaster } from "../components/ui/Toaster";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -15,8 +15,7 @@ export function FavoritesPage() {
   const { visibleFavorites, loading } = useListsPageData();
   const inboxListId = getInboxListId();
 
-  const deleteTaskListSafeById = useTaskStore((s) => s.deleteTaskListSafeById);
-  const updateTaskList = useTaskStore((s) => s.updateTaskList);
+  const { deleteTaskListSafeById, updateTaskList } = useTaskActions();
 
   const handleDeleteList = async (listId: string) => {   
     const list = visibleFavorites.find(l => l.id === listId);

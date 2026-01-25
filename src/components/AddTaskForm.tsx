@@ -16,7 +16,7 @@ import type { TaskUI, AddTaskFormProps } from "../types/task";
 import { useEffect, useMemo, useState } from "react";
 import { getInboxListId } from "../config/inboxSettings";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 type Option<T extends string> = { label: string; value: T };
 
@@ -81,7 +81,7 @@ export const AddTaskForm = ({
 
   const { visibleLists: allLists } = useTaskmasterData();
 
-  const createTask = useTaskStore((s) => s.createTask);
+  const { createTask } = useTaskActions();
 
   //  Chakra v3 pattern: destructure `{ collection }`
   const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({

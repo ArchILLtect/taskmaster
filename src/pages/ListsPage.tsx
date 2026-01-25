@@ -10,7 +10,7 @@ import { Toaster } from "../components/ui/Toaster";
 import type { ListUI } from "../types";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-import { useTaskStore } from "../store/taskStore";
+import { useTaskActions } from "../store/taskStore";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -29,9 +29,7 @@ export const ListsPage = () => {
   const [saving, setSaving] = useState(false);
 
   const { visibleLists, loading, err, refresh } = useListsPageData();
-  const createTaskList = useTaskStore((s) => s.createTaskList);
-  const updateTaskList = useTaskStore((s) => s.updateTaskList);
-  const deleteTaskListSafeById = useTaskStore((s) => s.deleteTaskListSafeById);
+  const { createTaskList, updateTaskList, deleteTaskListSafeById } = useTaskActions();
   const selected = visibleLists.find((l) => l.id === selectedList);
   const inboxListId = getInboxListId();
 
