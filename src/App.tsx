@@ -16,6 +16,7 @@ import { FavoritesPage } from "./pages/FavoritesPage";
 import { ListDetailsPage } from "./pages/ListDetailsPage";
 import { lazy, Suspense } from "react";
 import { BasicSpinner } from "./components/ui/BasicSpinner";
+import { clearUserUICache } from "./services/authService";
 
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
@@ -23,10 +24,16 @@ const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.Dev
 export default function App() {
   return (
     <Authenticator>
-      {({ signOut, user }) => (
+      {({ signOut, user }) => {
+        const signOutWithCleanup = async () => {
+          clearUserUICache();
+          await signOut?.();
+        };
+
+        return (
         <>
           <Routes>
-            <Route element={<AppShell user={user} onSignOut={signOut} />}>
+            <Route element={<AppShell user={user} onSignOut={signOutWithCleanup} />}>
               <Route path="/" element={<Navigate to="/today" replace />} />
               <Route path="/inbox" element={<InboxPage />} />
               <Route path="/today" element={<TodayPage />} />
@@ -40,7 +47,7 @@ export default function App() {
               <Route path="/lists/:listId/tasks/*" element={<ListDetailsPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
-              <Route path="/profile" element={<ProfilePage user={user} onSignOut={signOut} />} />
+              <Route path="/profile" element={<ProfilePage user={user} onSignOut={signOutWithCleanup} />} />
               <Route path="/settings" element={<SettingsPage />} />
               {import.meta.env.DEV ? (
                 <Route
@@ -58,7 +65,8 @@ export default function App() {
             </Route>
           </Routes>
         </>
-      )}
+        );
+      }}
     </Authenticator>
   );
 }
