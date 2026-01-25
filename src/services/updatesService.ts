@@ -1,47 +1,25 @@
-import { isoNow, readJson, writeJson } from "./storage";
-import { updatesEventStore } from "./updatesEventStore";
-
-const KEY = "taskmaster.updates.v1";
-
-export type UpdatesState = {
-  lastReadAt: string | null;
-  clearedBeforeAt: string | null;
-};
-
-const DEFAULTS: UpdatesState = {
-  lastReadAt: null,
-  clearedBeforeAt: null,
-};
-
-function getState(): UpdatesState {
-  const s = readJson<UpdatesState>(KEY, DEFAULTS);
-  return {
-    lastReadAt: s.lastReadAt ?? null,
-    clearedBeforeAt: s.clearedBeforeAt ?? null,
-  };
-}
-
-function setState(next: UpdatesState) {
-  writeJson(KEY, next);
-}
+import type { UpdatesPersistedStateV1 } from "./updatesEventStore";
+import { useUpdatesStore, updatesEventStore } from "./updatesEventStore";
 
 export const updatesService = {
-  getState,
+  getState(): Pick<UpdatesPersistedStateV1, "lastReadAt" | "clearedBeforeAt"> {
+    const s = useUpdatesStore.getState();
+    return {
+      lastReadAt: s.lastReadAt ?? null,
+      clearedBeforeAt: s.clearedBeforeAt ?? null,
+    };
+  },
 
   markAllReadNow() {
-    const s = getState();
-    setState({ ...s, lastReadAt: isoNow() });
+    useUpdatesStore.getState().markAllReadNow();
   },
 
   clearRead() {
-    const s = getState();
-    // “Clear read” means: hide everything up to lastReadAt
-    if (!s.lastReadAt) return;
-    setState({ ...s, clearedBeforeAt: s.lastReadAt });
+    useUpdatesStore.getState().clearRead();
   },
 
   getViewModel() {
-    const s = getState();
+    const s = updatesService.getState();
     const events = updatesEventStore.getAll();
 
     const clearedBeforeMs = s.clearedBeforeAt ? new Date(s.clearedBeforeAt).getTime() : -Infinity;

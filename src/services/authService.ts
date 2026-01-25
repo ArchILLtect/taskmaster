@@ -1,5 +1,6 @@
 import { fetchAuthSession, fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
 import type { UserUI } from "../types";
+import { useUserUICacheStore } from "./userUICacheStore";
 
 type UserUIResult = { userUI: UserUI | null; error: unknown | null };
 
@@ -45,6 +46,17 @@ export async function getUserUIResult(): Promise<{ userUI: UserUI | null; error:
 
     const username = currentUser.username || currentUser.userId;
 
+    // Persisted cache path (across reloads)
+    const persisted = useUserUICacheStore.getState();
+    if (
+      persisted.userUI &&
+      persisted.userUI.username === username &&
+      typeof persisted.fetchedAtMs === "number" &&
+      Date.now() - persisted.fetchedAtMs < CACHE_TTL_MS
+    ) {
+      return { userUI: persisted.userUI, error: null };
+    }
+
     try {
       const attributes = await fetchUserAttributes();
 
@@ -84,6 +96,7 @@ export async function getUserUIResult(): Promise<{ userUI: UserUI | null; error:
     if (result.userUI) {
       cached = result;
       cachedAtMs = Date.now();
+      useUserUICacheStore.getState().set(result.userUI);
     }
     return result;
   } finally {
@@ -95,6 +108,7 @@ export function clearUserUICache() {
   inFlight = null;
   cached = null;
   cachedAtMs = 0;
+  useUserUICacheStore.getState().clear();
 }
 
 export async function getUserUI(): Promise<UserUI | null> {

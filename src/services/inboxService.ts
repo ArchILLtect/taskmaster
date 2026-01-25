@@ -1,6 +1,9 @@
-import { isoNow, readJson, writeJson } from "./storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { isoNow } from "./storage";
 
-const KEY = "taskmaster.inbox.v1";
+const STORAGE_KEY = "taskmaster:inbox";
+const STORE_VERSION = 1;
 
 export type InboxState = {
   lastViewedAt: string | null;
@@ -16,48 +19,89 @@ const DEFAULTS: InboxState = {
   lastComputedAtMs: Date.now(),
 };
 
-function getState(): InboxState {
-  const s = readJson<InboxState>(KEY, DEFAULTS);
-  // defensive defaults in case schema drifts
+type InboxStore = InboxState & {
+  touchNow: () => void;
+  setDueSoonWindowDays: (days: number) => void;
+  dismiss: (taskId: string) => void;
+  undismiss: (taskId: string) => void;
+  markViewedNow: () => void;
+};
+
+export const useInboxStore = create<InboxStore>()(
+  persist(
+    (set, get) => ({
+      ...DEFAULTS,
+
+      touchNow: () => {
+        set({ lastComputedAtMs: Date.now() });
+      },
+
+      setDueSoonWindowDays: (days) => {
+        const normalized = Math.max(1, Math.min(30, Math.floor(days || 0) || 3));
+        set({ dueSoonWindowDays: normalized, lastComputedAtMs: Date.now() });
+      },
+
+      dismiss: (taskId) => {
+        const s = get();
+        if (s.dismissedTaskIds.includes(taskId)) return;
+        set({ dismissedTaskIds: [...s.dismissedTaskIds, taskId], lastComputedAtMs: Date.now() });
+      },
+
+      undismiss: (taskId) => {
+        const s = get();
+        set({ dismissedTaskIds: s.dismissedTaskIds.filter((id) => id !== taskId), lastComputedAtMs: Date.now() });
+      },
+
+      markViewedNow: () => {
+        set({ lastViewedAt: isoNow(), lastComputedAtMs: Date.now() });
+      },
+    }),
+    {
+      name: STORAGE_KEY,
+      version: STORE_VERSION,
+      migrate: (persistedState) => persistedState,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        lastViewedAt: s.lastViewedAt,
+        dueSoonWindowDays: s.dueSoonWindowDays,
+        dismissedTaskIds: s.dismissedTaskIds,
+        lastComputedAtMs: s.lastComputedAtMs,
+      }),
+    }
+  )
+);
+
+function normalizeState(s: Partial<InboxState> | null | undefined): InboxState {
   return {
-    lastViewedAt: s.lastViewedAt ?? null,
-    dueSoonWindowDays: Number.isFinite(s.dueSoonWindowDays) ? s.dueSoonWindowDays : 3,
-    dismissedTaskIds: Array.isArray(s.dismissedTaskIds) ? s.dismissedTaskIds : [],
-    lastComputedAtMs: Number.isFinite(s.lastComputedAtMs) ? s.lastComputedAtMs : DEFAULTS.lastComputedAtMs,
+    lastViewedAt: s?.lastViewedAt ?? null,
+    dueSoonWindowDays: Number.isFinite(s?.dueSoonWindowDays) ? Number(s?.dueSoonWindowDays) : 3,
+    dismissedTaskIds: Array.isArray(s?.dismissedTaskIds) ? s!.dismissedTaskIds! : [],
+    lastComputedAtMs: Number.isFinite(s?.lastComputedAtMs) ? Number(s?.lastComputedAtMs) : DEFAULTS.lastComputedAtMs,
   };
 }
 
-function setState(next: InboxState) {
-  writeJson(KEY, next);
-}
-
 export const inboxService = {
-  getState,
+  getState(): InboxState {
+    return normalizeState(useInboxStore.getState());
+  },
 
   touchNow() {
-    const s = getState();
-    setState({ ...s, lastComputedAtMs: Date.now() });
+    useInboxStore.getState().touchNow();
   },
 
   setDueSoonWindowDays(days: number) {
-    const s = getState();
-    const normalized = Math.max(1, Math.min(30, Math.floor(days || 0) || 3));
-    setState({ ...s, dueSoonWindowDays: normalized, lastComputedAtMs: Date.now() });
+    useInboxStore.getState().setDueSoonWindowDays(days);
   },
 
   dismiss(taskId: string) {
-    const s = getState();
-    if (s.dismissedTaskIds.includes(taskId)) return;
-    setState({ ...s, dismissedTaskIds: [...s.dismissedTaskIds, taskId], lastComputedAtMs: Date.now() });
+    useInboxStore.getState().dismiss(taskId);
   },
 
   undismiss(taskId: string) {
-    const s = getState();
-    setState({ ...s, dismissedTaskIds: s.dismissedTaskIds.filter((id) => id !== taskId), lastComputedAtMs: Date.now() });
+    useInboxStore.getState().undismiss(taskId);
   },
 
   markViewedNow() {
-    const s = getState();
-    setState({ ...s, lastViewedAt: isoNow(), lastComputedAtMs: Date.now() });
+    useInboxStore.getState().markViewedNow();
   },
 };
