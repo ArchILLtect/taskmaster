@@ -11,12 +11,12 @@ import {
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { buildTaskStackPath } from "../routes/taskStack";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { TaskStatus, TaskPriority } from "../API";
 import type { TaskUI, AddTaskFormProps } from "../types/task";
 import { useEffect, useMemo, useState } from "react";
 import { getInboxListId } from "../config/inboxSettings";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
+import { useTaskStore } from "../store/taskStore";
 
 type Option<T extends string> = { label: string; value: T };
 
@@ -70,7 +70,7 @@ export const AddTaskForm = ({
   setNewTaskPriority,
   setShowAddTaskForm,
   navigate,
-  refresh,
+  refresh: _refresh,
   parentTaskId
 }: AddTaskFormProps) => {
 
@@ -80,6 +80,8 @@ export const AddTaskForm = ({
   const [selectedListId, setSelectedListId] = useState<string>(listId ? listId : inboxListId || "");
 
   const { visibleLists: allLists } = useTaskmasterData();
+
+  const createTask = useTaskStore((s) => s.createTask);
 
   //  Chakra v3 pattern: destructure `{ collection }`
   const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({
@@ -130,7 +132,7 @@ export const AddTaskForm = ({
       const status = newTaskStatus ?? TaskStatus.Open;
       const completedAt = status === TaskStatus.Done ? new Date().toISOString() : null;
 
-      const created = await taskmasterApi.createTask({
+      const created = await createTask({
         listId: selectedListId,
         // sortOrder: nextSortOrder(tasksInList, parent), --was the previous line--
         // TODO: Will the refactored line break anything?
@@ -145,9 +147,6 @@ export const AddTaskForm = ({
         assigneeId: null,
         tagIds: [],
       });
-
-      // refresh the page-level data from AppSync
-      await refresh();
 
       // navigate same as before (open the task pane for top-level tasks)
       // const nextStack = parentTaskId ? stack : [...stack, created.id]; was the previous line

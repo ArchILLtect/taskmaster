@@ -5,12 +5,12 @@ import { buildTaskStackPath, nextStackFromLevel } from "../routes/taskStack";
 import { AddTaskForm } from "./AddTaskForm";
 import { SubTaskRow } from "./SubTaskRow";
 import type { TaskDetailsPaneProps } from "../types/task";
-import { taskmasterApi } from "../api/taskmasterApi";
 import { EditTaskForm } from "./EditTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
 import { fireToast } from "../hooks/useFireToast";
 import type { TaskUI } from "../types/task";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
+import { useTaskStore } from "../store/taskStore";
 
 // --- animations
 const pulse = keyframes`
@@ -79,6 +79,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
   const closeLast = () => navigate(buildTaskStackPath(listId, stack.slice(0, -1)));
   const { loading } = useTaskmasterData();
+  const updateTask = useTaskStore((s) => s.updateTask);
 
   const children = selected
     ? tasksInList
@@ -96,13 +97,11 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
     const completedAt = nextStatus === TaskStatus.Done ? new Date().toISOString() : null;
 
-    await taskmasterApi.updateTask({
+    await updateTask({
       id: taskId,
       status: nextStatus as TaskStatus,
       completedAt,
     });
-
-    await refresh();
   };
   
   const prepAddTaskForm = () => {
@@ -127,7 +126,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
     try {
       setSaving(true);
-      await taskmasterApi.updateTask({
+      await updateTask({
         id: selectedTask.id,
         listId: selectedTask.listId,
         title: draftTaskTitle.trim() || "Untitled Task",
@@ -144,7 +143,6 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       fireToast("error", "Error saving task", "There was an issue saving the task.");
     } finally {
       setSaving(false);
-      refresh();
       resetFormAndClose();
       fireToast("success", "Task saved", "The task has been successfully updated.");
     }
