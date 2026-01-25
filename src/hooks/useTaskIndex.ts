@@ -10,6 +10,7 @@ import {
 // import { isInboxList } from "../config/inboxSettings";
 import type { TaskUI } from "../types/task";
 import type { ListUI } from "../types/list";
+import { taskService } from "../services/taskService";
 
 type TaskIndex = {
   lists: ListUI[];
@@ -104,10 +105,12 @@ export function useTaskIndex(opts?: {
 
       setRawLists(ensuredLists);
       setRawTasks(tasks);
+      taskService.setBaseTasks(tasks);
     } catch (e) {
       setErr(e);
       setRawLists([]);
       setRawTasks([]);
+      taskService.setBaseTasks([]);
     } finally {
       setLoading(false);
     }
