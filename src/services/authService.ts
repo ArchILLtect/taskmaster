@@ -51,8 +51,6 @@ export async function getUserUIResult(): Promise<{ userUI: UserUI | null; error:
       const email = attributes.email;
       const roleFromCustom = attributes["custom:role"];
 
-      console.log("Fetched user attributes:", attributes);
-
       let role: string | undefined = roleFromCustom;
 
       if (!role) {
