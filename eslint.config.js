@@ -30,63 +30,57 @@ export default defineConfig([
 
   /**
    * UI-layer guardrail:
-   * - In components/pages/hooks, forbid importing generated Amplify API *types*
-   *   (models/queries/mutations/etc.) from ../API or @/API.
+   * - In components/pages, forbid importing generated Amplify API types from ../API or @/API.
    * - Allow ONLY TaskStatus + TaskPriority enums.
+   * - UI must not import from src/api/** directly.
    */
   {
     files: [
       "src/components/**/*.{ts,tsx}",
       "src/pages/**/*.{ts,tsx}",
-      "src/hooks/**/*.{ts,tsx}",
     ],
     rules: {
       "no-restricted-imports": [
         "error",
         {
           patterns: [
-            // Match any relative import that ends in "/API" (../API, ../../API, etc.)
+            // Disallow API subpath imports entirely (../API/* or @/API/*)
+            {
+              regex: "^(\\.{1,2}\\/)+API\\/.+$",
+              message:
+                "UI must not import from ../API subpaths. Only named imports TaskStatus/TaskPriority from ../API are allowed.",
+            },
+            {
+              regex: "^@\\/API\\/.+$",
+              message:
+                "UI must not import from @/API subpaths. Only named imports TaskStatus/TaskPriority from @/API are allowed.",
+            },
+
+            // Allowlist only TaskStatus/TaskPriority from ../API or @/API
             {
               regex: "^(\\.{1,2}\\/)+API$",
               allowImportNames: ["TaskStatus", "TaskPriority"],
               message:
-                "UI-layer code must not import generated model/query types from ../API. Import TaskUI/ListUI from src/types and map API results at the boundary (src/api/**). Only TaskStatus/TaskPriority enums are allowed here.",
+                "UI must not import from ../API except for named imports TaskStatus and TaskPriority.",
             },
-
-            // Match alias import "@/API"
             {
               regex: "^@\\/API$",
               allowImportNames: ["TaskStatus", "TaskPriority"],
               message:
-                "UI-layer code must not import generated model/query types from @/API. Import TaskUI/ListUI from src/types and map API results at the boundary (src/api/**). Only TaskStatus/TaskPriority enums are allowed here.",
+                "UI must not import from @/API except for named imports TaskStatus and TaskPriority.",
             },
 
             // UI must not call API wrappers directly; use Zustand store actions instead.
             {
               regex: "^(\\.{1,2}\\/)+api\\/.+$",
               message:
-                "UI-layer code must not import from src/api/**. Call the Zustand store actions in src/store/taskStore.ts instead (refreshAll/updateTask/deleteTask/createTaskList/etc.).",
+                "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
             },
             {
               regex: "^@\\/api\\/.+$",
               message:
-                "UI-layer code must not import from src/api/**. Call the Zustand store actions in src/store/taskStore.ts instead (refreshAll/updateTask/deleteTask/createTaskList/etc.).",
+                "UI must use store/hooks (useTaskActions/useTaskStoreView) instead of src/api directly.",
             },
-
-            // Optional: also forbid deep subpath imports like ../API/something (usually not needed)
-            // Uncomment if you ever see those appear.
-            /*
-            {
-              regex: "^(\\.{1,2}\\/)+API\\/.+$",
-              message:
-                "UI-layer code must not import from API subpaths. Import from ../API only for enums (TaskStatus/TaskPriority) or move API usage to the boundary (src/api/**).",
-            },
-            {
-              regex: "^@\\/API\\/.+$",
-              message:
-                "UI-layer code must not import from API subpaths. Import from @/API only for enums (TaskStatus/TaskPriority) or move API usage to the boundary (src/api/**).",
-            },
-            */
           ],
         },
       ],
