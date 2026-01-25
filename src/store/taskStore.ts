@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 import { taskmasterApi } from "../api/taskmasterApi";
 import { toListUI, toTaskUI } from "../api/mappers";
@@ -9,6 +10,8 @@ import {
   SYSTEM_INBOX_NAME,
 } from "../config/inboxSettings";
 import type { ListUI, TaskUI } from "../types";
+
+const EMPTY_TASKS: TaskUI[] = [];
 
 export type TaskIndexes = {
   listsById: Record<string, ListUI>;
@@ -234,6 +237,46 @@ export const useTaskStore = create<TaskStoreState>((set, get) => ({
     await get().refreshAll();
   },
 }));
+
+// Selectors (prefer these over inline `(s) => s.x` to keep consumption consistent)
+export const selectLists = (s: TaskStoreState) => s.lists;
+export const selectTasks = (s: TaskStoreState) => s.tasks;
+
+export const selectLoading = (s: TaskStoreState) => s.loading;
+export const selectError = (s: TaskStoreState) => s.error;
+
+export const selectListById = (id: string) => (s: TaskStoreState) => s.listsById[id];
+export const selectTaskById = (id: string) => (s: TaskStoreState) => s.tasksById[id];
+
+export const selectTasksByListId = (listId: string) => (s: TaskStoreState) => s.tasksByListId[listId] ?? EMPTY_TASKS;
+export const selectChildrenByParentId = (parentId: string) => (s: TaskStoreState) => s.childrenByParentId[parentId] ?? EMPTY_TASKS;
+
+// Common view helper: returns stable references and minimizes rerenders via shallow compare.
+export function useTaskIndexView(): {
+  lists: ListUI[];
+  tasks: TaskUI[];
+  listsById: Record<string, ListUI>;
+  tasksById: Record<string, TaskUI>;
+  tasksByListId: Record<string, TaskUI[]>;
+  childrenByParentId: Record<string, TaskUI[]>;
+  loading: boolean;
+  error: string | null;
+  refreshAll: TaskStoreState["refreshAll"];
+} {
+  return useTaskStore(
+    useShallow((s) => ({
+      lists: s.lists,
+      tasks: s.tasks,
+      listsById: s.listsById,
+      tasksById: s.tasksById,
+      tasksByListId: s.tasksByListId,
+      childrenByParentId: s.childrenByParentId,
+      loading: s.loading,
+      error: s.error,
+      refreshAll: s.refreshAll,
+    }))
+  );
+}
 
 export function getTaskStoreState() {
   return useTaskStore.getState();
