@@ -71,9 +71,71 @@ export type TaskStorePersistedState = Pick<
   | "childrenByParentId"
 >;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidTaskStorePersistedState(value: unknown): value is TaskStorePersistedState {
+  if (!isRecord(value)) return false;
+
+  if (!Array.isArray(value.lists)) return false;
+  if (!Array.isArray(value.tasks)) return false;
+
+  if ("lastLoadedAtMs" in value && value.lastLoadedAtMs !== undefined) {
+    if (typeof value.lastLoadedAtMs !== "number" || !Number.isFinite(value.lastLoadedAtMs)) return false;
+  }
+
+  // Indexes are always persisted by `partialize`, but tolerate older/malformed caches by only
+  // validating them when present.
+  if ("listsById" in value && value.listsById !== undefined && !isRecord(value.listsById)) return false;
+  if ("tasksById" in value && value.tasksById !== undefined && !isRecord(value.tasksById)) return false;
+  if ("tasksByListId" in value && value.tasksByListId !== undefined && !isRecord(value.tasksByListId)) return false;
+  if ("childrenByParentId" in value && value.childrenByParentId !== undefined && !isRecord(value.childrenByParentId)) return false;
+
+  return true;
+}
+
+let didWarnTaskStoreBadJson = false;
+let didWarnTaskStoreBadShape = false;
+
+// Persist storage wrapper that is resilient to corrupted/invalid JSON values.
+// This prevents a bad localStorage entry from breaking app startup.
+const taskStoreStorage = createJSONStorage(() => ({
+  getItem: (name: string) => {
+    const raw = localStorage.getItem(name);
+    if (raw == null) return null;
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      if (import.meta.env.DEV && !didWarnTaskStoreBadJson) {
+        didWarnTaskStoreBadJson = true;
+        console.warn(`[taskStore] Invalid persisted JSON for "${name}"; clearing and using defaults.`);
+      }
+      localStorage.removeItem(name);
+      return null;
+    }
+  },
+  setItem: (name: string, value: string) => {
+    localStorage.setItem(name, value);
+  },
+  removeItem: (name: string) => {
+    localStorage.removeItem(name);
+  },
+}));
+
 // Zustand persist-style migrate signature.
 // Stub for now; once persistence is enabled, evolve this to transform older shapes.
 export function migrateTaskStoreState(persistedState: unknown, _version: number): unknown {
+  // Allow older versions for now (no transforms yet), but validate the shape.
+  if (!isValidTaskStorePersistedState(persistedState)) {
+    if (import.meta.env.DEV && !didWarnTaskStoreBadShape) {
+      didWarnTaskStoreBadShape = true;
+      console.warn('[taskStore] Invalid persisted state shape; clearing cache and using defaults.');
+    }
+    return undefined;
+  }
+
   return persistedState;
 }
 
@@ -286,7 +348,7 @@ export const useTaskStore = create<TaskStoreState>()(
       name: "taskmaster:taskStore",
       version: TASK_STORE_PERSIST_VERSION,
       migrate: migrateTaskStoreState,
-      storage: createJSONStorage(() => localStorage),
+      storage: taskStoreStorage,
       partialize: (s) => ({
         lists: s.lists,
         tasks: s.tasks,
