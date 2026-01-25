@@ -95,7 +95,7 @@ The [amplify](amplify) folder is Amplify CLI output/scaffolding.
 - No `amplify add storage` is required for GraphQL-backed data models.
 
 Auth integration entry point:
-- [src/auth/mapUserFromClaims.ts](src/auth/mapUserFromClaims.ts)
+- [src/services/authService.ts](src/services/authService.ts) (and [src/hooks/useUserUI.ts](src/hooks/useUserUI.ts))
 
 ## Getting started
 

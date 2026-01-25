@@ -9,7 +9,7 @@ This is a lightweight checklist appropriate for a client-first prototype that pl
 
 ## Auth (planned)
 - [ ] Cognito User Pool sign-in/out wired in the UI.
-- [ ] Claims → app user mapping goes through [src/auth/mapUserFromClaims.ts](../src/auth/mapUserFromClaims.ts).
+- [ ] Claims / attributes → app user UI mapping is centralized (see [src/services/authService.ts](../src/services/authService.ts)).
 - [ ] Cognito group names are documented and consistent (e.g. `Admin`).
 
 ## GraphQL auth rules (planned)

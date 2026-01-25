@@ -68,8 +68,8 @@ Client-side generated files exist but are not yet the primary data source:
 > TODO: When wiring GraphQL for real pages, prefer a single boundary (service/repo layer) so pages/components don’t call GraphQL directly.
 
 ## Auth (current)
-Auth is mocked in the UI:
-- [src/mocks/currentUser.ts](../src/mocks/currentUser.ts)
+Auth is wired via Amplify UI’s `Authenticator` (app-level `user` + `signOut`).
 
-There is a helper for mapping Cognito claims → app user:
-- [src/auth/mapUserFromClaims.ts](../src/auth/mapUserFromClaims.ts)
+User display info (email/role) is fetched client-side via:
+- [src/services/authService.ts](../src/services/authService.ts)
+- [src/hooks/useUserUI.ts](../src/hooks/useUserUI.ts)

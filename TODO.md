@@ -35,6 +35,17 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - [ ] ListPage
   - [ ] UpdatesPage
 
+- [ ] TODO(P2) Persist client-side state (later)
+  - Goal: make offline-ish UX smoother by caching state between sessions.
+  - Targets to persist (candidates):
+    - tasks/lists cache (optional; versioned + TTL; safe to drop and refetch)
+    - updates events feed (optional; derived from task history or recorded client-side)
+    - inbox local state (dismissed ids, lastViewedAt, dueSoonWindowDays)
+    - userUI cache (optional; username/email/role with short TTL)
+  - Notes:
+    - Persist only serializable slices (arrays/records/primitives); keep functions out of persisted state.
+    - Add store versioning + migrations before enabling persistence.
+
 ---
 
 ## GraphQL & Data Modeling (Future Hardening / Improvements)
