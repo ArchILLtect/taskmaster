@@ -123,7 +123,6 @@ export function TasksPage() {
   };
 
   const acceptChanges = async () => {
-    console.log("Updating task:", selectedTask);
     await handleSave(selectedTask)
   };
 
