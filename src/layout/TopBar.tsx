@@ -1,21 +1,30 @@
 import { HStack, Heading, Spacer, Badge, Button, Box } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
-import type { User } from "../types";
+import type { AuthUserLike, UserUI } from "../types";
 import { IoSettingsSharp } from "react-icons/io5";
+import { useUserUI } from "../hooks/useUserUI";
 
 type TopBarProps = {
-  user?: User | null;
+  user?: AuthUserLike | null;
+  userUI?: UserUI | null;
   onSignOut?: () => void;
 };
 
-export function TopBar({ user, onSignOut }: TopBarProps) {
+export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
+  const { userUI: hookUserUI } = useUserUI();
+  const effectiveUserUI = userUI ?? hookUserUI;
+
+  const username = effectiveUserUI?.username ?? user?.username ?? user?.userId;
+  const role = effectiveUserUI?.role ?? user?.role;
+  const signedIn = Boolean(username);
+
   return (
     <HStack px={4} py={3} borderBottomWidth="1px" bg="white" position={"sticky"} minW="400px">
       <Heading size="lg">{"< TaskMaster />"}</Heading>
       <Spacer />
 
       <HStack gap={3}>
-        {user ? (
+        {signedIn ? (
           <>
             {/* Username link to Profile */}
             <RouterLink to="/profile">
@@ -28,13 +37,13 @@ export function TopBar({ user, onSignOut }: TopBarProps) {
                     bg={isActive ? "blackAlpha.100" : "transparent"}
                     _hover={{ bg: "blackAlpha.100" }}
                 >
-                    {user.username}
+                    {username}
                 </Box>
             )}
             </RouterLink>
 
             {/* Role indicator (Badge is simplest/most stable) */}
-            {user.role ? <Badge rounded="md">{user.role}</Badge> : null}
+            {role ? <Badge rounded="md">{role}</Badge> : null}
 
             {/* Optional sign out later */}
             {onSignOut ? (
