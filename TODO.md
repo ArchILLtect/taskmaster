@@ -46,6 +46,29 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
     - Persist only serializable slices (arrays/records/primitives); keep functions out of persisted state.
     - Add store versioning + migrations before enabling persistence.
 
+- [ ] TODO(stretch) Persist Inbox + Updates in DynamoDB per user
+  - Goal: Make Inbox “dismissed/new/due-soon” state + Updates feed/read markers follow the user across devices.
+  - Current: Stored in localStorage only (per-device).
+  - Proposed:
+    - Add models (one of these approaches):
+      - A) UserUXState (1 row per user) containing:
+        - inbox: dismissedTaskIds[], lastViewedAt, dueSoonWindowDays
+        - updates: events[] OR readMarkers + a capped events list
+      - B) Separate models:
+        - InboxState @model (owner) 1 row per user
+        - UpdateEvent @model (owner) many rows per user (with query by occurredAt)
+    - Keep @auth owner rules; Admin group can read/debug.
+    - Implement:
+      - On sign-in: fetch user UX state -> hydrate stores
+      - On state changes: write-through (debounced) to GraphQL
+      - Add retention policy (cap events count or TTL via DynamoDB TTL)
+    - Migration:
+      - First run: if localStorage has inbox/updates, import once then clear local.
+  - Notes:
+    - Prefer capped events to avoid unbounded growth.
+    - Consider idempotent seeds / deterministic ids for update events.
+
+
 ---
 
 ## GraphQL & Data Modeling (Future Hardening / Improvements)
@@ -185,6 +208,16 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
     - Preserve existing ErrorBoundary behavior for route renders (don’t move the boundary inside a lazy-loaded component)
     - Ensure the ErrorBoundary still wraps whatever renders the lazy route element so dynamic import failures and render errors surface consistently
 
+### Demo Feature:
+
+- [ ] TODO(P2) Wire Post Confirmation to include the addition of demo data. This means pre-seeding all newly created accounts with mock data the user can feel free to play with and lose.
+- [ ] TODO(P2) Add a Demo data section within SettingsPage that contains these features:
+   - [ ] A button to clear all demo data.
+   - [ ] A button to re-seed all demo data.
+   - [ ] A section for adding more demo data with:
+      - [ ] A button to add more tasks with multiplier. "Add [ x ] tasks."
+      - [ ] A button to add more lists with multiplier. "Add [ x ] lists."
+      - [ ] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
 
 ### Specify later:
 
@@ -197,3 +230,6 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 - [ ] Consider tightening architecture: optionally forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`, forcing all API access through store/hooks (commented-out rule block exists in eslint.config.js).
 - [ ] Consider replacing `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type for better editor help and safer mapping.
 - [ ] TODO(P2) The details SubtaskRow are not truncating and need to be because it breaks the UI by pushing the badges behind the action buttons.
+
+- [ ] TODO(P1) Right now Inbox has the ability to "dismiss" tasks. Should it? Without using a URL"hack," it is not possible to get to the system inbox list--and this list is technically just a staging area for tasks with no list.
+
