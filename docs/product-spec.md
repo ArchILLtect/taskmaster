@@ -8,7 +8,7 @@ It is intentionally product-focused (not implementation-focused) so collaborator
 
 - **Task is the atomic unit.** Tasks belong to exactly one List at a time (`listId`), and may optionally be nested (`parentTaskId`).
 - **Stable ordering.** Within the same parent scope (top-level or under a parent task), tasks are ordered by `sortOrder`.
-- **Edits are explicit.** Task changes happen via a single write path (GraphQL/AppSync via `taskmasterApi`, or the current local fallback during dev), then the UI refreshes.
+- **Edits are explicit.** Task changes happen via a single write path: UI → store action → GraphQL API wrapper (`taskmasterApi`).
 - **UI state vs data state.** Pane/stack navigation state lives in the URL; task data lives in the data layer.
 
 ---
@@ -86,7 +86,7 @@ Lists are the primary organizational containers for tasks (projects/areas) and a
 
 **Data source (reads/writes)**
 
-- Reads list metadata from the data layer (currently mocked lists; later GraphQL).
+- Reads list metadata from the data layer (GraphQL-backed via the API wrapper and stores).
 - Writes list preference changes (favorites) to local settings and/or backend.
 
 **Special rules / invariants**
@@ -102,11 +102,11 @@ Lists are the primary organizational containers for tasks (projects/areas) and a
 
 ---
 
-### List details (ListPage)
+### List details (ListDetailsPage)
 
 **Purpose**
 
-ListPage is the canonical place to work through tasks in a specific list and to open task details in a pane stack.
+ListDetailsPage is the canonical place to work through tasks in a specific list and to open task details in a pane stack.
 
 **Primary user actions**
 
@@ -119,7 +119,7 @@ ListPage is the canonical place to work through tasks in a specific list and to 
 **Data source (reads/writes)**
 
 - Reads: tasks for the selected list from the data layer.
-- Writes: task mutations (create/update/delete), then refresh.
+- Writes: store actions trigger mutations and the tasks store refreshes.
 
 **Special rules / invariants**
 
@@ -186,8 +186,8 @@ UpdatesPage shows a stream of notable task events to help users track what chang
 
 **Data source (reads/writes)**
 
-- Reads updates/events from an event store (currently local; later backend).
-- May read task details for rendering (e.g., title lookup).
+- Reads updates/events from a persisted local store.
+- Events are appended after successful task mutations (in the API layer), and the UI can link back to tasks when possible.
 
 **Special rules / invariants**
 
@@ -215,7 +215,7 @@ Settings is where user-level preferences live (appearance, defaults, integration
 
 **Data source (reads/writes)**
 
-- Reads/writes to local storage for preferences (and later backend profile settings).
+- Reads/writes to local storage for preferences (and later backend profile settings, if desired).
 
 **Special rules / invariants**
 

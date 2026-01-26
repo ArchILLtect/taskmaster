@@ -27,15 +27,15 @@ npm run build
 - This is a client-only Vite app; use browser devtools for React component inspection and network/storage.
 - Local state is persisted in `localStorage` (see “Reset local state” in [TROUBLESHOOTING.md](TROUBLESHOOTING.md)).
 
-## Known repo-state issues (as of today)
-> TODO: These are current issues in the repo; either fix them or update this list when resolved.
+### Reset local state (localStorage)
 
-- `npm run build` fails due to an invalid type re-export in [src/types/index.ts](../src/types/index.ts).
-- `npm run lint` can fail due to:
-  - generated Amplify typings under `amplify/backend/types/*`
-  - a minor `prefer-const` issue in [src/mocks/currentUser.ts](../src/mocks/currentUser.ts)
+If the UI looks “stuck” (stale cached tasks, odd inbox dismissals, etc.), clear the persisted keys in browser devtools → Application → Local Storage:
 
-Additional issues observed during doc work:
-- `npm run build` fails in [src/API.ts](../src/API.ts) with `TS1294` when `erasableSyntaxOnly` is enabled (enums are not allowed).
-- `npm run build` fails in [src/dev/GraphQLSmokeTest.tsx](../src/dev/GraphQLSmokeTest.tsx) due to a deep type comparison error.
-- `npm run lint` fails on `no-explicit-any` in Amplify-generated artifacts (example: [src/aws-exports.d.ts](../src/aws-exports.d.ts), [src/dev/GraphQLSmokeTest.tsx](../src/dev/GraphQLSmokeTest.tsx)).
+- `taskmaster:taskStore` (tasks/lists cache with TTL)
+- `taskmaster:inbox` (inbox preferences/dismissals)
+- `taskmaster:updates` (updates event feed + read markers)
+
+## Notes
+
+- `npm run build` runs TypeScript project references (`tsc -b`) and then `vite build`.
+- If `npm run dev` exits unexpectedly, re-run it and check the first error printed in the terminal (it’s often the most actionable signal).

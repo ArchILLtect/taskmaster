@@ -30,9 +30,9 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - [ ] update feed (derived from updatedAt / createdAt)
   - [ ] updates read-state (lastReadAt / clearedBeforeAt)
 
-- [ ] TODO(P1) Gradually migrate pages from mock/local services → GraphQL
+- [ ] TODO(P1) Gradually migrate any remaining legacy page logic → store hooks/actions
   - [ ] InboxPage
-  - [ ] ListPage
+  - [ ] ListDetailsPage
   - [ ] UpdatesPage
 
 - [ ] TODO(P2) Persist client-side state (later)
@@ -104,7 +104,7 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string
 
 - [ ] TODO(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
-  - Replace `src/mocks/currentUser.ts`
+  - Ensure it uses `useUserUI` and does not rely on hard-coded values
 
 - [ ] TODO(P3) Add an app footer
   - [ ] Link to the showcase site
@@ -149,25 +149,23 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 
 ## Performance / Bundling
 
-- [ ] TODO(P4) Investigate production bundle size & code splitting
-  - Vite warning: main JS chunk > 500 kB (≈1.4 MB minified, ≈395 kB gzip)
+- [ ] TODO(P4) Investigate production bundle size & route-level code splitting
+  - Vite warning: main JS chunk > 500 kB
   - Likely contributors:
     - Chakra UI
     - AWS Amplify (Auth + API)
-    - Large page components (ListPage, UpdatesPage, TasksPage)
+    - Large route components
   - Notes:
-    - Lazy-loading the DevPage increased bundle size (expected; DevPage is tiny)
-    - Optimization should focus on **route-level code splitting**, not dev tooling
+    - Zustand migration + caching is complete; bundle work is now purely perf polish
   - Possible actions (later):
-    - Convert major routes to `React.lazy()`:
-      - ListPage
-      - UpdatesPage
-      - TasksPage
+    - Route-level `React.lazy()` for heavy pages:
+      - TasksPage, UpdatesPage, Lists/ListDetails pages
     - Consider `manualChunks` in `vite.config.ts` if needed
-    - Re-evaluate after MVP UX + Zustand migration
+    - Re-evaluate after MVP polish
   - Status:
     - Non-blocking for MVP
     - Safe to defer until performance tuning phase
+
 
 - [ ] TODO(P4) Route-level code splitting (React.lazy + Suspense)
   - Lazy-load routes first (highest impact):
@@ -194,12 +192,8 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - Removed taskStore.refreshAll() glue (taskService.setBaseTasks).
   - Deleted legacy overlay files (taskService/taskPatchStore) and removed dependencies.
   - Goal met: Zustand is the single source of truth for tasks/lists and edits.
-
-</Suspense>
 - [ ] Add CI enforcement: run `npm run lint` + `npm run build` on PRs to keep the UI-layer API import restrictions enforced.
 - [ ] TODO(P4) ESLint guardrail: if we introduce additional Amplify enums used by UI (beyond TaskStatus/TaskPriority), expand the allowlist in `eslint.config.js` (`no-restricted-imports` → allowImportNames) so UI can import those enums from `../API` without importing generated models.
 - [ ] Consider tightening architecture: optionally forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`, forcing all API access through store/hooks (commented-out rule block exists in eslint.config.js).
 - [ ] Consider replacing `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type for better editor help and safer mapping.
-
-
 - [ ] TODO(P2) The details SubtaskRow are not truncating and need to be because it breaks the UI by pushing the badges behind the action buttons.

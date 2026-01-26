@@ -31,7 +31,7 @@ Primary goals:
 - Admin group support (read/write)
 - Stable routing & UI patterns
 - GraphQL smoke tests in `/dev`
-- Pages wired to real backend data (no mocks)
+- Pages wired to real backend data (no local placeholder data)
 
 ### Explicit non-goals
 - Offline support
@@ -48,9 +48,9 @@ Primary goals:
 This phase focuses on **quality and resilience**, not new features.
 
 ### Scope
-- Introduce Zustand as the client-side source of truth
-- Remove `tick / refresh()` patterns
-- Centralize data access (GraphQL → store → UI)
+- Harden Zustand as the client-side source of truth
+- Remove remaining ad-hoc local refresh patterns (prefer store-driven updates)
+- Centralize data access (GraphQL → API wrapper → store → UI)
 - Clean up owner auth edge cases
 - Improve Updates page (derived from timestamps)
 - Better error handling & loading states
@@ -102,16 +102,15 @@ These are intentionally unspecified until earlier phases are complete.
 
 ## TODO: Current implementation status (docs vs code)
 
-Some items listed as MVP scope above (Cognito Auth + GraphQL-backed pages) are not yet reflected in the current UI implementation.
-
 Current code reality (as of today):
-- Pages primarily use mock data from `src/mocks/*`.
-- Task mutations are persisted locally via a patch/event system in `src/services/*` (localStorage-backed).
+- Pages read/write data via Zustand stores under `src/store/*`.
+- Store actions call the GraphQL wrapper (`src/api/taskmasterApi.ts`).
+- Local persistence uses Zustand `persist` for fast reloads (cached lists/tasks, updates feed, inbox prefs).
 
 References:
 - Current routing + pages: [src/App.tsx](../src/App.tsx)
-- Local task persistence: [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts)
-- Local task API: [src/services/taskService.ts](../src/services/taskService.ts)
-- Updates feed persistence: [src/services/updatesEventStore.ts](../src/services/updatesEventStore.ts)
+- Tasks store (cache + actions): [src/store/taskStore.ts](../src/store/taskStore.ts)
+- GraphQL wrapper: [src/api/taskmasterApi.ts](../src/api/taskmasterApi.ts)
+- Updates store (persisted feed): [src/store/updatesStore.ts](../src/store/updatesStore.ts)
 
-This roadmap remains the target direction; this section exists to prevent onboarding confusion until the MVP is fully GraphQL-wired.
+This roadmap remains the target direction; this section exists to prevent onboarding confusion as the MVP hardens.

@@ -16,12 +16,12 @@ This guide documents *current* conventions found in the codebase.
 ## Routing
 - Preserve the list “pane stack” route behavior:
   - `/lists/:listId/tasks/*`
-  - See [src/pages/ListPage.tsx](../src/pages/ListPage.tsx)
+  - See [src/pages/ListDetailsPage.tsx](../src/pages/ListDetailsPage.tsx)
 
 ## Data consistency
 - If you change any domain type, update both:
   - `src/types/*`
-  - `src/mocks/*`
+  - store mappers/indexes as needed (e.g., [src/api/mappers.ts](../src/api/mappers.ts), [src/store/taskStore.ts](../src/store/taskStore.ts))
 
 ## TypeScript
 - The repo runs strict TS settings (see [tsconfig.app.json](../tsconfig.app.json)).

@@ -1,26 +1,89 @@
-# Security & Legal Checklist
+# Security Checklist
 
-This is a lightweight checklist appropriate for a client-first prototype that plans to adopt Cognito + AppSync.
+TaskMaster uses AWS Amplify (Gen 1) with Cognito Auth and AppSync GraphQL. This checklist focuses on practical safeguards for an MVP/prototype that already persists real user data.
 
-## App security (frontend)
-- [ ] No secrets in the frontend bundle (API keys, private credentials).
-- [ ] Dependencies kept up to date (`npm audit` periodically).
-- [ ] Avoid storing sensitive user data in `localStorage`.
+---
 
-## Auth (planned)
-- [ ] Cognito User Pool sign-in/out wired in the UI.
-- [ ] Claims / attributes → app user UI mapping is centralized (see [src/services/authService.ts](../src/services/authService.ts)).
-- [ ] Cognito group names are documented and consistent (e.g. `Admin`).
+## 1) Supply chain & build hygiene
 
-## GraphQL auth rules (planned)
-Schema currently indicates owner + Admin group access:
+- [ ] Keep dependencies current and review security advisories:
+	- `npm audit` (and/or GitHub Dependabot)
+- [ ] Avoid introducing packages that require broad runtime privileges.
+- [ ] Ensure CI (or at least local) runs:
+	- `npm run lint`
+	- `npm run build`
+
+---
+
+## 2) Secrets & configuration
+
+- [ ] No secrets in the frontend bundle.
+	- The frontend is public code; treat anything shipped to the browser as discoverable.
+- [ ] Verify generated Amplify exports (`src/aws-exports.js`) contain configuration only (endpoints/ids), not credentials.
+- [ ] Ensure any `.env*` files containing secrets are not committed.
+
+---
+
+## 3) Authentication (Cognito)
+
+- [ ] Auth is enforced in the UI via Amplify UI Authenticator (see [src/App.tsx](../src/App.tsx)).
+- [ ] User display info is derived via the centralized mapping + caching layer:
+	- [src/services/authService.ts](../src/services/authService.ts)
+- [ ] Verify sign-out clears cached user display info (to avoid cross-user leakage on shared devices).
+- [ ] Document and enforce Cognito group names used by authorization rules (e.g. `Admin`).
+
+Recommended hardening (post-MVP):
+- [ ] Decide on MFA requirements and password policy.
+- [ ] Confirm whether self-signup is allowed and aligns with expectations.
+
+---
+
+## 4) Authorization (AppSync GraphQL + DynamoDB)
+
+Schema reference:
 - [amplify/backend/api/taskmaster/schema.graphql](../amplify/backend/api/taskmaster/schema.graphql)
 
-- [ ] Ensure owners cannot reassign `owner` via mutation payloads.
-- [ ] Ensure Admin group behavior is tested.
+Checklist:
+- [ ] Validate owner-based access actually prevents cross-user reads/writes.
+- [ ] Validate Admin group can read/write across users (if enabled for the environment).
+- [ ] Confirm clients cannot change ownership via mutation payloads.
+	- Amplify’s default behavior may allow reassignment unless explicitly prevented.
+	- If this is a concern, harden with field-level auth and/or remove the `owner` field from client-writable inputs.
 
-## Privacy / legal
-- [ ] Add a privacy policy once user data is persisted remotely.
-- [ ] Add cookie/storage disclosure if needed.
+Operational verification:
+- [ ] Create two users and confirm User A cannot access User B’s lists/tasks.
+- [ ] If Admin is enabled, confirm an Admin user can access both.
 
-> TODO: Expand this checklist when the app moves beyond prototype status.
+---
+
+## 5) Client-side persistence & data handling
+
+The app persists some state in localStorage for UX (faster reload / cached views). Treat localStorage as readable by anyone with access to the device/browser profile.
+
+- [ ] Do not store access tokens or sensitive secrets in localStorage.
+- [ ] Sanity-check what’s persisted under these keys:
+	- `taskmaster:taskStore` (tasks/lists cache with TTL)
+	- `taskmaster:inbox` (inbox preferences/dismissals)
+	- `taskmaster:updates` (updates feed + read markers)
+- [ ] Ensure persisted state is validated/migrated defensively (corrupted JSON should not break startup).
+
+---
+
+## 6) Hosting & browser protections
+
+When deploying the SPA, prefer enabling standard security headers at the host/CDN:
+
+- [ ] HTTPS only + HSTS (production)
+- [ ] `Content-Security-Policy` (at minimum, block `object-src`, restrict script sources)
+- [ ] `X-Content-Type-Options: nosniff`
+- [ ] `Referrer-Policy` appropriate to the product
+- [ ] `Permissions-Policy` to disable unused capabilities
+
+---
+
+## 7) Logging, telemetry, and privacy
+
+- [ ] Avoid logging user content (task titles/descriptions) to third-party services.
+- [ ] If error reporting is added later (Sentry/etc.), scrub PII and auth tokens.
+- [ ] Provide a basic privacy policy once the app is exposed to real users.
+- [ ] Add a storage disclosure if needed (localStorage caches and auth storage).

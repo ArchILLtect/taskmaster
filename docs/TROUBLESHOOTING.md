@@ -1,50 +1,40 @@
 # Troubleshooting / FAQ
 
 ## The app looks “stuck” after I change data
-Some pages use a simple `tick/refresh()` local-state pattern to re-render after localStorage-backed changes.
-- Example: [src/pages/UpdatesPage.tsx](../src/pages/UpdatesPage.tsx)
+TaskMaster uses persisted Zustand stores for fast reloads, and a TTL-based cache for tasks/lists. If something looks stale, it’s usually one of:
 
-> TODO: As part of the roadmap, this is expected to move to a proper state store (Zustand).
+- You’re seeing cached task data (it will refresh automatically when stale).
+- A local persisted UX setting is hiding content (e.g., Inbox dismissals).
 
 ## Reset local state (recommended during development)
-TaskMaster persists local patches and updates in `localStorage`.
+TaskMaster persists a small amount of state in `localStorage`.
 
 Keys in use:
-- `taskmaster.taskPatches.v1` (created tasks + patches + deletions)
-- `taskmaster.updateEvents.v1` (activity feed)
-- `taskmaster.updates.v1` (updates read state)
+- `taskmaster:taskStore` (tasks/lists cache with TTL)
+- `taskmaster:inbox` (inbox preferences + dismissals)
+- `taskmaster:updates` (updates event feed + read markers)
+- `taskmaster:user` (cached user display info)
 
 To reset:
 1. Open browser devtools → Application/Storage → Local Storage.
 2. Remove the keys above.
 3. Refresh the page.
 
-## `npm run build` fails: “no exported member 'SubTask'”
-This comes from [src/types/index.ts](../src/types/index.ts) re-exporting a type that does not exist.
+Tip: If you only want to reset tasks/lists cache (but keep UX state), clear only `taskmaster:taskStore`.
 
-> TODO: Fix by either defining `SubTask` in [src/types/task.ts](../src/types/task.ts) or removing the re-export.
+## `npm run dev` exits immediately
+If `npm run dev` exits with code 1:
 
-## `npm run lint` fails in Amplify generated files
-Amplify generates typings under `amplify/backend/types/*` which may not conform to the repo’s ESLint rules.
+1. Re-run `npm run dev` and read the *first* error line (it’s usually the real root cause).
+2. If it’s a TypeScript error, try `npm run build` to get the full typecheck output.
+3. If it’s a dependency/Vite error, delete `node_modules` and reinstall: `npm install`.
 
-Options:
-- Prefer excluding generated paths from lint (recommended).
-- Or adjust ESLint rules to allow those generated patterns.
+## I updated a task but Updates didn’t change
+Updates events are appended after successful task mutations (create/update/delete). If you don’t see an expected event:
 
-> TODO: Decide which approach we want and document it in [SETUP.md](SETUP.md).
-
-## `npm run build` fails in `src/API.ts` with TS1294
-If you see errors like:
-> This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
-
-This is currently triggered by `export enum ...` declarations in [src/API.ts](../src/API.ts).
-
-> TODO: Options include changing TypeScript compiler settings or regenerating/adjusting the Amplify-generated types to avoid enums.
-
-## `npm run build` fails in `GraphQLSmokeTest.tsx` with deep type errors
-The dev GraphQL smoke test currently hits an “Excessive stack depth comparing types” TypeScript error.
-
-> TODO: Typically resolved by simplifying types at the call site, using explicit types, or adjusting the generated client typing.
+- Confirm the mutation succeeded (check network tab and UI toast).
+- Clear `taskmaster:updates` to reset the feed.
+- Note: some updates may be categorized as “task_updated” vs “task_completed/reopened” depending on what fields changed.
 
 ## Time zones / due dates
 The Add Task form uses the user’s local timezone when computing the minimum date.

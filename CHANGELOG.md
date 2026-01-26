@@ -7,10 +7,19 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 ## [Unreleased]
 
 ### Added
-- TODO
+- Zustand-first state architecture for tasks/lists, including derived indexes for fast reads.
+- Persisted client-side caches (localStorage) with TTL refresh behavior.
+- Dev-only GraphQL smoke test route (`/dev`).
+- Deployment and security checklists under /docs.
+- README banner, badges, screenshots, and an architecture mini-diagram.
 
 ### Changed
-- TODO
+- Updated documentation across /docs to match current Amplify (Cognito + AppSync) + Zustand architecture.
+- Removed all references to deleted mock data/files; app/docs now assume real GraphQL-backed data.
+- Improved README structure and navigation for onboarding and contributors.
 
 ### Fixed
-- TODO
+- Documentation drift: corrected stale references and aligned guides/checklists with current scripts, storage keys, and routing patterns.
+
+### Removed
+- Mock-data references in docs and contributor guidance (mock files were deleted from the repo).

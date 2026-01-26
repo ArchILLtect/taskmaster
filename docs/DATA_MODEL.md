@@ -4,33 +4,34 @@ This doc describes the entities in TaskMaster and how they relate.
 
 ## Source of truth today
 - TypeScript types: [src/types](../src/types)
-- Seed data: [src/mocks](../src/mocks)
-- Local persistence overlays: [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts) and update event store
+- App state + persistence: [src/store](../src/store)
 
-## Planned backend schema
+## Backend schema (Amplify GraphQL)
 - Amplify GraphQL schema: [amplify/backend/api/taskmaster/schema.graphql](../amplify/backend/api/taskmaster/schema.graphql)
 
-## Core entities (current TS)
-### `Task`
+## Core entities (current UI types)
+### `TaskUI`
 Defined in [src/types/task.ts](../src/types/task.ts)
 - `id: string`
 - `listId: string`
 - `sortOrder: number` (lower = higher in list)
 - `parentTaskId?: string | null`
-- `subtasks: string[]` (task IDs)
 - `title`, `description?`
-- `status: "Open" | "Done"`
-- `priority: "Low" | "Medium" | "High"`
+- `status: TaskStatus` (enum from generated [src/API.ts](../src/API.ts))
+- `priority: TaskPriority` (enum from generated [src/API.ts](../src/API.ts))
 - `dueAt?: string | null`
+- `completedAt?: string | null`
 - `assigneeId?: string | null`
 - `tagIds: string[]`
 - `createdAt`, `updatedAt`: ISO strings
 
-### `TaskList`
-Defined in [src/types/list.ts](../src/types/list.ts) and seeded in [src/mocks/lists.ts](../src/mocks/lists.ts)
+Subtasks are derived (not stored) by filtering tasks where `parentTaskId === <task.id>`.
+
+### `ListUI`
+Defined in [src/types/list.ts](../src/types/list.ts)
 
 ### `User`
-Defined in [src/types/user.ts](../src/types/user.ts) and mocked via [src/mocks/currentUser.ts](../src/mocks/currentUser.ts)
+Defined in [src/types/user.ts](../src/types/user.ts). User display info is fetched via Amplify Auth and cached locally.
 
 ## Relationships (conceptual)
 ```mermaid
@@ -58,17 +59,18 @@ erDiagram
 ```
 
 ## Notes on TS vs GraphQL differences
-The GraphQL schema currently models parent/child tasks using `parentTaskId` + the `tasksByParent` index. The TypeScript model also includes `subtasks: string[]`.
+The GraphQL schema models parent/child tasks using `parentTaskId` + secondary indexes.
+The UI derives subtasks from `parentTaskId` (and the `taskStore` builds indexes like `childrenByParentId`).
 
-> TODO: Decide whether `subtasks` stays as a denormalized array, or whether the UI should derive subtasks solely from `parentTaskId` (which matches the GraphQL model better).
+UI-facing models (`TaskUI`, `ListUI`) are mapped from GraphQL responses via [src/api/mappers.ts](../src/api/mappers.ts).
 
 ## Local persistence structures
-Task mutations in the prototype are persisted locally:
-- Patch store key: `taskmaster.taskPatches.v1`
-- Event store key: `taskmaster.updateEvents.v1`
-- Updates read state key: `taskmaster.updates.v1`
+This app persists a small set of UI/runtime state in `localStorage` via Zustand `persist`:
+- Tasks + lists cache: `taskmaster:taskStore` (see [src/store/taskStore.ts](../src/store/taskStore.ts))
+- Updates feed + read markers: `taskmaster:updates` (see [src/store/updatesStore.ts](../src/store/updatesStore.ts))
+- Inbox preferences: `taskmaster:inbox` (see [src/store/inboxStore.ts](../src/store/inboxStore.ts))
+- User display cache: `taskmaster:user` (see [src/services/userUICacheStore.ts](../src/services/userUICacheStore.ts))
+- System inbox list id: `taskmaster.inboxListId` (see [src/config/inboxSettings.ts](../src/config/inboxSettings.ts))
 
-Reference:
-- [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts)
-- [src/services/updatesEventStore.ts](../src/services/updatesEventStore.ts)
-- [src/services/updatesService.ts](../src/services/updatesService.ts)
+Helper utilities:
+- [src/services/storage.ts](../src/services/storage.ts)

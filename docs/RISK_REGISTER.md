@@ -5,19 +5,19 @@ This file tracks risks and mitigations for TaskMaster.
 ## Risks
 
 ### R1 — Docs vs implementation drift
-- **Risk:** Planning docs describe GraphQL-backed behavior while the UI currently uses mocks/local stores.
-- **Impact:** Confusion during onboarding and during implementation.
-- **Mitigation:** Add TODO callouts in docs and keep [docs/INDEX.md](INDEX.md) current.
+- **Risk:** Docs fall out of date as the store/persistence/routing architecture evolves.
+- **Impact:** Confusion during onboarding and regression-prone implementation work.
+- **Mitigation:** Keep [docs/INDEX.md](INDEX.md) and [docs/ARCHITECTURE.md](ARCHITECTURE.md) aligned with current code, and treat docs changes as part of feature work.
 
 ### R2 — Local persistence complexity
-- **Risk:** localStorage patch/event stores grow into an accidental state architecture.
-- **Impact:** Hard-to-debug UI refresh patterns (`tick/refresh`).
-- **Mitigation:** Follow the roadmap to migrate to a single store boundary (Zustand) and keep persistence behind services.
+- **Risk:** persisted localStorage state grows into an accidental second source of truth.
+- **Impact:** Hard-to-debug “stale UI” and cache invalidation issues.
+- **Mitigation:** Keep persisted slices minimal and versioned (Zustand `persist`), rebuild derived data on hydration, and centralize all network interactions behind store actions + the API wrapper.
 
 ### R3 — Auth + access control correctness
 - **Risk:** Owner-based auth can be subtly wrong (e.g., owner reassignment, group edge cases).
 - **Impact:** Security/correctness issues when backend is enabled.
-- **Mitigation:** Document auth invariants and add dedicated smoke tests once GraphQL is wired.
+- **Mitigation:** Document auth invariants and keep dedicated smoke tests (e.g. `/dev`) for auth + GraphQL behavior.
 
 ### R4 — Time zone handling
 - **Risk:** Mixed time zone assumptions (due dates, formatting).

@@ -13,7 +13,7 @@ npm run dev
 - Use `RouterLink` (wrapper around React Router `NavLink`) for navigation elements that need active-state styling.
   - See [src/components/RouterLink.tsx](src/components/RouterLink.tsx)
 - Keep list/task navigation compatible with the “pane stack” route design.
-  - See [src/pages/ListPage.tsx](src/pages/ListPage.tsx)
+  - See [src/pages/ListDetailsPage.tsx](src/pages/ListDetailsPage.tsx)
 
 ## Code quality
 Run before opening a PR:
@@ -21,8 +21,6 @@ Run before opening a PR:
 npm run lint
 npm run build
 ```
-
-> TODO: Lint/build currently fail in the repo state; see [docs/SETUP.md](docs/SETUP.md) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## Working with Amplify
 - `amplify/` contains Amplify CLI output. Avoid hand-editing generated files under `amplify/backend/` unless you’re intentionally making Amplify-driven changes.

@@ -1,40 +1,35 @@
 # API Reference
 
-This project currently has two relevant “API surfaces”:
-1) Internal frontend services (used by pages/components today)
-2) Planned backend GraphQL API (Amplify/AppSync) described by the schema
+This project has a few intentionally small “API surfaces”:
+1) UI-facing store hooks + actions (what pages/components should use)
+2) Internal API wrapper (the only place that calls Amplify GraphQL)
+3) The backend GraphQL schema (reference)
 
-## 1) Frontend service APIs (current)
+## 1) UI-facing store APIs (current)
 
-### `taskService`
-Source: [src/services/taskService.ts](../src/services/taskService.ts)
+### Stores + actions (current)
 
-Key methods:
-- `getAll(): Task[]` — returns mock tasks + locally created tasks + patches applied
-- `getByListId(listId): Task[]`
-- `getById(taskId): Task | undefined`
-- `getTopLevel(tasks): Task[]` — tasks with `parentTaskId == null`, sorted by `sortOrder`
-- `getChildren(tasks, parentId): Task[]` — tasks with `parentTaskId === parentId`, sorted
-- `setStatus(taskId, status)` — updates local patch store and emits an update event
-- `create(partialTask): Task` — creates a new task (client-generated id), persists via patch store, emits update event
-- `delete(taskId)` — deletes a task and all descendants, persists via patch store, emits update event
+This app’s “frontend API” is the set of Zustand store hooks and store actions.
 
-Persistence details:
-- Patches stored via [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts)
-- Storage keys documented in [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+Core stores:
+- Tasks + lists: [src/store/taskStore.ts](../src/store/taskStore.ts)
+  - Read via `useTaskIndexView()` / `useTaskIndex()`
+  - Mutate via `useTaskActions()`
+- Updates feed (persisted UX state): [src/store/updatesStore.ts](../src/store/updatesStore.ts)
+  - Read via `useUpdatesView()`
+  - Mutate via `useUpdatesActions()`
+- Inbox UX state (persisted preferences): [src/store/inboxStore.ts](../src/store/inboxStore.ts)
+  - Read via `useInboxView()`
+  - Mutate via `useInboxActions()`
 
-### `updatesService`
-Source: [src/services/updatesService.ts](../src/services/updatesService.ts)
+Network boundary:
+- The API wrapper lives in [src/api/taskmasterApi.ts](../src/api/taskmasterApi.ts)
+- UI code (pages/components/hooks) does not import `src/api/**` directly; store actions do.
 
-Key methods:
-- `getViewModel()` → `{ state, events, unreadCount }`
-- `markAllReadNow()`
-- `clearRead()`
+Update events:
+- Updates events are appended in one place (API layer) after successful mutations.
 
-Events originate from:
-- [src/services/updatesEventStore.ts](../src/services/updatesEventStore.ts)
-
-## 2) GraphQL API (planned / scaffolded)
+## 2) GraphQL API (Amplify/AppSync) (current)
 Schema: [amplify/backend/api/taskmaster/schema.graphql](../amplify/backend/api/taskmaster/schema.graphql)
 
 Core models:
@@ -49,7 +44,12 @@ Auth rules (current schema intent):
 - Owner-based access
 - Admin group override (`Admin`)
 
-> TODO: The UI is not currently backed by GraphQL yet. When it is, prefer routing all reads/writes through a repo/service layer (UI should not call GraphQL directly).
+The UI is backed by GraphQL via the API wrapper and Zustand store actions.
+
+Boundary rules:
+- Pages/components/hooks must not call Amplify GraphQL directly.
+- The API wrapper lives in [src/api/taskmasterApi.ts](../src/api/taskmasterApi.ts) and is the only module that calls `client.graphql`.
+- Store actions call the API wrapper; UI calls store hooks/actions.
 
 ### Example queries (reference)
 List tasks by list id:

@@ -2,23 +2,26 @@
 
 This repo uses Markdown “living docs” stored alongside the code.
 
-This directory contains **intentional design documents** for TaskMaster.
+This directory contains **current architecture docs** and **intentional design docs** for TaskMaster.
 
-### TaskMaster – Design & Architecture Docs
+### TaskMaster – Docs Map
 
-These docs exist so future work is:
-- planned
-- consistent
-- not rediscovered through trial-and-error
+#### Recommended start
 
-If you’re reading this months later, **start here** in this doc.
+- New to the repo: [README.md](../README.md) → [SETUP.md](SETUP.md)
+- Want the “how it works” overview: [ARCHITECTURE.md](ARCHITECTURE.md)
+- Debugging weird state/caches: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+
+These docs exist so work stays:
+- correct (matches current implementation)
+- planned (future work is intentional)
+- consistent (shared patterns + boundaries)
 
 #### 🧭 <u>Planning Docs</u>:
 
 These documents define **what gets built, and when**.
 
 - **[ROADMAP.md](ROADMAP.md)**: Overall direction and sequencing of work.
-
 - **[MILESTONES.md](MILESTONES.md)**: Phase-based checkpoints (MVP → Post-MVP → Offline).
 
 Start with these before diving into implementation details.
@@ -81,3 +84,4 @@ If a feature feels “missing,” check here before assuming it was forgotten.
 - Changelog: [CHANGELOG.md](../CHANGELOG.md)
 - Security & legal: [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md)
 - Deployment: [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+

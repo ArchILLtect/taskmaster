@@ -3,13 +3,13 @@
 # Taskmaster Offline Mode Design (GraphQL + Zustand)
 
 **Status:** Design doc (future work)  
-**Applies to:** Taskmaster (Amplify Gen 1 CLI backend, AppSync GraphQL, Cognito User Pool auth, React + TypeScript + Chakra UI, planned Zustand state)
+**Applies to:** Taskmaster (Amplify Gen 1 CLI backend, AppSync GraphQL, Cognito User Pool auth, React + TypeScript + Chakra UI, Zustand state)
 
 ---
 
 ## 0) Why this doc exists
 
-You already have an “offline-ish” local patch system (created/patches/deletedIds + derived updates feed + tick/refresh). Now that GraphQL is live, offline becomes a **product feature** rather than an accidental side-effect of mocks.
+TaskMaster is GraphQL-backed and uses persisted Zustand stores for fast reloads. Offline mode is still a **product feature** (not yet implemented) and should be designed/implemented intentionally.
 
 This doc lays out a **concrete, step-by-step** plan to implement offline mode **without** creating two competing sources of truth.
 
@@ -59,10 +59,10 @@ Key fields:
 
 ### Single source of truth rules
 - **Zustand store** is the **only** place components read/write task state.
-- Store actions call a **repository** abstraction (`TaskRepo`) which chooses:
-  - online GraphQL
-  - offline local cache
-  - offline queue + later sync
+- Store actions call a single data boundary which chooses:
+  - online GraphQL (current via `src/api/taskmasterApi.ts`)
+  - offline cache (future)
+  - offline queue + later sync (future)
 
 ### Key boundary
 UI does **not** call GraphQL directly.  
@@ -72,6 +72,8 @@ Everything goes through:
 ```
 Component → Zustand Action → Repo → (GraphQL | Cache | Queue) → Store update
 ```
+
+Today, the “Repo” boundary is the API wrapper (`src/api/taskmasterApi.ts`) called by store actions.
 
 
 ---
@@ -264,6 +266,10 @@ Each write action:
 1. if offline or mutation fails → enqueue op
 1. updates sync counts
 
+Implementation notes (current codebase):
+- Tasks/lists are already cached in `taskStore` with a TTL for fast reloads.
+- Store selectors must return stable snapshots (React 19 `useSyncExternalStore` requirement).
+
 ---
 
 ### 11) Sync engine behavior
@@ -406,7 +412,7 @@ Later improvements (optional):
 
 #### Step D — Wire Zustand actions to repo
 9. Create Zustand store with the actions listed earlier
-1. Ensure all pages read from store, not from services/mocks
+1. Ensure all pages read from store, not from ad-hoc data sources
 
 #### Step E — Add sync engine
 11. Implement `flushQueue()`:
@@ -458,17 +464,14 @@ Later improvements (optional):
 
 ---
 
-### 17) Migration from your existing local patch system
+### 17) Migration strategy (from online-only to offline-capable)
 
-You currently have local patch merging, tick/refresh patterns, and an updates feed derived from that.
+The app is currently online-first (GraphQL-backed) with persisted caches.
 
-#### Recommended migration
-- Keep your patch system code in repo (do not delete immediately)
-- Stop wiring it into pages
-- Use Zustand + TaskRepo boundary instead
-- Later, reuse the idea (queue of ops) inside the offline repo implementation
-
-This avoids maintaining two parallel caches.
+Recommended approach:
+- Keep the UI/store contract stable.
+- Add a cache + queue layer behind store actions (or behind the API wrapper) without changing pages/components.
+- Treat offline mode as an implementation detail: the same store actions should work online or offline.
 
 ---
 

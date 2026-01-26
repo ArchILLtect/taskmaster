@@ -27,10 +27,10 @@ This milestone means:
 **In Progress**
 
 Criteria:
-- No mock data used in user-facing pages
-- Core pages wired to GraphQL:
+- Core pages are demoable end-to-end:
   - Inbox
-  - List view
+  - Lists + List details (pane stack)
+  - Tasks
   - Updates
 - Basic CRUD works end-to-end
 - Errors are surfaced cleanly
@@ -43,14 +43,18 @@ When this milestone is reached:
 
 ## 🔵 Milestone: State Architecture Stabilized
 
-**Planned**
+**Completed**
 
 Criteria:
 - Zustand introduced
-- GraphQL calls isolated to a service layer
+- GraphQL calls isolated to an API boundary
 - UI reads from store only
 - No `tick / refresh()` usage
 - Clear ownership of client vs server state
+
+Notes:
+- Store selectors must return stable snapshots (React 19 `useSyncExternalStore` requirement).
+- Persisted slices are minimal and derived indexes are rebuilt on hydration.
 
 When this milestone is reached:
 > “The app is easy to reason about.”
@@ -72,13 +76,21 @@ When this milestone is reached:
 
 ---
 
+## ✅ Milestone: Persisted UX State + Cache (Local)
+
+**Completed**
+
+Criteria:
+- Tasks/lists are cached locally with TTL and revalidated on refresh.
+- Derived indexes are rebuilt from canonical arrays on hydration.
+- Inbox preferences/dismissals persist locally.
+- Updates feed + read markers persist locally.
+
+When this milestone is reached:
+> “Reloads are fast and UI state is resilient.”
+
+---
+
 ## TODO: Milestone verification notes
 
-Some milestone statements (notably “GraphQL Backbone Established” and “No mock data used in user-facing pages”) may not match the current runtime wiring.
-
-Current code reality (as of today):
-- UI pages use `src/mocks/*` as the primary data source.
-- Local persistence exists via `src/services/*` (patch store + updates event store).
-- Amplify/GraphQL schema exists, but the app is not yet fully migrated to it.
-
-This TODO section is intentionally additive (no edits to the original milestone text) so we can reconcile the plan and the implementation later.
+Milestones should be periodically re-verified as features expand.

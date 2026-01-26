@@ -1,12 +1,12 @@
 # Architecture Overview
 
-This doc describes the system *as currently implemented* (mock/local-first) and the intended backend integration points (Amplify GraphQL).
+This doc describes the system *as currently implemented* (Zustand + Amplify GraphQL) and the key boundaries that keep UI/data flow predictable.
 
 ## High-level
 TaskMaster is a single-page app:
 - React Router v7 for routing
 - Chakra UI for layout/components
-- Mock data + localStorage-backed patch/event stores for persistence
+- Zustand stores for app state, with persisted caches for fast reloads
 
 Entry points:
 - [src/main.tsx](../src/main.tsx): ChakraProvider + BrowserRouter
@@ -16,17 +16,17 @@ Entry points:
 ## Directory map
 - `src/pages/*`: route-level pages
 - `src/components/*`: reusable UI
-- `src/services/*`: local persistence + domain helpers
-- `src/mocks/*`: seed data
-- `src/types/*`: TypeScript domain types (must match mocks)
-- `amplify/*`: generated Amplify backend config (not fully wired into runtime yet)
+- `src/store/*`: Zustand state, persistence, and actions
+- `src/services/*`: small non-store utilities (auth helpers, storage helpers)
+- `src/types/*`: TypeScript domain types
+- `amplify/*`: generated Amplify backend config + metadata (schema + infrastructure)
 
 ## Routing + “pane stack” design
 Lists and task details use a route-encoded stack:
 - Route: `/lists/:listId/tasks/*`
 - The `*` splat contains a stack of task IDs (`t1/t3/t9`)
 
-Implementation: [src/pages/ListPage.tsx](../src/pages/ListPage.tsx)
+Implementation: [src/pages/ListDetailsPage.tsx](../src/pages/ListDetailsPage.tsx)
 - `stackIds`: derived from the splat param
 - `buildStackUrl(listId, stackIds)`: converts stack → URL
 - `pushTask(taskId)`: pushes onto stack
@@ -36,36 +36,49 @@ Why this exists:
 - Deep-linkable UI state (panes can be shared/bookmarked)
 - Avoids hidden internal state for navigation
 
-## Current data flow (mock + local persistence)
-UI reads base data from mocks, then overlays local changes from localStorage.
+## Current data flow (Zustand + persisted caches)
+All app state that drives the UI lives in Zustand stores under `src/store/**`.
 
-Key pieces:
-- Base tasks: [src/mocks/tasks.ts](../src/mocks/tasks.ts)
-- Patch overlay: [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts)
-- Domain API: [src/services/taskService.ts](../src/services/taskService.ts)
+### State architecture (Zustand)
 
-Task events / updates feed:
-- Event log: [src/services/updatesEventStore.ts](../src/services/updatesEventStore.ts)
-- View model + read-state: [src/services/updatesService.ts](../src/services/updatesService.ts)
+- **taskStore** is the single source of truth for task lists + tasks, with derived indexes built in the store.
+- UI code should consume state via **UI-facing hooks**:
+	- `useTaskIndex` / `useTaskActions`
+	- `useInboxView` / `useInboxActions`
+	- `useUpdatesView` / `useUpdatesActions`
+- Direct imports from `src/api/**` are forbidden in UI (pages/components). Amplify generated `../API` is restricted to enums only (`TaskStatus`, `TaskPriority`).
+- Persistence:
+	- `taskStore` persists `{ lists, tasks, lastLoadedAtMs }` with a TTL; indexes are rebuilt on hydration.
+	- Inbox + Updates stores persist their own local UI state (dismissals, read markers, event feed).
+
+Core stores:
+- Tasks/lists: [src/store/taskStore.ts](../src/store/taskStore.ts)
+	- Persists only the canonical arrays (`lists`, `tasks`, `lastLoadedAtMs`)
+	- Rebuilds derived indexes in-memory on hydration
+	- Uses a TTL to make reloads feel instant while still auto-refreshing in the background
+- Updates feed (local, persisted UX state): [src/store/updatesStore.ts](../src/store/updatesStore.ts)
+- Inbox UX state (local, persisted preferences): [src/store/inboxStore.ts](../src/store/inboxStore.ts)
+
+Network boundary:
+- Pages/components do **not** call `src/api/**` directly.
+- Store actions call the API wrapper.
+- Update events are appended in one place (the API layer) after successful mutations: [src/api/taskmasterApi.ts](../src/api/taskmasterApi.ts)
 
 Persistence primitives:
-- JSON helpers: [src/services/storage.ts](../src/services/storage.ts)
+- JSON + time helpers: [src/services/storage.ts](../src/services/storage.ts)
 
-### UI refresh pattern
-Some pages use a `tick/refresh()` local state counter to re-render after service mutations.
-- Example: [src/pages/UpdatesPage.tsx](../src/pages/UpdatesPage.tsx)
-
-> TODO: Roadmap/design docs describe migrating this to a single state store (Zustand) so UI re-renders via selectors rather than manual ticks.
-
-## Amplify + GraphQL (planned / partially scaffolded)
+## Amplify + GraphQL (current)
 GraphQL schema exists under Amplify:
 - [amplify/backend/api/taskmaster/schema.graphql](../amplify/backend/api/taskmaster/schema.graphql)
 
-Client-side generated files exist but are not yet the primary data source:
+Client-side generated files exist and are used by the API wrapper:
 - [src/API.ts](../src/API.ts)
 - [src/graphql](../src/graphql)
 
-> TODO: When wiring GraphQL for real pages, prefer a single boundary (service/repo layer) so pages/components don’t call GraphQL directly.
+Important boundaries:
+- UI (pages/components/hooks) does not call GraphQL directly.
+- `src/api/taskmasterApi.ts` is the boundary that calls `client.graphql`.
+- Zustand store actions call the API wrapper and remain the single source of truth for UI state.
 
 ## Auth (current)
 Auth is wired via Amplify UI’s `Authenticator` (app-level `user` + `signOut`).

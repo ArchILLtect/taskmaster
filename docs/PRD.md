@@ -6,7 +6,7 @@
 TaskMaster is a task management app prototype focused on:
 - clear list/task navigation
 - stable UI patterns
-- a migration path from mocks → GraphQL → offline support
+- a migration path from GraphQL-backed MVP → offline support
 
 ## Target users
 - Single user (initially)
@@ -16,7 +16,7 @@ TaskMaster is a task management app prototype focused on:
 - As a user, I can view my task lists.
 - As a user, I can view tasks in a list.
 - As a user, I can open task details without losing context.
-- As a user, I can create tasks and see them persist locally.
+- As a user, I can create tasks and see them persist (GraphQL-backed, with a cached store for fast reloads).
 - As a user, I can mark tasks done/open and see an activity feed.
 
 ## Key UX requirements
@@ -26,28 +26,22 @@ TaskMaster is a task management app prototype focused on:
 
 ## Acceptance criteria (current prototype)
 - App runs locally via `npm run dev`.
-- Lists and tasks render from mocks.
-- Task create/status changes persist via localStorage.
-
-> TODO: Align this PRD with [ROADMAP.md](ROADMAP.md). Some roadmap items assume GraphQL wiring that is not yet reflected in the UI.
+- Lists and tasks render from Zustand stores backed by Amplify GraphQL.
+- Task create/status changes persist via GraphQL, and the app keeps a persisted cache in localStorage for fast reloads.
 
 ---
 
-## TODO: Target-state PRD (MVP = Cognito + GraphQL)
-
-This section captures the intended MVP target state (as reflected in [ROADMAP.md](ROADMAP.md)) while the current prototype remains mock/localStorage-backed.
-
-### MVP scope (target)
+## MVP scope
 - Authentication is real (Cognito via Amplify Auth)
 	- user identity is available throughout the app shell
 	- Admin group support exists (read/write across users)
 - Data is real (AppSync GraphQL + DynamoDB via Amplify `@model`)
-	- Lists and tasks pages do not use `src/mocks/*` for user-facing data
+		- Lists and tasks pages do not use local placeholder data for user-facing data
 	- Core CRUD works end-to-end for TaskLists + Tasks
 - Developer confidence
 	- Dev-only GraphQL smoke tests exist and are runnable
 
-### MVP acceptance criteria (target)
+### MVP acceptance criteria
 - A signed-in user can:
 	- create/update/delete TaskLists
 	- create/update/delete Tasks
@@ -57,9 +51,10 @@ This section captures the intended MVP target state (as reflected in [ROADMAP.md
 	- owners can only access their own records
 	- Admin group can read/write across users
 
-### Current-state callout (implementation today)
-- UI still uses mock data and local persistence services (localStorage patch/event stores).
+### Implementation notes (current)
+- UI state is managed via Zustand stores with persisted caches (TTL for tasks/lists).
+- UI does not call `src/api/**` directly; store actions call the API wrapper.
 
 References:
 - GraphQL schema: [amplify/backend/api/taskmaster/schema.graphql](../amplify/backend/api/taskmaster/schema.graphql)
-- Local task persistence (prototype): [src/services/taskPatchStore.ts](../src/services/taskPatchStore.ts)
+- Tasks store (cache + actions): [src/store/taskStore.ts](../src/store/taskStore.ts)
