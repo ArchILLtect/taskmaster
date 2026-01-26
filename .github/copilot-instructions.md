@@ -19,7 +19,7 @@
 - **Sidebar structure**:
   - Main items are declared in the component (see [src/layout/Sidebar.tsx](../src/layout/Sidebar.tsx)).
   - Collapsible sections pull their items from config (`viewLinks`) in [src/config/sidebar.ts](../src/config/sidebar.ts).
-  - Favorites derive from the current lists state (Zustand store → page hooks), not from static mocks.
+  - Favorites derive from the current lists state (Zustand store → page hooks), not from hard-coded data.
 - **Tasks UI**:
   - Task list rows are rendered via `TaskRow` and styled via Chakra + `RouterLink` (see [src/components/TaskRow.tsx](../src/components/TaskRow.tsx)).
   - UI task shape is `TaskUI` in [src/types/task.ts](../src/types/task.ts) (treat it as the stable UI contract).
