@@ -1,8 +1,8 @@
-import { useCallback, useState } from "react";
+import { useMemo } from "react";
 import { useTaskIndex } from "../hooks/useTaskIndex";
-import { inboxService } from "../services/inboxService";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
+import { useInboxView } from "../store/inboxStore";
 
 function isNewTask(createdAt: string, lastViewedAt: string | null) {
   if (!lastViewedAt) return true;
@@ -21,14 +21,10 @@ function isDueSoon(dueAt: string | null | undefined, status: TaskStatus, nowMs: 
 export function useInboxPageData() {
   const { lists, tasks, initialLoading, err, refresh: refreshData } = useTaskIndex();
 
-  // local “poke” for inbox-only state changes (dismiss/window/viewedAt)
-  const [, setInboxVersion] = useState(0);
-  const refreshInbox = useCallback(() => setInboxVersion((v) => v + 1), []);
-
   const inboxListId = getInboxListId();
 
-  const state = inboxService.getState();
-  const dismissed = new Set(state.dismissedTaskIds);
+  const state = useInboxView();
+  const dismissed = useMemo(() => new Set(state.dismissedTaskIds), [state.dismissedTaskIds]);
   const nowMs = state.lastComputedAtMs;
 
   // Only tasks that belong to the Inbox list
@@ -55,6 +51,5 @@ export function useInboxPageData() {
     loading: initialLoading,
     err,
     refreshData,   // network refresh
-    refreshInbox,  // local refresh
   };
 }

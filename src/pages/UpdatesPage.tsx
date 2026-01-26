@@ -2,23 +2,21 @@ import { useMemo, useState } from "react";
 import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
-import { updatesService } from "../services/updatesService";
-import { updatesEventStore } from "../services/updatesEventStore";
 import { TaskStatus } from "../API";
 import { useUpdatesPageData } from "./useUpdatesPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useTaskActions } from "../store/taskStore";
+import { useUpdatesActions, useUpdatesView } from "../store/updatesStore";
 
 export function UpdatesPage() {
 
   const { allTasks, lists, loading } = useUpdatesPageData();
-  const vm = updatesService.getViewModel();
+  const vm = useUpdatesView();
+  const { clearAll, clearRead, markAllReadNow } = useUpdatesActions();
 
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
-  const [, setUpdatesVersion] = useState(0);
-  const refreshUpdates = () => setUpdatesVersion((v) => v + 1);
 
   const { updateTask, deleteTask } = useTaskActions();
 
@@ -92,16 +90,14 @@ export function UpdatesPage() {
           <Button
             variant="outline"
             onClick={() => {
-              updatesService.clearRead();
-              refreshUpdates();
+              clearRead();
             }}
           >
             Clear read
           </Button>
           <Button
             onClick={() => {
-              updatesService.markAllReadNow();
-              refreshUpdates();
+              markAllReadNow();
             }}
           >
             Mark all read
@@ -170,8 +166,7 @@ export function UpdatesPage() {
         setOpen={setIsClearAllOpen}
         onCancel={() => setIsClearAllOpen(false)}
         onAccept={async () => {
-          updatesEventStore.clearAll();
-          refreshUpdates();
+          clearAll();
           // TODO: If an opportunity presents itself again, test if this modal closes on acceptance
           // if not, uncomment the following code:
           // setIsClearAllOpen(false);
@@ -180,7 +175,7 @@ export function UpdatesPage() {
       />
 
       <Text color="gray.500" fontSize="sm">
-        Tip: Events are captured from task actions and stored locally (will move into Zustand persistence later).
+        Tip: Events are captured from task actions and stored locally.
       </Text>
     </VStack>
   );

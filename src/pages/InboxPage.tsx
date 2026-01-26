@@ -1,7 +1,6 @@
 import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
-import { inboxService } from "../services/inboxService";
 import { TaskPriority, TaskStatus } from "../API";
 import { useInboxPageData } from "./useInboxPageData";
 import { useMemo, useState } from "react";
@@ -14,6 +13,7 @@ import type { TaskUI } from "../types";
 import { Toaster } from "../components/ui/Toaster";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
+import { useInboxActions } from "../store/inboxStore";
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -65,7 +65,9 @@ export function InboxPage() {
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [saving, setSaving] = useState(false);
 
-  const { vm, lists, loading, err, refreshData, refreshInbox } = useInboxPageData();
+  const { vm, lists, loading, err, refreshData } = useInboxPageData();
+
+  const { markViewedNow, setDueSoonWindowDays, dismiss } = useInboxActions();
 
   const { updateTask, deleteTask } = useTaskActions();
 
@@ -198,8 +200,7 @@ export function InboxPage() {
 
         <Button
           onClick={() => {
-            inboxService.markViewedNow();
-            refreshInbox();
+            markViewedNow();
           }}
         >
           Done triaging
@@ -216,8 +217,7 @@ export function InboxPage() {
           value={String(vm.state.dueSoonWindowDays)}
           onValueChange={({ valueAsNumber }) => {
             if (!Number.isFinite(valueAsNumber)) return;
-            inboxService.setDueSoonWindowDays(valueAsNumber);
-            refreshInbox();
+            setDueSoonWindowDays(valueAsNumber);
           }}
         >
           <NumberInput.Input />
@@ -263,8 +263,7 @@ export function InboxPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        inboxService.dismiss(t.id);
-                        refreshInbox();
+                        dismiss(t.id);
                       }}
                     >
                       Dismiss
@@ -322,8 +321,7 @@ export function InboxPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        inboxService.dismiss(t.id);
-                      refreshInbox();
+                        dismiss(t.id);
                     }}
                   >
                     Acknowledge
