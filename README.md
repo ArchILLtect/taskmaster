@@ -1,137 +1,162 @@
 <!-- {root}/README.md -->
 
-# TaskMaster (WIP)
+<p align="center">
+  <img src="docs/assets/readme-banner.svg" alt="TaskMaster" width="100%" />
+</p>
 
-TaskMaster is a Vite + React + TypeScript task app prototype using Chakra UI.  
-The app is transitioning from mocked data to a real backend powered by AWS Amplify (AppSync + Cognito), with an MVP-first mindset.
+<p align="center">
+  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.x-646CFF?logo=vite&logoColor=white"></a>
+  <a href="https://react.dev/"><img alt="React" src="https://img.shields.io/badge/React-19.x-087EA4?logo=react&logoColor=white"></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white"></a>
+  <a href="https://chakra-ui.com/"><img alt="Chakra UI" src="https://img.shields.io/badge/Chakra%20UI-3.x-319795?logo=chakraui&logoColor=white"></a>
+  <a href="https://zustand-demo.pmnd.rs/"><img alt="Zustand" src="https://img.shields.io/badge/Zustand-5.x-000000"></a>
+  <a href="https://docs.amplify.aws/"><img alt="AWS Amplify" src="https://img.shields.io/badge/AWS%20Amplify-Gen%201-FF9900?logo=amazonaws&logoColor=white"></a>
+</p>
 
-## Tech stack
+# TaskMaster
+
+TaskMaster is a task app prototype built with **Vite + React 19 + TypeScript + Chakra UI**, backed by **AWS Amplify** (**Cognito Auth + AppSync GraphQL + DynamoDB**) and a **Zustand** state architecture.
+
+The UI is **store-driven**:
+- Reads go through Zustand hooks/selectors
+- Writes go through store actions → `taskmasterApi` → GraphQL
+- A persisted local cache (with TTL refresh) makes reloads fast
+
+---
+
+## ✨ Features
+
+- Authenticated app shell (sidebar + top bar)
+- Task lists + tasks (GraphQL-backed)
+- Task details “pane stack” navigation (deep-linkable)
+- Updates feed + read markers (local/persisted UX state)
+- Dev-only GraphQL smoke testing route (`/dev`)
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="docs/assets/inbox-page-screenshot.png" alt="Inbox page" width="48%" />
+  <img src="docs/assets/tasks-page-screenshot.png" alt="Tasks page" width="48%" />
+</p>
+
+---
+
+## 🧱 Tech stack
+
 - React 19 + TypeScript + Vite
-- Chakra UI (all UI primitives)
+- Chakra UI (UI primitives)
 - React Router v7 (`react-router-dom`)
-- AWS Amplify (Auth + GraphQL / AppSync)
-- AppSync + DynamoDB via `@model` GraphQL schema
-- (Planned) Zustand for client-side state/cache
+- Zustand (client state + persisted caches)
+- AWS Amplify Gen 1
+  - Cognito (Auth)
+  - AppSync GraphQL + DynamoDB (`@model`)
 
-Entry points:
-- App bootstrapping: [src/main.tsx](src/main.tsx)
-- Route table: [src/App.tsx](src/App.tsx)
-- Shared layout shell (top bar + sidebar): [src/layout/AppShell.tsx](src/layout/AppShell.tsx)
+---
 
-## What’s implemented
-- App shell with persistent sidebar + top bar
-- Cognito authentication via Amplify `Authenticator`
-- GraphQL backend (AppSync + DynamoDB) generated from schema
-- Core data models: TaskList, Task
-- Dev-only GraphQL smoke testing page (`/dev`)
-- Views/pages: Inbox / Today / Week / Month / Updates / Settings / Profile
-- Lists page with an “infinite pane stack” details UI for drilling into tasks
-
-## Routing model
-Routes are defined in [src/App.tsx](src/App.tsx).
-
-Key patterns:
-- Base list views: `/lists` and `/lists/:listId` render the same page component.
-- “Pane stack” list details: `/lists/:listId/tasks/*`
-  - The `*` splat encodes a stack of selected task IDs as path segments.
-  - Example: `/lists/inbox/tasks/t1/t3`
-  - Implementation lives in [src/pages/ListPage.tsx](src/pages/ListPage.tsx).
-
-## Data model
-The backend is driven by a GraphQL schema using Amplify `@model`.
-
-- Schema: `amplify/backend/api/*/schema.graphql`
-- Tables are auto-generated in DynamoDB by Amplify.
-- No manual database setup is required.
-
-Local mocks are still present but are being phased out as pages migrate to GraphQL.
-
-## 📄 Architecture & Design Docs
-
-Design documents live in `/docs` and describe **planned or deferred architecture** so future work is intentional—not rediscovered.
-
-### Offline Mode (Planned)
-
-- **Document:** [`/docs/offline-mode-design.md`](./docs/offline-mode-design.md)
-- **Status:** Not implemented (by design)
-
-This document describes the full offline-capable architecture for TaskMaster, including:
-- Zustand as the single client-side source of truth
-- GraphQL (AppSync) as the server source of truth
-- IndexedDB-based caching
-- Offline mutation queue + optimistic UI
-- Sync, conflict resolution, and UX rules
-
-⚠️ **Important:**  
-Offline support is intentionally deferred until after the MVP.  
-When implemented, this document should be treated as the **source of truth**.
-
-> If you’re reading this in the future and wondering “why isn’t offline here yet?” —  
-> it’s because MVP-first decisions were made on purpose. The roadmap already exists. 😉
-
-See also: [`/docs/README.md`](./docs/README.md)
-
-## 🧭 Roadmap & Milestones
-
-TaskMaster follows an **MVP → Post-MVP → Offline** progression.  
-Planning is documented explicitly so future work is intentional and scoped.
-
-- **Roadmap:** [`/docs/ROADMAP.md`](./docs/ROADMAP.md)  
-  High-level direction and phase goals.
-
-- **Milestones:** [`/docs/MILESTONES.md`](./docs/MILESTONES.md)  
-  Concrete deliverables grouped by phase:
-  - MVP
-  - Post-MVP
-  - Offline Mode
-
-If you’re wondering *“what should I work on next?”* — start here.
-
-## Amplify notes
-The [amplify](amplify) folder is Amplify CLI output/scaffolding.
-
-- GraphQL, DynamoDB, and Cognito are already live.
-- `@model` types automatically create tables and resolvers.
-- No `amplify add storage` is required for GraphQL-backed data models.
-
-Auth integration entry point:
-- [src/services/authService.ts](src/services/authService.ts) (and [src/hooks/useUserUI.ts](src/hooks/useUserUI.ts))
-
-## Getting started
+## 🚀 Quickstart
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Scripts
+Quality checks:
 
-- npm run dev — start Vite dev server
-- npm run build — typecheck + build
-- npm run lint — run ESLint
-- npm run preview — preview production build
+```bash
+npm run lint
+npm run build
+```
 
 ---
 
-## Documentation (additional)
+## 🧭 Key implementation locations
 
-> TODO: This section is additive and may overlap with earlier doc links.
+- App bootstrapping: [src/main.tsx](src/main.tsx)
+- Route table: [src/App.tsx](src/App.tsx)
+- Shared layout shell: [src/layout/AppShell.tsx](src/layout/AppShell.tsx)
+- Tasks/lists store (cache + actions): [src/store/taskStore.ts](src/store/taskStore.ts)
+- Pane-stack list details UI: [src/pages/ListDetailsPage.tsx](src/pages/ListDetailsPage.tsx)
+- GraphQL API wrapper boundary: [src/api/taskmasterApi.ts](src/api/taskmasterApi.ts)
+
+---
+
+## 🧠 Why this architecture?
+
+This repo optimizes for **predictable data flow** and **fast UI iteration**:
+
+- **UI stays simple**: pages/components read via hooks/selectors and don’t import the API wrapper directly.
+- **One write path**: UI → store actions → `taskmasterApi` → GraphQL.
+- **Fast reloads**: persisted caches + TTL mean the app can render instantly and refresh in the background.
+- **Fewer re-render footguns**: stable selector snapshots reduce unnecessary renders and play nicely with React’s external store semantics.
+
+Mini-diagram:
+
+```mermaid
+flowchart LR
+  UI[React UI\n(pages/components)] -->|read via hooks/selectors| Store[Zustand stores\n(taskStore, inbox, updates)]
+  UI -->|mutations via actions| Store
+
+  Store --> API[taskmasterApi\n(GraphQL wrapper)]
+  API --> AppSync[AppSync GraphQL]
+  AppSync --> DB[(DynamoDB)]
+
+  Store <--> Cache[(localStorage\nTTL cache)]
+```
+
+## 🧩 Routing model (pane stack)
+
+The list details view supports an “infinite pane stack” encoded in the URL:
+
+- Base list views: `/lists` and `/lists/:listId`
+- Pane stack route: `/lists/:listId/tasks/*`
+  - The `*` splat encodes a stack of selected task IDs as path segments.
+  - Example: `/lists/inbox/tasks/t1/t3`
+
+---
+
+## 💾 Local persistence (client cache)
+
+Some state is cached in `localStorage` to make reloads fast and UX smoother.
+
+Reset keys (useful when debugging “stuck” UI):
+- `taskmaster:taskStore`
+- `taskmaster:inbox`
+- `taskmaster:updates`
+
+---
+
+## 📚 Documentation
 
 Start here:
-- [docs/INDEX.md](docs/INDEX.md)
+- Docs index: [docs/INDEX.md](docs/INDEX.md)
 
 Common entry points:
 - Local setup: [docs/SETUP.md](docs/SETUP.md)
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- API reference: [docs/API.md](docs/API.md)
-- Data model: [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
+- Glossary: [docs/glossary.md](docs/glossary.md)
+- Product spec: [docs/product-spec.md](docs/product-spec.md)
 - Troubleshooting: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-- Style guide: [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md)
-- Deployment checklist: [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)
-- Security checklist: [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)
+- Deployment: [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)
+- Security: [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)
+- Offline mode design (planned): [docs/offline-mode-design.md](docs/offline-mode-design.md)
 
-Repo-level docs:
-- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Changelog: [CHANGELOG.md](CHANGELOG.md)
+---
 
-> TODO: Some README claims may reflect planned work rather than current wiring. If something seems inconsistent, check [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the TODO section in [docs/ROADMAP.md](docs/ROADMAP.md).
+## 🗺️ Planning
+
+- Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
+- Milestones: [docs/MILESTONES.md](docs/MILESTONES.md)
+
+---
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 📄 License
+
+See [LICENSE](LICENSE).
