@@ -143,6 +143,7 @@ const taskStoreStorage: PersistStorage<unknown, unknown> = {
 };
 
 // Zustand persist-style migrate signature.
+// TODO: does this still need to be stubbed or can we evolve it now?
 // Stub for now; once persistence is enabled, evolve this to transform older shapes.
 export function migrateTaskStoreState(persistedState: unknown, _version: number): unknown {
   // Allow older versions for now (no transforms yet), but validate the shape.
