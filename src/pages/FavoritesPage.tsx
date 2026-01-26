@@ -24,12 +24,11 @@ export function FavoritesPage() {
 
     try {
       await deleteTaskListSafeById(listId);
+      // Fire toast notification for list deletion
+      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
     } catch (error) {
       console.error("Error deleting list:", error);
       await fireToast("error", "Error deleting list", "There was an issue deleting the list.");
-    } finally {
-      // Fire toast notification for list deletion
-      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
     }
   };
 
@@ -51,11 +50,10 @@ export function FavoritesPage() {
         id: listId,
         isFavorite: reverseFavorite
       });
+      await fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
     } catch (error) {
       console.error("Error updating favorite status:", error);
       await fireToast("error", "Error updating favorite", "There was an issue updating the favorite status.");
-    } finally {
-      await fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
     }
   };
 

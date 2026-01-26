@@ -91,12 +91,12 @@ export const ListsPage = () => {
         // description: draftDescription,
       });
       setIsEditing(false);
+      // Fire toast notification for unimplemented feature
+      await fireToast("success", "List Saved", "Your changes have been saved successfully.");
     } catch (error) {
       // Fire toast notification for unimplemented feature
       await fireToast("error", "Save Failed", "There was an error saving the list. Please try again. Error details: " + (error instanceof Error ? error.message : String(error)));
     } finally {
-      // Fire toast notification for unimplemented feature
-      await fireToast("success", "List Saved", "Your changes have been saved successfully.");
       setSaving(false);
     }
   };
@@ -109,12 +109,11 @@ export const ListsPage = () => {
 
     try {
       await deleteTaskListSafeById(listId);
+      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
     } catch (error) {
       console.error("Failed to delete list:", error);
       await fireToast("error", "Failed to delete list", "An error occurred while deleting the list.");
       return;
-    } finally {
-      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
     }
   };
 

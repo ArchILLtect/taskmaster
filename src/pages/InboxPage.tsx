@@ -86,12 +86,11 @@ export function InboxPage() {
         status: nextStatus,
         completedAt,
       });
+      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
     } catch (error) {
       console.error("Error updating task status:", error);
       fireToast("error", "Error updating task", "There was an issue updating the task status.");
-    } finally {
-      fireToast("success", "Task marked as " + nextStatus, "Task is now " + nextStatus.toLowerCase() + ".");
-    };
+    }
   };
 
   const handleEditTask = async (task: TaskUI) => {
@@ -110,11 +109,10 @@ export function InboxPage() {
       await deleteTask({
         id: taskId
       });
+      fireToast("success", "Task deleted", "The task has been successfully deleted.");
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
-    } finally {
-      fireToast("success", "Task deleted", "The task has been successfully deleted.");
     }
   };
 
@@ -134,13 +132,13 @@ export function InboxPage() {
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
       });
+      fireToast("success", "Task saved", "The task has been successfully updated.");
     } catch (error) {
       console.error("Error saving task:", error);
       fireToast("error", "Error saving task", "There was an issue saving the task.");
     } finally {
       setSaving(false);
       resetFormAndClose();
-      fireToast("success", "Task saved", "The task has been successfully updated.");
     }
   };
 
