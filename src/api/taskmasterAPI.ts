@@ -25,7 +25,7 @@ import {
 import type { ListTaskListsQuery, TasksByListQuery } from "../API";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
-import { updatesEventStore } from "../services/updatesEventStore";
+import { useUpdatesStore } from "../store/updatesStore";
 
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
@@ -148,7 +148,7 @@ export const taskmasterApi = {
     const created = (data as any).createTask;
 
     if (created?.id && created?.listId) {
-      updatesEventStore.append({
+      useUpdatesStore.getState().addEvent({
         type: "task_created",
         taskId: created.id,
         listId: created.listId,
@@ -197,7 +197,7 @@ export const taskmasterApi = {
           ? "Task reopened"
           : "Task updated";
 
-      updatesEventStore.append({
+      useUpdatesStore.getState().addEvent({
         type,
         taskId: updated.id,
         listId: updated.listId,
@@ -216,7 +216,7 @@ export const taskmasterApi = {
 
     // Note: delete mutation selection set must include listId/title for this to be informative.
     if (deleted?.id && deleted?.listId) {
-      updatesEventStore.append({
+      useUpdatesStore.getState().addEvent({
         type: "task_deleted",
         taskId: deleted.id,
         listId: deleted.listId,
@@ -225,7 +225,7 @@ export const taskmasterApi = {
       });
     } else if (input?.id) {
       // Fallback: still record something, even if the mutation didn't return enough data.
-      updatesEventStore.append({
+      useUpdatesStore.getState().addEvent({
         type: "task_deleted",
         taskId: input.id,
         listId: "unknown",

@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 
 import { isoNow } from "../services/storage";
 
@@ -99,14 +98,47 @@ function makeId(prefix: string) {
 }
 
 export function useUpdatesActions(): Pick<UpdatesStore, "addEvent" | "markAllReadNow" | "clearRead" | "clearAll"> {
-  return useUpdatesStore(
-    useShallow((s) => ({
-      addEvent: s.addEvent,
-      markAllReadNow: s.markAllReadNow,
-      clearRead: s.clearRead,
-      clearAll: s.clearAll,
-    }))
-  );
+  return useUpdatesStore(selectUpdatesActions);
+}
+
+type UpdatesActions = Pick<UpdatesStore, "addEvent" | "markAllReadNow" | "clearRead" | "clearAll">;
+
+let cachedUpdatesActions: UpdatesActions | null = null;
+let cachedUpdatesActionsInputs: {
+  addEvent: UpdatesActions["addEvent"];
+  markAllReadNow: UpdatesActions["markAllReadNow"];
+  clearRead: UpdatesActions["clearRead"];
+  clearAll: UpdatesActions["clearAll"];
+} | null = null;
+
+function selectUpdatesActions(s: UpdatesStore): UpdatesActions {
+  const inputs = {
+    addEvent: s.addEvent,
+    markAllReadNow: s.markAllReadNow,
+    clearRead: s.clearRead,
+    clearAll: s.clearAll,
+  };
+
+  if (
+    cachedUpdatesActions &&
+    cachedUpdatesActionsInputs &&
+    cachedUpdatesActionsInputs.addEvent === inputs.addEvent &&
+    cachedUpdatesActionsInputs.markAllReadNow === inputs.markAllReadNow &&
+    cachedUpdatesActionsInputs.clearRead === inputs.clearRead &&
+    cachedUpdatesActionsInputs.clearAll === inputs.clearAll
+  ) {
+    return cachedUpdatesActions;
+  }
+
+  cachedUpdatesActionsInputs = inputs;
+  cachedUpdatesActions = {
+    addEvent: inputs.addEvent,
+    markAllReadNow: inputs.markAllReadNow,
+    clearRead: inputs.clearRead,
+    clearAll: inputs.clearAll,
+  };
+
+  return cachedUpdatesActions;
 }
 
 type UpdatesView = {
@@ -163,18 +195,3 @@ const selectUpdatesView = (() => {
 export function useUpdatesView(): UpdatesView {
   return useUpdatesStore(selectUpdatesView);
 }
-
-// Back-compat facade for existing call sites (API layer appends events here).
-export const updatesEventStore = {
-  append(evt: Omit<UpdateEvent, "id" | "occurredAt">): UpdateEvent {
-    return useUpdatesStore.getState().addEvent(evt);
-  },
-
-  getAll(): UpdateEvent[] {
-    return useUpdatesStore.getState().events ?? [];
-  },
-
-  clearAll() {
-    useUpdatesStore.getState().clearAll();
-  },
-};
