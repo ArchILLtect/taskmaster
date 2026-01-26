@@ -8,9 +8,7 @@ import type { ListUI } from "../types/list";
 * and to handle any necessary transformations
 * For example, if the GraphQL schema changes, only this file needs to be updated
 * rather than the entire app.
-* Also, it allows for easier testing and mocking of data in the app.
-* Use export function mapTaskList(g: GqlTaskList): TaskList { ... } and
-* export function mapTask(g: GqlTask): Task { ... } when the types are re-introduced
+* Also, it makes unit testing easier.
 */
 
 // API shapes are often "selection set" objects (not necessarily the full generated model types).
@@ -71,13 +69,4 @@ export function toTaskUI(apiTask: ApiTaskLike): TaskUI {
     createdAt: apiTask.createdAt,
     updatedAt: apiTask.updatedAt,
   };
-}
-
-// Back-compat exports (older code calls mapTask/mapTaskList)
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function mapTaskList(g: any) {
-  return toListUI(g as ApiListLike);
-}
-export function mapTask(g: any) {
-  return toTaskUI(g as ApiTaskLike);
 }
