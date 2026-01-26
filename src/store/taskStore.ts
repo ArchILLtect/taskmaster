@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 
 import { taskmasterApi } from "../api/taskmasterApi";
 import { toListUI, toTaskUI } from "../api/mappers";
@@ -443,8 +442,7 @@ export const selectTaskById = (id: string) => (s: TaskStoreState) => s.tasksById
 export const selectTasksByListId = (listId: string) => (s: TaskStoreState) => s.tasksByListId[listId] ?? EMPTY_TASKS;
 export const selectChildrenByParentId = (parentId: string) => (s: TaskStoreState) => s.childrenByParentId[parentId] ?? EMPTY_TASKS;
 
-// Common view helper: returns stable references and minimizes rerenders via shallow compare.
-export function useTaskIndexView(): {
+type TaskIndexView = {
   lists: ListUI[];
   tasks: TaskUI[];
   listsById: Record<string, ListUI>;
@@ -459,25 +457,88 @@ export function useTaskIndexView(): {
   lastRefreshAtMs?: number;
   refreshAll: TaskStoreState["refreshAll"];
   hydrateAndRefreshIfStale: TaskStoreState["hydrateAndRefreshIfStale"];
-} {
-  return useTaskStore(
-    useShallow((s) => ({
-      lists: s.lists,
-      tasks: s.tasks,
-      listsById: s.listsById,
-      tasksById: s.tasksById,
-      tasksByListId: s.tasksByListId,
-      childrenByParentId: s.childrenByParentId,
-      loading: s.loading,
-      error: s.error,
-      lastLoadedAtMs: s.lastLoadedAtMs,
-      lastRefreshSource: s.lastRefreshSource,
-      lastRefreshReason: s.lastRefreshReason,
-      lastRefreshAtMs: s.lastRefreshAtMs,
-      refreshAll: s.refreshAll,
-      hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
-    }))
-  );
+};
+
+let cachedTaskIndexView: TaskIndexView | null = null;
+let cachedTaskIndexInputs: {
+  lists: TaskIndexView["lists"];
+  tasks: TaskIndexView["tasks"];
+  listsById: TaskIndexView["listsById"];
+  tasksById: TaskIndexView["tasksById"];
+  tasksByListId: TaskIndexView["tasksByListId"];
+  childrenByParentId: TaskIndexView["childrenByParentId"];
+  loading: TaskIndexView["loading"];
+  error: TaskIndexView["error"];
+  lastLoadedAtMs: TaskIndexView["lastLoadedAtMs"];
+  lastRefreshSource: TaskIndexView["lastRefreshSource"];
+  lastRefreshReason: TaskIndexView["lastRefreshReason"];
+  lastRefreshAtMs: TaskIndexView["lastRefreshAtMs"];
+  refreshAll: TaskIndexView["refreshAll"];
+  hydrateAndRefreshIfStale: TaskIndexView["hydrateAndRefreshIfStale"];
+} | null = null;
+
+function selectTaskIndexView(s: TaskStoreState): TaskIndexView {
+  const inputs = {
+    lists: s.lists,
+    tasks: s.tasks,
+    listsById: s.listsById,
+    tasksById: s.tasksById,
+    tasksByListId: s.tasksByListId,
+    childrenByParentId: s.childrenByParentId,
+    loading: s.loading,
+    error: s.error,
+    lastLoadedAtMs: s.lastLoadedAtMs,
+    lastRefreshSource: s.lastRefreshSource,
+    lastRefreshReason: s.lastRefreshReason,
+    lastRefreshAtMs: s.lastRefreshAtMs,
+    refreshAll: s.refreshAll,
+    hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
+  };
+
+  if (
+    cachedTaskIndexView &&
+    cachedTaskIndexInputs &&
+    cachedTaskIndexInputs.lists === inputs.lists &&
+    cachedTaskIndexInputs.tasks === inputs.tasks &&
+    cachedTaskIndexInputs.listsById === inputs.listsById &&
+    cachedTaskIndexInputs.tasksById === inputs.tasksById &&
+    cachedTaskIndexInputs.tasksByListId === inputs.tasksByListId &&
+    cachedTaskIndexInputs.childrenByParentId === inputs.childrenByParentId &&
+    cachedTaskIndexInputs.loading === inputs.loading &&
+    cachedTaskIndexInputs.error === inputs.error &&
+    cachedTaskIndexInputs.lastLoadedAtMs === inputs.lastLoadedAtMs &&
+    cachedTaskIndexInputs.lastRefreshSource === inputs.lastRefreshSource &&
+    cachedTaskIndexInputs.lastRefreshReason === inputs.lastRefreshReason &&
+    cachedTaskIndexInputs.lastRefreshAtMs === inputs.lastRefreshAtMs &&
+    cachedTaskIndexInputs.refreshAll === inputs.refreshAll &&
+    cachedTaskIndexInputs.hydrateAndRefreshIfStale === inputs.hydrateAndRefreshIfStale
+  ) {
+    return cachedTaskIndexView;
+  }
+
+  cachedTaskIndexInputs = inputs;
+  cachedTaskIndexView = {
+    lists: inputs.lists,
+    tasks: inputs.tasks,
+    listsById: inputs.listsById,
+    tasksById: inputs.tasksById,
+    tasksByListId: inputs.tasksByListId,
+    childrenByParentId: inputs.childrenByParentId,
+    loading: inputs.loading,
+    error: inputs.error,
+    lastLoadedAtMs: inputs.lastLoadedAtMs,
+    lastRefreshSource: inputs.lastRefreshSource,
+    lastRefreshReason: inputs.lastRefreshReason,
+    lastRefreshAtMs: inputs.lastRefreshAtMs,
+    refreshAll: inputs.refreshAll,
+    hydrateAndRefreshIfStale: inputs.hydrateAndRefreshIfStale,
+  };
+  return cachedTaskIndexView;
+}
+
+// Common view helper: returns cached snapshots (stable references when inputs don’t change).
+export function useTaskIndexView(): TaskIndexView {
+  return useTaskStore(selectTaskIndexView);
 }
 
 export function useTaskStoreView() {
@@ -499,20 +560,68 @@ type TaskActions = Pick<
 >;
 
 export function useTaskActions(): TaskActions {
-  return useTaskStore(
-    useShallow((s) => ({
-      refreshAll: s.refreshAll,
-      hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
-      expireTaskCache: s.expireTaskCache,
-      createTask: s.createTask,
-      updateTask: s.updateTask,
-      deleteTask: s.deleteTask,
-      sendTaskToInbox: s.sendTaskToInbox,
-      createTaskList: s.createTaskList,
-      updateTaskList: s.updateTaskList,
-      deleteTaskListSafeById: s.deleteTaskListSafeById,
-    }))
-  );
+  return useTaskStore(selectTaskActions);
+}
+
+let cachedTaskActions: TaskActions | null = null;
+let cachedTaskActionsInputs: {
+  refreshAll: TaskActions["refreshAll"];
+  hydrateAndRefreshIfStale: TaskActions["hydrateAndRefreshIfStale"];
+  expireTaskCache: TaskActions["expireTaskCache"];
+  createTask: TaskActions["createTask"];
+  updateTask: TaskActions["updateTask"];
+  deleteTask: TaskActions["deleteTask"];
+  sendTaskToInbox: TaskActions["sendTaskToInbox"];
+  createTaskList: TaskActions["createTaskList"];
+  updateTaskList: TaskActions["updateTaskList"];
+  deleteTaskListSafeById: TaskActions["deleteTaskListSafeById"];
+} | null = null;
+
+function selectTaskActions(s: TaskStoreState): TaskActions {
+  const inputs = {
+    refreshAll: s.refreshAll,
+    hydrateAndRefreshIfStale: s.hydrateAndRefreshIfStale,
+    expireTaskCache: s.expireTaskCache,
+    createTask: s.createTask,
+    updateTask: s.updateTask,
+    deleteTask: s.deleteTask,
+    sendTaskToInbox: s.sendTaskToInbox,
+    createTaskList: s.createTaskList,
+    updateTaskList: s.updateTaskList,
+    deleteTaskListSafeById: s.deleteTaskListSafeById,
+  };
+
+  if (
+    cachedTaskActions &&
+    cachedTaskActionsInputs &&
+    cachedTaskActionsInputs.refreshAll === inputs.refreshAll &&
+    cachedTaskActionsInputs.hydrateAndRefreshIfStale === inputs.hydrateAndRefreshIfStale &&
+    cachedTaskActionsInputs.expireTaskCache === inputs.expireTaskCache &&
+    cachedTaskActionsInputs.createTask === inputs.createTask &&
+    cachedTaskActionsInputs.updateTask === inputs.updateTask &&
+    cachedTaskActionsInputs.deleteTask === inputs.deleteTask &&
+    cachedTaskActionsInputs.sendTaskToInbox === inputs.sendTaskToInbox &&
+    cachedTaskActionsInputs.createTaskList === inputs.createTaskList &&
+    cachedTaskActionsInputs.updateTaskList === inputs.updateTaskList &&
+    cachedTaskActionsInputs.deleteTaskListSafeById === inputs.deleteTaskListSafeById
+  ) {
+    return cachedTaskActions;
+  }
+
+  cachedTaskActionsInputs = inputs;
+  cachedTaskActions = {
+    refreshAll: inputs.refreshAll,
+    hydrateAndRefreshIfStale: inputs.hydrateAndRefreshIfStale,
+    expireTaskCache: inputs.expireTaskCache,
+    createTask: inputs.createTask,
+    updateTask: inputs.updateTask,
+    deleteTask: inputs.deleteTask,
+    sendTaskToInbox: inputs.sendTaskToInbox,
+    createTaskList: inputs.createTaskList,
+    updateTaskList: inputs.updateTaskList,
+    deleteTaskListSafeById: inputs.deleteTaskListSafeById,
+  };
+  return cachedTaskActions;
 }
 
 export function getTaskStoreState() {

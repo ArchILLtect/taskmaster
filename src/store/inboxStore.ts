@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { useShallow } from "zustand/react/shallow";
 
 import { isoNow } from "../services/storage";
 
@@ -81,58 +80,94 @@ export const useInboxStore = create<InboxStore>()(
   )
 );
 
-export function useInboxView(): InboxPersistedStateV1 & { lastComputedAtMs: number } {
-  return useInboxStore(
-    useShallow((s) => ({
-      lastViewedAt: s.lastViewedAt,
-      dueSoonWindowDays: s.dueSoonWindowDays,
-      dismissedTaskIds: s.dismissedTaskIds,
-      lastComputedAtMs: s.lastComputedAtMs,
-    }))
-  );
+type InboxView = InboxPersistedStateV1 & { lastComputedAtMs: number };
+
+let cachedInboxView: InboxView | null = null;
+let cachedInboxViewInputs: {
+  lastViewedAt: InboxView["lastViewedAt"];
+  dueSoonWindowDays: InboxView["dueSoonWindowDays"];
+  dismissedTaskIds: InboxView["dismissedTaskIds"];
+  lastComputedAtMs: InboxView["lastComputedAtMs"];
+} | null = null;
+
+function selectInboxView(s: InboxStore): InboxView {
+  const inputs = {
+    lastViewedAt: s.lastViewedAt,
+    dueSoonWindowDays: s.dueSoonWindowDays,
+    dismissedTaskIds: s.dismissedTaskIds,
+    lastComputedAtMs: s.lastComputedAtMs,
+  };
+
+  if (
+    cachedInboxView &&
+    cachedInboxViewInputs &&
+    cachedInboxViewInputs.lastViewedAt === inputs.lastViewedAt &&
+    cachedInboxViewInputs.dueSoonWindowDays === inputs.dueSoonWindowDays &&
+    cachedInboxViewInputs.dismissedTaskIds === inputs.dismissedTaskIds &&
+    cachedInboxViewInputs.lastComputedAtMs === inputs.lastComputedAtMs
+  ) {
+    return cachedInboxView;
+  }
+
+  cachedInboxViewInputs = inputs;
+  cachedInboxView = {
+    lastViewedAt: inputs.lastViewedAt,
+    dueSoonWindowDays: inputs.dueSoonWindowDays,
+    dismissedTaskIds: inputs.dismissedTaskIds,
+    lastComputedAtMs: inputs.lastComputedAtMs,
+  };
+
+  return cachedInboxView;
 }
 
-export function useInboxActions(): Pick<InboxStore, "touchNow" | "setDueSoonWindowDays" | "dismiss" | "undismiss" | "markViewedNow"> {
-  return useInboxStore(
-    useShallow((s) => ({
-      touchNow: s.touchNow,
-      setDueSoonWindowDays: s.setDueSoonWindowDays,
-      dismiss: s.dismiss,
-      undismiss: s.undismiss,
-      markViewedNow: s.markViewedNow,
-    }))
-  );
+export function useInboxView(): InboxView {
+  return useInboxStore(selectInboxView);
 }
 
-// Back-compat facade (keeps existing API stable).
-export const inboxService = {
-  getState(): InboxPersistedStateV1 & { lastComputedAtMs: number } {
-    const s = useInboxStore.getState();
-    return {
-      lastViewedAt: s.lastViewedAt ?? null,
-      dueSoonWindowDays: Number.isFinite(s.dueSoonWindowDays) ? Number(s.dueSoonWindowDays) : 3,
-      dismissedTaskIds: Array.isArray(s.dismissedTaskIds) ? s.dismissedTaskIds : [],
-      lastComputedAtMs: Number.isFinite(s.lastComputedAtMs) ? Number(s.lastComputedAtMs) : Date.now(),
-    };
-  },
+type InboxActions = Pick<InboxStore, "touchNow" | "setDueSoonWindowDays" | "dismiss" | "undismiss" | "markViewedNow">;
 
-  touchNow() {
-    useInboxStore.getState().touchNow();
-  },
+let cachedInboxActions: InboxActions | null = null;
+let cachedInboxActionsInputs: {
+  touchNow: InboxActions["touchNow"];
+  setDueSoonWindowDays: InboxActions["setDueSoonWindowDays"];
+  dismiss: InboxActions["dismiss"];
+  undismiss: InboxActions["undismiss"];
+  markViewedNow: InboxActions["markViewedNow"];
+} | null = null;
 
-  setDueSoonWindowDays(days: number) {
-    useInboxStore.getState().setDueSoonWindowDays(days);
-  },
+function selectInboxActions(s: InboxStore): InboxActions {
+  const inputs = {
+    touchNow: s.touchNow,
+    setDueSoonWindowDays: s.setDueSoonWindowDays,
+    dismiss: s.dismiss,
+    undismiss: s.undismiss,
+    markViewedNow: s.markViewedNow,
+  };
 
-  dismiss(taskId: string) {
-    useInboxStore.getState().dismiss(taskId);
-  },
+  if (
+    cachedInboxActions &&
+    cachedInboxActionsInputs &&
+    cachedInboxActionsInputs.touchNow === inputs.touchNow &&
+    cachedInboxActionsInputs.setDueSoonWindowDays === inputs.setDueSoonWindowDays &&
+    cachedInboxActionsInputs.dismiss === inputs.dismiss &&
+    cachedInboxActionsInputs.undismiss === inputs.undismiss &&
+    cachedInboxActionsInputs.markViewedNow === inputs.markViewedNow
+  ) {
+    return cachedInboxActions;
+  }
 
-  undismiss(taskId: string) {
-    useInboxStore.getState().undismiss(taskId);
-  },
+  cachedInboxActionsInputs = inputs;
+  cachedInboxActions = {
+    touchNow: inputs.touchNow,
+    setDueSoonWindowDays: inputs.setDueSoonWindowDays,
+    dismiss: inputs.dismiss,
+    undismiss: inputs.undismiss,
+    markViewedNow: inputs.markViewedNow,
+  };
 
-  markViewedNow() {
-    useInboxStore.getState().markViewedNow();
-  },
-};
+  return cachedInboxActions;
+}
+
+export function useInboxActions(): InboxActions {
+  return useInboxStore(selectInboxActions);
+}
