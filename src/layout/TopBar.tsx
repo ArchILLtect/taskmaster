@@ -36,7 +36,6 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
         ) : null}
         {signedIn ? (
           <>
-            {/* Username link to Profile */}
             <RouterLink to="/profile">
             {({ isActive }) => (
                 <Box
@@ -52,10 +51,8 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
             )}
             </RouterLink>
 
-            {/* Role indicator (Badge is simplest/most stable) */}
             {role ? <Badge rounded="md">{role}</Badge> : null}
 
-            {/* Optional sign out later */}
             {onSignOut ? (
               <Button size="sm" variant="outline" onClick={onSignOut}>
                 Sign out
@@ -66,7 +63,6 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
           <Button size="sm" variant="solid">
             Sign in
           </Button>
-
         )}
         <RouterLink to={"/settings"}>
           {({ isActive }) => (
