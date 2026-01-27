@@ -45,6 +45,47 @@ type Task
   # parentTask: Task @belongsTo(fields: ["parentTaskId"])
 }
 
+type UserProfile
+  @model
+  @auth(rules: [
+    # Owner is the Cognito user sub (stable unique id)
+    { allow: owner, ownerField: "owner", identityClaim: "sub" },
+
+    # Admin override
+    { allow: groups, groups: ["Admin"] }
+  ]) {
+  # Use the Cognito sub as the record id
+  id: ID! @primaryKey
+
+  planTier: PlanTier!
+  defaultVisibility: DefaultVisibility!
+
+  # demo seeding + upgrades
+  seedVersion: Int!            # start at 1
+  seededAt: AWSDateTime        # nice for debugging
+
+  # onboarding seeding + upgrades
+  onboardingVersion: Int!
+  onboarding: AWSJSON
+
+  # settings blob + updates
+  settingsVersion: Int!        # start at 1
+  settings: AWSJSON
+
+  # optional profile fields
+  displayName: String
+  avatarUrl: String
+  lastSeenAt: AWSDateTime
+  preferredName: String
+  bio: String
+  timezone: String
+  locale: String
+
+  # app lifecycle + analytics
+  lastDeviceId: String
+  acceptedTermsAt: AWSDateTime
+}
+
 enum TaskStatus {
   Open
   Done
@@ -54,4 +95,16 @@ enum TaskPriority {
   Low
   Medium
   High
+}
+
+enum PlanTier {
+  FREE
+  DEMO
+  PRO
+}
+
+enum DefaultVisibility {
+  PRIVATE
+  TEAM
+  PUBLIC
 }

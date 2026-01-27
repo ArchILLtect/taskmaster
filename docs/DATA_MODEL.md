@@ -84,8 +84,8 @@ type UserProfile
   # Use the Cognito sub as the record id
   id: ID! @primaryKey
 
-  # owner scoping
-  owner: String!
+  planTier: PlanTier!
+  defaultVisibility: DefaultVisibility!
 
   # demo seeding + upgrades
   seedVersion: Int!            # start at 1
@@ -103,6 +103,26 @@ type UserProfile
   displayName: String
   avatarUrl: String
   lastSeenAt: AWSDateTime
+  preferredName: String
+  bio: String
+  timezone: String
+  locale: String
+
+  # app lifecycle + analytics
+  lastDeviceId: String
+  acceptedTermsAt: AWSDateTime
+}
+
+enum PlanTier {
+  FREE
+  DEMO
+  PRO
+}
+
+enum DefaultVisibility {
+  PRIVATE
+  TEAM
+  PUBLIC
 }
 ```
 
