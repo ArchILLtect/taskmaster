@@ -63,6 +63,14 @@ Last refreshed: Jan 26 2026
   - [x] On sign out: clear `taskStore` persisted cache + user UI cache (and other user-scoped caches)
   - [ ] On sign in: Hub listener (or equivalent) triggers bootstrap and ensures no stale caches leak across users
 
+- [ ] TODO(P2) Add a Demo data section within SettingsPage that contains these features:
+   - [ ] A button to clear all demo data.
+   - [ ] A button to re-seed all demo data.
+   - [ ] A section for adding more demo data with:
+      - [ ] A button to add more tasks with multiplier. "Add [ x ] tasks."
+      - [ ] A button to add more lists with multiplier. "Add [ x ] lists."
+      - [ ] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
+
 ---
 
 ## Settings + onboarding blob strategy (light MVP)
@@ -273,15 +281,6 @@ Last refreshed: Jan 26 2026
     - Preserve existing ErrorBoundary behavior for route renders (don’t move the boundary inside a lazy-loaded component)
     - Ensure the ErrorBoundary still wraps whatever renders the lazy route element so dynamic import failures and render errors surface consistently
 
-### Demo Feature:
-
-- [ ] TODO(P2) Add a Demo data section within SettingsPage that contains these features:
-   - [ ] A button to clear all demo data.
-   - [ ] A button to re-seed all demo data.
-   - [ ] A section for adding more demo data with:
-      - [ ] A button to add more tasks with multiplier. "Add [ x ] tasks."
-      - [ ] A button to add more lists with multiplier. "Add [ x ] lists."
-      - [ ] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
 
 ### Specify later:
 
