@@ -187,3 +187,102 @@ export const onDeleteTask = /* GraphQL */ `subscription OnDeleteTask(
   APITypes.OnDeleteTaskSubscriptionVariables,
   APITypes.OnDeleteTaskSubscription
 >;
+export const onCreateUserProfile = /* GraphQL */ `subscription OnCreateUserProfile(
+  $filter: ModelSubscriptionUserProfileFilterInput
+  $owner: String
+) {
+  onCreateUserProfile(filter: $filter, owner: $owner) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateUserProfileSubscriptionVariables,
+  APITypes.OnCreateUserProfileSubscription
+>;
+export const onUpdateUserProfile = /* GraphQL */ `subscription OnUpdateUserProfile(
+  $filter: ModelSubscriptionUserProfileFilterInput
+  $owner: String
+) {
+  onUpdateUserProfile(filter: $filter, owner: $owner) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateUserProfileSubscriptionVariables,
+  APITypes.OnUpdateUserProfileSubscription
+>;
+export const onDeleteUserProfile = /* GraphQL */ `subscription OnDeleteUserProfile(
+  $filter: ModelSubscriptionUserProfileFilterInput
+  $owner: String
+) {
+  onDeleteUserProfile(filter: $filter, owner: $owner) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteUserProfileSubscriptionVariables,
+  APITypes.OnDeleteUserProfileSubscription
+>;

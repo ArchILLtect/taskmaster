@@ -187,3 +187,102 @@ export const deleteTask = /* GraphQL */ `mutation DeleteTask(
   APITypes.DeleteTaskMutationVariables,
   APITypes.DeleteTaskMutation
 >;
+export const createUserProfile = /* GraphQL */ `mutation CreateUserProfile(
+  $input: CreateUserProfileInput!
+  $condition: ModelUserProfileConditionInput
+) {
+  createUserProfile(input: $input, condition: $condition) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.CreateUserProfileMutationVariables,
+  APITypes.CreateUserProfileMutation
+>;
+export const updateUserProfile = /* GraphQL */ `mutation UpdateUserProfile(
+  $input: UpdateUserProfileInput!
+  $condition: ModelUserProfileConditionInput
+) {
+  updateUserProfile(input: $input, condition: $condition) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.UpdateUserProfileMutationVariables,
+  APITypes.UpdateUserProfileMutation
+>;
+export const deleteUserProfile = /* GraphQL */ `mutation DeleteUserProfile(
+  $input: DeleteUserProfileInput!
+  $condition: ModelUserProfileConditionInput
+) {
+  deleteUserProfile(input: $input, condition: $condition) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.DeleteUserProfileMutationVariables,
+  APITypes.DeleteUserProfileMutation
+>;

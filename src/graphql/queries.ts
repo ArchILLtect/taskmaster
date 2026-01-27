@@ -127,6 +127,82 @@ export const listTasks = /* GraphQL */ `query ListTasks(
   }
 }
 ` as GeneratedQuery<APITypes.ListTasksQueryVariables, APITypes.ListTasksQuery>;
+export const getUserProfile = /* GraphQL */ `query GetUserProfile($id: ID!) {
+  getUserProfile(id: $id) {
+    id
+    planTier
+    defaultVisibility
+    seedVersion
+    seededAt
+    onboardingVersion
+    onboarding
+    settingsVersion
+    settings
+    displayName
+    avatarUrl
+    lastSeenAt
+    preferredName
+    bio
+    timezone
+    locale
+    lastDeviceId
+    acceptedTermsAt
+    createdAt
+    updatedAt
+    owner
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.GetUserProfileQueryVariables,
+  APITypes.GetUserProfileQuery
+>;
+export const listUserProfiles = /* GraphQL */ `query ListUserProfiles(
+  $id: ID
+  $filter: ModelUserProfileFilterInput
+  $limit: Int
+  $nextToken: String
+  $sortDirection: ModelSortDirection
+) {
+  listUserProfiles(
+    id: $id
+    filter: $filter
+    limit: $limit
+    nextToken: $nextToken
+    sortDirection: $sortDirection
+  ) {
+    items {
+      id
+      planTier
+      defaultVisibility
+      seedVersion
+      seededAt
+      onboardingVersion
+      onboarding
+      settingsVersion
+      settings
+      displayName
+      avatarUrl
+      lastSeenAt
+      preferredName
+      bio
+      timezone
+      locale
+      lastDeviceId
+      acceptedTermsAt
+      createdAt
+      updatedAt
+      owner
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListUserProfilesQueryVariables,
+  APITypes.ListUserProfilesQuery
+>;
 export const tasksByList = /* GraphQL */ `query TasksByList(
   $listId: ID!
   $sortOrder: ModelIntKeyConditionInput
