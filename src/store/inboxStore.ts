@@ -16,6 +16,8 @@ type InboxStore = InboxPersistedStateV1 & {
   // Non-persisted (used to keep computations stable within a session)
   lastComputedAtMs: number;
 
+  resetAll: () => void;
+
   touchNow: () => void;
   setDueSoonWindowDays: (days: number) => void;
   dismiss: (taskId: string) => void;
@@ -34,6 +36,13 @@ export const useInboxStore = create<InboxStore>()(
     (set, get) => ({
       ...DEFAULTS,
       lastComputedAtMs: Date.now(),
+
+      resetAll: () => {
+        set({
+          ...DEFAULTS,
+          lastComputedAtMs: Date.now(),
+        });
+      },
 
       touchNow: () => {
         set({ lastComputedAtMs: Date.now() });

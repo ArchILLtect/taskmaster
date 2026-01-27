@@ -5,6 +5,8 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { Toaster } from "../components/ui/Toaster";
 import { fireToast } from "../hooks/useFireToast";
 import { isCacheFresh, useTaskStoreView, useTaskActions } from "../store/taskStore";
+import { clearAllUserCaches } from "../store/clearUserCaches";
+import { getUserUIResult } from "../services/authService";
 
 export function DevPage() {
 
@@ -29,6 +31,26 @@ export function DevPage() {
           fresh: <Code>{String(fresh)}</Code>
         </Text>
         <HStack gap={2} flexWrap="wrap">
+          <Button
+            size="sm"
+            colorPalette="red"
+            variant="outline"
+            onClick={async () => {
+              clearAllUserCaches();
+
+              // Repopulate current session state so the UI updates immediately.
+              // (Otherwise you often need a manual browser reload to see user metadata and tasks.)
+              await Promise.all([refreshAll(), getUserUIResult()]);
+
+              fireToast(
+                "success",
+                "Cleared user caches",
+                "Removed taskStore/inbox/updates/user caches, refreshed tasks, and re-fetched user metadata."
+              );
+            }}
+          >
+            Clear all user caches
+          </Button>
           <Button
             size="sm"
             variant="outline"

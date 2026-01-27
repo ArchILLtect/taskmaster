@@ -16,18 +16,94 @@ import { FavoritesPage } from "./pages/FavoritesPage";
 import { ListDetailsPage } from "./pages/ListDetailsPage";
 import { lazy, Suspense } from "react";
 import { BasicSpinner } from "./components/ui/BasicSpinner";
-import { clearUserUICache } from "./services/authService";
+import { Hub } from "aws-amplify/utils";
+import { clearAllUserCaches } from "./store/clearUserCaches";
+import { USER_UI_STORAGE_KEY } from "./services/userUICacheStore";
 
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
+
+let didRegisterAuthHubListener = false;
+function ensureAuthLifecycleCacheGuards() {
+  if (didRegisterAuthHubListener) return;
+  didRegisterAuthHubListener = true;
+
+  Hub.listen("auth", ({ payload }) => {
+    const evt = String((payload as { event?: unknown } | undefined)?.event ?? "");
+
+    // Belt + suspenders: clear caches if sign-out happens outside our TopBar flow.
+    if (evt === "signOut" || evt === "signedOut") {
+      clearAllUserCaches();
+      return;
+    }
+  });
+}
+
+ensureAuthLifecycleCacheGuards();
+
+function readPersistedUsername(): string | null {
+  try {
+    const raw = localStorage.getItem(USER_UI_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    const envelope = parsed as { state?: unknown };
+    const state = envelope.state as { userUI?: unknown } | undefined;
+    const userUI = state?.userUI as { username?: unknown } | undefined;
+    return typeof userUI?.username === "string" ? userUI.username : null;
+  } catch {
+    return null;
+  }
+}
+
+function hasAnyUserScopedCacheKeys(): boolean {
+  try {
+    return Boolean(
+      localStorage.getItem("taskmaster:taskStore") ||
+        localStorage.getItem("taskmaster:inbox") ||
+        localStorage.getItem("taskmaster:updates") ||
+        localStorage.getItem(USER_UI_STORAGE_KEY)
+    );
+  } catch {
+    return false;
+  }
+}
+
+let lastAuthedUserKey: string | null = null;
+function maybeClearCachesBeforeFirstAuthedRender(user?: { username?: string; userId?: string } | null) {
+  const authKey = user?.username || user?.userId || null;
+  if (!authKey) {
+    lastAuthedUserKey = null;
+    return;
+  }
+
+  if (lastAuthedUserKey === authKey) return;
+  lastAuthedUserKey = authKey;
+
+  if (!hasAnyUserScopedCacheKeys()) return;
+
+  const persistedUsername = readPersistedUsername();
+  if (persistedUsername && persistedUsername === authKey) return;
+
+  // If we have caches but no matching persisted user identity, clear before rendering
+  // any authenticated routes to prevent cross-user cache flashes.
+  clearAllUserCaches();
+}
 
 export default function App() {
   return (
     <Authenticator>
       {({ signOut, user }) => {
+        maybeClearCachesBeforeFirstAuthedRender(user as unknown as { username?: string; userId?: string } | null);
+
+        console.log(user);
         const signOutWithCleanup = async () => {
-          clearUserUICache();
-          await signOut?.();
+          try {
+            await signOut?.();
+          } finally {
+            // Clear after signOut so that if Amplify triggers any downstream auth events,
+            // we are already in a signed-out state when caches disappear.
+            clearAllUserCaches();
+          }
         };
 
         return (

@@ -39,6 +39,7 @@ const DEFAULTS: UpdatesPersistedStateV1 = {
 type UpdatesStore = UpdatesPersistedStateV1 & {
   addEvent: (evt: Omit<UpdateEvent, "id" | "occurredAt">) => UpdateEvent;
   clearAll: () => void;
+  resetAll: () => void;
   markAllReadNow: () => void;
   clearRead: () => void;
 };
@@ -63,6 +64,10 @@ export const useUpdatesStore = create<UpdatesStore>()(
       clearAll: () => {
         // Intentionally does not touch read/unread state.
         set({ events: [] });
+      },
+
+      resetAll: () => {
+        set({ ...DEFAULTS });
       },
 
       markAllReadNow: () => {

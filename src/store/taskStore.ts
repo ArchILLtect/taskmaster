@@ -45,6 +45,7 @@ export type TaskStoreState = {
   ) => Promise<void>;
   hydrateAndRefreshIfStale: (opts?: { listLimit?: number }) => Promise<void>;
   expireTaskCache: () => void;
+  clearAllLocal: () => void;
 
   // Internal helper (not persisted)
   setRefreshMeta: (meta: {
@@ -253,6 +254,7 @@ function buildIndexes(lists: ListUI[], tasks: TaskUI[]): TaskIndexes {
 }
 
 let refreshInFlight: Promise<void> | null = null;
+let taskStoreEpoch = 0;
 
 export const useTaskStore = create<TaskStoreState>()(
   persist(
@@ -295,6 +297,25 @@ export const useTaskStore = create<TaskStoreState>()(
         set({ lastLoadedAtMs: 0 });
       },
 
+      clearAllLocal: () => {
+        refreshInFlight = null;
+        taskStoreEpoch += 1;
+        set({
+          lists: [],
+          tasks: [],
+          listsById: emptyIndexes.listsById,
+          tasksById: emptyIndexes.tasksById,
+          tasksByListId: emptyIndexes.tasksByListId,
+          childrenByParentId: emptyIndexes.childrenByParentId,
+          loading: false,
+          error: null,
+          lastLoadedAtMs: undefined,
+          lastRefreshSource: undefined,
+          lastRefreshReason: undefined,
+          lastRefreshAtMs: undefined,
+        });
+      },
+
       hydrateAndRefreshIfStale: async (opts) => {
         if (isCacheFresh(get().lastLoadedAtMs)) {
           get().setRefreshMeta({ source: "cache", reason: "ttl" });
@@ -306,8 +327,14 @@ export const useTaskStore = create<TaskStoreState>()(
       refreshAll: async (opts, meta) => {
         if (refreshInFlight) return refreshInFlight;
 
+        const epochAtStart = taskStoreEpoch;
+        const safeSet = (partial: Partial<TaskStoreState>) => {
+          if (epochAtStart !== taskStoreEpoch) return;
+          set(partial);
+        };
+
         refreshInFlight = (async () => {
-          set({ loading: true, error: null });
+          safeSet({ loading: true, error: null });
 
           try {
             const listPage = await taskmasterApi.listTaskLists({ limit: opts?.listLimit ?? 200 });
@@ -327,7 +354,7 @@ export const useTaskStore = create<TaskStoreState>()(
 
             const indexes = buildIndexes(ensuredListsSorted, tasksSorted);
 
-            set({
+            safeSet({
               lists: ensuredListsSorted,
               tasks: tasksSorted,
               listsById: indexes.listsById,
@@ -345,7 +372,7 @@ export const useTaskStore = create<TaskStoreState>()(
             const prev = get();
             const hasCachedData = prev.lists.length > 0 || prev.tasks.length > 0;
 
-            set(
+            safeSet(
               hasCachedData
                 ? {
                     loading: false,
