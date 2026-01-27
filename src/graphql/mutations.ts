@@ -14,6 +14,7 @@ export const createTaskList = /* GraphQL */ `mutation CreateTaskList(
   createTaskList(input: $input, condition: $condition) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -38,6 +39,7 @@ export const updateTaskList = /* GraphQL */ `mutation UpdateTaskList(
   updateTaskList(input: $input, condition: $condition) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -62,6 +64,7 @@ export const deleteTaskList = /* GraphQL */ `mutation DeleteTaskList(
   deleteTaskList(input: $input, condition: $condition) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -100,6 +103,7 @@ export const createTask = /* GraphQL */ `mutation CreateTask(
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder
@@ -139,6 +143,7 @@ export const updateTask = /* GraphQL */ `mutation UpdateTask(
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder
@@ -178,6 +183,7 @@ export const deleteTask = /* GraphQL */ `mutation DeleteTask(
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder

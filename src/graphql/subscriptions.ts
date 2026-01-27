@@ -14,6 +14,7 @@ export const onCreateTaskList = /* GraphQL */ `subscription OnCreateTaskList(
   onCreateTaskList(filter: $filter, owner: $owner) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -38,6 +39,7 @@ export const onUpdateTaskList = /* GraphQL */ `subscription OnUpdateTaskList(
   onUpdateTaskList(filter: $filter, owner: $owner) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -62,6 +64,7 @@ export const onDeleteTaskList = /* GraphQL */ `subscription OnDeleteTaskList(
   onDeleteTaskList(filter: $filter, owner: $owner) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -100,6 +103,7 @@ export const onCreateTask = /* GraphQL */ `subscription OnCreateTask(
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder
@@ -139,6 +143,7 @@ export const onUpdateTask = /* GraphQL */ `subscription OnUpdateTask(
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder
@@ -178,6 +183,7 @@ export const onDeleteTask = /* GraphQL */ `subscription OnDeleteTask(
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder

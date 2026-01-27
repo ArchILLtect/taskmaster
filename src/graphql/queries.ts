@@ -11,6 +11,7 @@ export const getTaskList = /* GraphQL */ `query GetTaskList($id: ID!) {
   getTaskList(id: $id) {
     id
     name
+    description
     isDemo
     isFavorite
     sortOrder
@@ -45,6 +46,7 @@ export const listTaskLists = /* GraphQL */ `query ListTaskLists(
     items {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder
@@ -79,6 +81,7 @@ export const getTask = /* GraphQL */ `query GetTask($id: ID!) {
     list {
       id
       name
+      description
       isDemo
       isFavorite
       sortOrder

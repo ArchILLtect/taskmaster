@@ -8,6 +8,7 @@ type TaskList
   id: ID! @primaryKey
 
   name: String!
+  description: String
   isDemo: Boolean!
   isFavorite: Boolean!
   sortOrder: Int!
