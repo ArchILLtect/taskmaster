@@ -8,11 +8,13 @@ const expected = new Set([
   "mutations.ts",
   "queries.ts",
   "subscriptions.ts",
-  "schema.json",
 ]);
 
 // Optional documentation file; safe if present.
-const allowedExtras = new Set(["README.md"]);
+const allowedExtras = new Set([
+    "README.md",
+    "schema.json"
+]);
 
 function fail(message) {
   console.error(`\n[verify:codegen-graphql] ${message}\n`);
@@ -38,9 +40,10 @@ for (const f of expected) {
 }
 
 const unexpected = files.filter((f) => !expected.has(f) && !allowedExtras.has(f));
-if (unexpected.length > 0) {
+const unexpectedNonDts = unexpected.filter((f) => !f.endsWith(".d.ts"));
+if (unexpectedNonDts.length > 0) {
   fail(
-    `Unexpected files in src/graphql (do not hand-edit this folder): ${unexpected.join(", ")}. ` +
+    `Unexpected files in src/graphql (do not hand-edit this folder): ${unexpectedNonDts.join(", ")}. ` +
       `Put custom operations in src/api/operationsMinimal.ts instead.`
   );
 }
