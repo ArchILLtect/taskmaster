@@ -1,4 +1,4 @@
 import { Amplify } from "aws-amplify";
-import awsExports from "./aws-exports";
+import amplifyConfiguration from "./amplifyconfiguration.json";
 
-Amplify.configure(awsExports);
+Amplify.configure(amplifyConfiguration);

@@ -44,3 +44,6 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+# CI/build requires a committed Amplify runtime config; keep it in src/
+!src/amplifyconfiguration.json
