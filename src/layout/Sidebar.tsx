@@ -21,7 +21,7 @@ export function Sidebar() {
 
       <Separator my={3} />
 
-      <SidebarCollapse to="/views" label="Views" items={viewLinks} defaultOpen />
+      <SidebarCollapse to="/views" label="Views" items={viewLinks} defaultOpen={false} />
 
       <Separator my={3} />
 
@@ -37,7 +37,7 @@ export function Sidebar() {
       
       <Separator my={3} />
 
-      <SidebarCollapse to="/favorites" label="Favorites" items={favoriteLinks} defaultOpen />
+      <SidebarCollapse to="/favorites" label="Favorites" items={favoriteLinks} defaultOpen={false} />
 
       <Separator my={3} />
 
