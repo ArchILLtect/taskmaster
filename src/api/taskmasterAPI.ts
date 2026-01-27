@@ -21,7 +21,7 @@ import {
   deleteTaskMinimal,
   tasksByListMinimal,
   // tasksByParentMinimal, // later if needed
-} from "../graphql/operations";
+} from "./operationsMinimal";
 import type { ListTaskListsQuery, TasksByListQuery } from "../API";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
@@ -38,7 +38,7 @@ type GenQuery<I, O> = string & { __generatedQueryInput: I; __generatedQueryOutpu
 type GenMutation<I, O> = string & { __generatedMutationInput: I; __generatedMutationOutput: O };
 
 /**
- * Typed GraphQL caller for Amplify codegen operations.ts strings.
+ * Typed GraphQL caller for our minimal GraphQL document strings.
  * Returns the `.data` object (the operation result wrapper), not the whole GraphQL response.
  */
 async function runQuery<I, O>(query: GenQuery<I, O>, variables: I): Promise<O> {
