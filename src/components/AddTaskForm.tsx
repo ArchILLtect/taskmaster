@@ -146,6 +146,7 @@ export const AddTaskForm = ({
         completedAt,
         assigneeId: null,
         tagIds: [],
+        isDemo: false,
       });
 
       // navigate same as before (open the task pane for top-level tasks)

@@ -199,6 +199,7 @@ async function ensureInboxListExists(rawLists: ListUI[]) {
     name: SYSTEM_INBOX_NAME,
     sortOrder: maxSortOrder + 1,
     isFavorite: false,
+    isDemo: false,
   });
 
   if (created?.id) setInboxListId(created.id);

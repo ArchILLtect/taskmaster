@@ -51,6 +51,7 @@ export const ListsPage = () => {
       await createTaskList({
         name: trimmed || "Untitled List",
         isFavorite: false,
+        isDemo: false,
         sortOrder: nextSortOrder(visibleLists),
         // description: newListDescription,
       });
