@@ -1,5 +1,8 @@
 import * as APITypes from "../API";
 
+// NOTE: This file is intentionally NOT under src/graphql/**.
+// That folder is treated as codegen-owned and may be deleted/regenerated.
+
 type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryInput: InputType;
   __generatedQueryOutput: OutputType;
@@ -74,7 +77,6 @@ export const getTaskListMinimal = /* GraphQL */ `
   APITypes.GetTaskListQueryVariables,
   APITypes.GetTaskListQuery
 >;
-
 
 export const listTaskListsMinimal = /* GraphQL */ `
   query ListTaskLists($limit: Int, $nextToken: String) {
@@ -192,7 +194,7 @@ export const tasksByListMinimal = /* GraphQL */ `
 >;
 
 /**
- * Optional (we won’t need this for the first page conversion unless you show subtasks):
+ * Optional (not currently used):
  * requires schema queryField: "tasksByParent"
  */
 export const tasksByParentMinimal = /* GraphQL */ `
