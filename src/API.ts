@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 //  This file was automatically generated and should not be edited.
 
 export type CreateTaskListInput = {
@@ -221,6 +222,127 @@ export type DeleteTaskInput = {
   id: string,
 };
 
+export type CreateUserProfileInput = {
+  id?: string | null,
+  planTier: PlanTier,
+  defaultVisibility: DefaultVisibility,
+  seedVersion: number,
+  seededAt?: string | null,
+  onboardingVersion: number,
+  onboarding?: string | null,
+  settingsVersion: number,
+  settings?: string | null,
+  displayName?: string | null,
+  avatarUrl?: string | null,
+  lastSeenAt?: string | null,
+  preferredName?: string | null,
+  bio?: string | null,
+  timezone?: string | null,
+  locale?: string | null,
+  lastDeviceId?: string | null,
+  acceptedTermsAt?: string | null,
+};
+
+export enum PlanTier {
+  FREE = "FREE",
+  DEMO = "DEMO",
+  PRO = "PRO",
+}
+
+
+export enum DefaultVisibility {
+  PRIVATE = "PRIVATE",
+  TEAM = "TEAM",
+  PUBLIC = "PUBLIC",
+}
+
+
+export type ModelUserProfileConditionInput = {
+  planTier?: ModelPlanTierInput | null,
+  defaultVisibility?: ModelDefaultVisibilityInput | null,
+  seedVersion?: ModelIntInput | null,
+  seededAt?: ModelStringInput | null,
+  onboardingVersion?: ModelIntInput | null,
+  onboarding?: ModelStringInput | null,
+  settingsVersion?: ModelIntInput | null,
+  settings?: ModelStringInput | null,
+  displayName?: ModelStringInput | null,
+  avatarUrl?: ModelStringInput | null,
+  lastSeenAt?: ModelStringInput | null,
+  preferredName?: ModelStringInput | null,
+  bio?: ModelStringInput | null,
+  timezone?: ModelStringInput | null,
+  locale?: ModelStringInput | null,
+  lastDeviceId?: ModelStringInput | null,
+  acceptedTermsAt?: ModelStringInput | null,
+  and?: Array< ModelUserProfileConditionInput | null > | null,
+  or?: Array< ModelUserProfileConditionInput | null > | null,
+  not?: ModelUserProfileConditionInput | null,
+  createdAt?: ModelStringInput | null,
+  updatedAt?: ModelStringInput | null,
+  owner?: ModelStringInput | null,
+};
+
+export type ModelPlanTierInput = {
+  eq?: PlanTier | null,
+  ne?: PlanTier | null,
+};
+
+export type ModelDefaultVisibilityInput = {
+  eq?: DefaultVisibility | null,
+  ne?: DefaultVisibility | null,
+};
+
+export type UserProfile = {
+  __typename: "UserProfile",
+  id: string,
+  planTier: PlanTier,
+  defaultVisibility: DefaultVisibility,
+  seedVersion: number,
+  seededAt?: string | null,
+  onboardingVersion: number,
+  onboarding?: string | null,
+  settingsVersion: number,
+  settings?: string | null,
+  displayName?: string | null,
+  avatarUrl?: string | null,
+  lastSeenAt?: string | null,
+  preferredName?: string | null,
+  bio?: string | null,
+  timezone?: string | null,
+  locale?: string | null,
+  lastDeviceId?: string | null,
+  acceptedTermsAt?: string | null,
+  createdAt: string,
+  updatedAt: string,
+  owner?: string | null,
+};
+
+export type UpdateUserProfileInput = {
+  id: string,
+  planTier?: PlanTier | null,
+  defaultVisibility?: DefaultVisibility | null,
+  seedVersion?: number | null,
+  seededAt?: string | null,
+  onboardingVersion?: number | null,
+  onboarding?: string | null,
+  settingsVersion?: number | null,
+  settings?: string | null,
+  displayName?: string | null,
+  avatarUrl?: string | null,
+  lastSeenAt?: string | null,
+  preferredName?: string | null,
+  bio?: string | null,
+  timezone?: string | null,
+  locale?: string | null,
+  lastDeviceId?: string | null,
+  acceptedTermsAt?: string | null,
+};
+
+export type DeleteUserProfileInput = {
+  id: string,
+};
+
 export type ModelTaskListFilterInput = {
   id?: ModelIDInput | null,
   name?: ModelStringInput | null,
@@ -265,6 +387,39 @@ export type ModelTaskFilterInput = {
   or?: Array< ModelTaskFilterInput | null > | null,
   not?: ModelTaskFilterInput | null,
   owner?: ModelStringInput | null,
+};
+
+export type ModelUserProfileFilterInput = {
+  id?: ModelIDInput | null,
+  planTier?: ModelPlanTierInput | null,
+  defaultVisibility?: ModelDefaultVisibilityInput | null,
+  seedVersion?: ModelIntInput | null,
+  seededAt?: ModelStringInput | null,
+  onboardingVersion?: ModelIntInput | null,
+  onboarding?: ModelStringInput | null,
+  settingsVersion?: ModelIntInput | null,
+  settings?: ModelStringInput | null,
+  displayName?: ModelStringInput | null,
+  avatarUrl?: ModelStringInput | null,
+  lastSeenAt?: ModelStringInput | null,
+  preferredName?: ModelStringInput | null,
+  bio?: ModelStringInput | null,
+  timezone?: ModelStringInput | null,
+  locale?: ModelStringInput | null,
+  lastDeviceId?: ModelStringInput | null,
+  acceptedTermsAt?: ModelStringInput | null,
+  createdAt?: ModelStringInput | null,
+  updatedAt?: ModelStringInput | null,
+  and?: Array< ModelUserProfileFilterInput | null > | null,
+  or?: Array< ModelUserProfileFilterInput | null > | null,
+  not?: ModelUserProfileFilterInput | null,
+  owner?: ModelStringInput | null,
+};
+
+export type ModelUserProfileConnection = {
+  __typename: "ModelUserProfileConnection",
+  items:  Array<UserProfile | null >,
+  nextToken?: string | null,
 };
 
 export type ModelIntKeyConditionInput = {
@@ -352,6 +507,32 @@ export type ModelSubscriptionTaskFilterInput = {
   updatedAt?: ModelSubscriptionStringInput | null,
   and?: Array< ModelSubscriptionTaskFilterInput | null > | null,
   or?: Array< ModelSubscriptionTaskFilterInput | null > | null,
+  owner?: ModelStringInput | null,
+};
+
+export type ModelSubscriptionUserProfileFilterInput = {
+  id?: ModelSubscriptionIDInput | null,
+  planTier?: ModelSubscriptionStringInput | null,
+  defaultVisibility?: ModelSubscriptionStringInput | null,
+  seedVersion?: ModelSubscriptionIntInput | null,
+  seededAt?: ModelSubscriptionStringInput | null,
+  onboardingVersion?: ModelSubscriptionIntInput | null,
+  onboarding?: ModelSubscriptionStringInput | null,
+  settingsVersion?: ModelSubscriptionIntInput | null,
+  settings?: ModelSubscriptionStringInput | null,
+  displayName?: ModelSubscriptionStringInput | null,
+  avatarUrl?: ModelSubscriptionStringInput | null,
+  lastSeenAt?: ModelSubscriptionStringInput | null,
+  preferredName?: ModelSubscriptionStringInput | null,
+  bio?: ModelSubscriptionStringInput | null,
+  timezone?: ModelSubscriptionStringInput | null,
+  locale?: ModelSubscriptionStringInput | null,
+  lastDeviceId?: ModelSubscriptionStringInput | null,
+  acceptedTermsAt?: ModelSubscriptionStringInput | null,
+  createdAt?: ModelSubscriptionStringInput | null,
+  updatedAt?: ModelSubscriptionStringInput | null,
+  and?: Array< ModelSubscriptionUserProfileFilterInput | null > | null,
+  or?: Array< ModelSubscriptionUserProfileFilterInput | null > | null,
   owner?: ModelStringInput | null,
 };
 
@@ -529,6 +710,102 @@ export type DeleteTaskMutation = {
   } | null,
 };
 
+export type CreateUserProfileMutationVariables = {
+  input: CreateUserProfileInput,
+  condition?: ModelUserProfileConditionInput | null,
+};
+
+export type CreateUserProfileMutation = {
+  createUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
+export type UpdateUserProfileMutationVariables = {
+  input: UpdateUserProfileInput,
+  condition?: ModelUserProfileConditionInput | null,
+};
+
+export type UpdateUserProfileMutation = {
+  updateUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
+export type DeleteUserProfileMutationVariables = {
+  input: DeleteUserProfileInput,
+  condition?: ModelUserProfileConditionInput | null,
+};
+
+export type DeleteUserProfileMutation = {
+  deleteUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
 export type GetTaskListQueryVariables = {
   id: string,
 };
@@ -635,6 +912,76 @@ export type ListTasksQuery = {
       completedAt?: string | null,
       assigneeId?: string | null,
       tagIds: Array< string >,
+      createdAt: string,
+      updatedAt: string,
+      owner?: string | null,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type GetUserProfileQueryVariables = {
+  id: string,
+};
+
+export type GetUserProfileQuery = {
+  getUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
+export type ListUserProfilesQueryVariables = {
+  id?: string | null,
+  filter?: ModelUserProfileFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+  sortDirection?: ModelSortDirection | null,
+};
+
+export type ListUserProfilesQuery = {
+  listUserProfiles?:  {
+    __typename: "ModelUserProfileConnection",
+    items:  Array< {
+      __typename: "UserProfile",
+      id: string,
+      planTier: PlanTier,
+      defaultVisibility: DefaultVisibility,
+      seedVersion: number,
+      seededAt?: string | null,
+      onboardingVersion: number,
+      onboarding?: string | null,
+      settingsVersion: number,
+      settings?: string | null,
+      displayName?: string | null,
+      avatarUrl?: string | null,
+      lastSeenAt?: string | null,
+      preferredName?: string | null,
+      bio?: string | null,
+      timezone?: string | null,
+      locale?: string | null,
+      lastDeviceId?: string | null,
+      acceptedTermsAt?: string | null,
       createdAt: string,
       updatedAt: string,
       owner?: string | null,
@@ -879,6 +1226,102 @@ export type OnDeleteTaskSubscription = {
       updatedAt: string,
       owner?: string | null,
     } | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
+export type OnCreateUserProfileSubscriptionVariables = {
+  filter?: ModelSubscriptionUserProfileFilterInput | null,
+  owner?: string | null,
+};
+
+export type OnCreateUserProfileSubscription = {
+  onCreateUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
+export type OnUpdateUserProfileSubscriptionVariables = {
+  filter?: ModelSubscriptionUserProfileFilterInput | null,
+  owner?: string | null,
+};
+
+export type OnUpdateUserProfileSubscription = {
+  onUpdateUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
+    createdAt: string,
+    updatedAt: string,
+    owner?: string | null,
+  } | null,
+};
+
+export type OnDeleteUserProfileSubscriptionVariables = {
+  filter?: ModelSubscriptionUserProfileFilterInput | null,
+  owner?: string | null,
+};
+
+export type OnDeleteUserProfileSubscription = {
+  onDeleteUserProfile?:  {
+    __typename: "UserProfile",
+    id: string,
+    planTier: PlanTier,
+    defaultVisibility: DefaultVisibility,
+    seedVersion: number,
+    seededAt?: string | null,
+    onboardingVersion: number,
+    onboarding?: string | null,
+    settingsVersion: number,
+    settings?: string | null,
+    displayName?: string | null,
+    avatarUrl?: string | null,
+    lastSeenAt?: string | null,
+    preferredName?: string | null,
+    bio?: string | null,
+    timezone?: string | null,
+    locale?: string | null,
+    lastDeviceId?: string | null,
+    acceptedTermsAt?: string | null,
     createdAt: string,
     updatedAt: string,
     owner?: string | null,
