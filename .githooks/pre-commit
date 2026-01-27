@@ -13,4 +13,13 @@ if [ $STATUS -ne 0 ]; then
   exit $STATUS
 fi
 
+# Guard against accidentally committing an AppSync API key in amplifyconfiguration.json.
+# (If you switch auth to API_KEY, Amplify config may include aws_appsync_apiKey.)
+node -e "const fs=require('fs'); const p='src/amplifyconfiguration.json'; if(!fs.existsSync(p)) process.exit(0); const raw=fs.readFileSync(p,'utf8'); let j; try{j=JSON.parse(raw);}catch(e){console.error('\n[pre-commit] Failed to parse '+p+' as JSON.\n'); process.exit(1);} if(Object.prototype.hasOwnProperty.call(j,'aws_appsync_apiKey') && j.aws_appsync_apiKey){console.error('\n[pre-commit] Refusing to commit: '+p+' contains aws_appsync_apiKey.\n[pre-commit] Remove it (or stop tracking the file) before committing.\n'); process.exit(1);}"
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+  exit $STATUS
+fi
+
 exit 0

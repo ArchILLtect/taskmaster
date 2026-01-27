@@ -13,6 +13,7 @@ git config core.hooksPath .githooks
 Now `git commit` will run:
 
 - `npm run verify:codegen-graphql`
+- a safety check that fails if `src/amplifyconfiguration.json` contains `aws_appsync_apiKey`
 
 ## Disable
 
