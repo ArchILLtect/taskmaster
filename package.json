@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "verify:codegen-graphql": "node scripts/verify-codegen-graphql.mjs",
+    "lint": "eslint . && npm run verify:codegen-graphql",
     "preview": "vite preview"
   },
   "dependencies": {
