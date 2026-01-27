@@ -16,10 +16,9 @@ npm run dev
   - See [src/pages/ListDetailsPage.tsx](src/pages/ListDetailsPage.tsx)
 
 ## Code quality
-Run before opening a PR:
+Run before opening a PR (or before pushing to `main`):
 ```bash
-npm run lint
-npm run build
+npm run check
 ```
 
 ## Working with Amplify
@@ -48,6 +47,8 @@ git config core.hooksPath .githooks
 ```
 
 This runs `npm run verify:codegen-graphql` on commit.
+
+It also blocks commits if `src/amplifyconfiguration.json` contains `aws_appsync_apiKey` (to avoid accidentally committing AppSync API keys).
 
 ## Comments
 Prefer comments that explain *why* something exists (tradeoffs, constraints, invariants), not comments that restate the code.

@@ -1,6 +1,6 @@
 # Git hooks (optional)
 
-This repo includes a small, optional pre-commit hook to prevent accidental commits of handwritten files under `src/graphql/` (which is treated as codegen-owned output).
+This repo includes a small, optional pre-commit hook to prevent common workflow footguns.
 
 ## Enable
 
@@ -14,6 +14,8 @@ Now `git commit` will run:
 
 - `npm run verify:codegen-graphql`
 - a safety check that fails if `src/amplifyconfiguration.json` contains `aws_appsync_apiKey`
+
+The intent is to keep `src/graphql/` codegen-owned and avoid accidentally committing AppSync API keys.
 
 ## Disable
 
