@@ -39,6 +39,16 @@ npm run verify:codegen-graphql
 
 That check fails if `src/graphql/` has unexpected files, which is intentional (it prevents runtime regressions when codegen wipes the folder).
 
+### Optional: pre-commit hook (extra safety)
+
+If you want an extra local guardrail, enable the repo’s shared git hooks:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This runs `npm run verify:codegen-graphql` on commit.
+
 ## Comments
 Prefer comments that explain *why* something exists (tradeoffs, constraints, invariants), not comments that restate the code.
 

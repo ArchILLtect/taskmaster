@@ -1,0 +1,16 @@
+#!/bin/sh
+# Optional repo hook (enabled via: git config core.hooksPath .githooks)
+# Keeps src/graphql/ codegen-owned.
+
+npm run -s verify:codegen-graphql
+STATUS=$?
+
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] verify:codegen-graphql failed."
+  echo "[pre-commit] src/graphql is codegen-owned; move custom files out of it."
+  echo ""
+  exit $STATUS
+fi
+
+exit 0
