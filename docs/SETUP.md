@@ -39,3 +39,9 @@ If the UI looks “stuck” (stale cached tasks, odd inbox dismissals, etc.), cl
 
 - `npm run build` runs TypeScript project references (`tsc -b`) and then `vite build`.
 - If `npm run dev` exits unexpectedly, re-run it and check the first error printed in the terminal (it’s often the most actionable signal).
+
+### Amplify/codegen workflow
+
+- `src/graphql/` is treated as codegen-owned output.
+- Handwritten GraphQL documents live outside it (see `src/api/operationsMinimal.ts`).
+- After any schema/codegen changes, run `npm run verify:codegen-graphql`.

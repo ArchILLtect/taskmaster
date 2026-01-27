@@ -75,6 +75,10 @@ Client-side generated files exist and are used by the API wrapper:
 - [src/API.ts](../src/API.ts)
 - [src/graphql](../src/graphql)
 
+Codegen note:
+- `src/graphql/**` is treated as codegen-owned and safe to delete/regenerate.
+- Keep any hand-written GraphQL documents out of that folder (use [src/api/operationsMinimal.ts](../src/api/operationsMinimal.ts)).
+
 Important boundaries:
 - UI (pages/components/hooks) does not call GraphQL directly.
 - `src/api/taskmasterApi.ts` is the boundary that calls `client.graphql`.

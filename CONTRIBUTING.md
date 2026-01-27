@@ -25,6 +25,20 @@ npm run build
 ## Working with Amplify
 - `amplify/` contains Amplify CLI output. Avoid hand-editing generated files under `amplify/backend/` unless you’re intentionally making Amplify-driven changes.
 
+### Codegen note: `src/graphql/` is codegen-owned
+
+Amplify codegen may overwrite files under `src/graphql/`.
+
+- Do not hand-edit or add custom files under `src/graphql/`.
+- Keep handwritten GraphQL documents outside the codegen folder (see `src/api/operationsMinimal.ts`).
+- If you run Amplify/codegen or update the schema, run:
+
+```bash
+npm run verify:codegen-graphql
+```
+
+That check fails if `src/graphql/` has unexpected files, which is intentional (it prevents runtime regressions when codegen wipes the folder).
+
 ## Comments
 Prefer comments that explain *why* something exists (tradeoffs, constraints, invariants), not comments that restate the code.
 

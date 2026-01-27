@@ -158,3 +158,7 @@ This app persists a small set of UI/runtime state in `localStorage` via Zustand 
 
 Helper utilities:
 - [src/services/storage.ts](../src/services/storage.ts)
+
+Codegen note:
+- `src/graphql/**` is codegen output (safe to delete/regenerate).
+- Hand-written GraphQL documents (minimal selection sets, etc.) live in [src/api/operationsMinimal.ts](../src/api/operationsMinimal.ts).
