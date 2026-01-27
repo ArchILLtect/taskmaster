@@ -14,6 +14,7 @@ export const createTaskList = /* GraphQL */ `mutation CreateTaskList(
   createTaskList(input: $input, condition: $condition) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -37,6 +38,7 @@ export const updateTaskList = /* GraphQL */ `mutation UpdateTaskList(
   updateTaskList(input: $input, condition: $condition) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -60,6 +62,7 @@ export const deleteTaskList = /* GraphQL */ `mutation DeleteTaskList(
   deleteTaskList(input: $input, condition: $condition) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -93,9 +96,11 @@ export const createTask = /* GraphQL */ `mutation CreateTask(
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -130,9 +135,11 @@ export const updateTask = /* GraphQL */ `mutation UpdateTask(
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -167,9 +174,11 @@ export const deleteTask = /* GraphQL */ `mutation DeleteTask(
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -193,14 +202,17 @@ export const createUserProfile = /* GraphQL */ `mutation CreateUserProfile(
 ) {
   createUserProfile(input: $input, condition: $condition) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -212,7 +224,6 @@ export const createUserProfile = /* GraphQL */ `mutation CreateUserProfile(
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -226,14 +237,17 @@ export const updateUserProfile = /* GraphQL */ `mutation UpdateUserProfile(
 ) {
   updateUserProfile(input: $input, condition: $condition) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -245,7 +259,6 @@ export const updateUserProfile = /* GraphQL */ `mutation UpdateUserProfile(
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -259,14 +272,17 @@ export const deleteUserProfile = /* GraphQL */ `mutation DeleteUserProfile(
 ) {
   deleteUserProfile(input: $input, condition: $condition) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -278,7 +294,6 @@ export const deleteUserProfile = /* GraphQL */ `mutation DeleteUserProfile(
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }

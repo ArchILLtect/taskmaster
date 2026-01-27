@@ -14,6 +14,7 @@ export const onCreateTaskList = /* GraphQL */ `subscription OnCreateTaskList(
   onCreateTaskList(filter: $filter, owner: $owner) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -37,6 +38,7 @@ export const onUpdateTaskList = /* GraphQL */ `subscription OnUpdateTaskList(
   onUpdateTaskList(filter: $filter, owner: $owner) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -60,6 +62,7 @@ export const onDeleteTaskList = /* GraphQL */ `subscription OnDeleteTaskList(
   onDeleteTaskList(filter: $filter, owner: $owner) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -93,9 +96,11 @@ export const onCreateTask = /* GraphQL */ `subscription OnCreateTask(
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -130,9 +135,11 @@ export const onUpdateTask = /* GraphQL */ `subscription OnUpdateTask(
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -167,9 +174,11 @@ export const onDeleteTask = /* GraphQL */ `subscription OnDeleteTask(
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -193,14 +202,17 @@ export const onCreateUserProfile = /* GraphQL */ `subscription OnCreateUserProfi
 ) {
   onCreateUserProfile(filter: $filter, owner: $owner) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -212,7 +224,6 @@ export const onCreateUserProfile = /* GraphQL */ `subscription OnCreateUserProfi
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -226,14 +237,17 @@ export const onUpdateUserProfile = /* GraphQL */ `subscription OnUpdateUserProfi
 ) {
   onUpdateUserProfile(filter: $filter, owner: $owner) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -245,7 +259,6 @@ export const onUpdateUserProfile = /* GraphQL */ `subscription OnUpdateUserProfi
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -259,14 +272,17 @@ export const onDeleteUserProfile = /* GraphQL */ `subscription OnDeleteUserProfi
 ) {
   onDeleteUserProfile(filter: $filter, owner: $owner) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -278,7 +294,6 @@ export const onDeleteUserProfile = /* GraphQL */ `subscription OnDeleteUserProfi
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }

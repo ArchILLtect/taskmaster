@@ -11,6 +11,7 @@ export const getTaskList = /* GraphQL */ `query GetTaskList($id: ID!) {
   getTaskList(id: $id) {
     id
     name
+    isDemo
     isFavorite
     sortOrder
     tasks {
@@ -44,6 +45,7 @@ export const listTaskLists = /* GraphQL */ `query ListTaskLists(
     items {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -73,9 +75,11 @@ export const getTask = /* GraphQL */ `query GetTask($id: ID!) {
     completedAt
     assigneeId
     tagIds
+    isDemo
     list {
       id
       name
+      isDemo
       isFavorite
       sortOrder
       createdAt
@@ -117,6 +121,7 @@ export const listTasks = /* GraphQL */ `query ListTasks(
       completedAt
       assigneeId
       tagIds
+      isDemo
       createdAt
       updatedAt
       owner
@@ -130,14 +135,17 @@ export const listTasks = /* GraphQL */ `query ListTasks(
 export const getUserProfile = /* GraphQL */ `query GetUserProfile($id: ID!) {
   getUserProfile(id: $id) {
     id
+    owner
     planTier
     defaultVisibility
     seedVersion
     seededAt
     onboardingVersion
     onboarding
+    onboardingUpdatedAt
     settingsVersion
     settings
+    settingsUpdatedAt
     displayName
     avatarUrl
     lastSeenAt
@@ -149,7 +157,6 @@ export const getUserProfile = /* GraphQL */ `query GetUserProfile($id: ID!) {
     acceptedTermsAt
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -173,14 +180,17 @@ export const listUserProfiles = /* GraphQL */ `query ListUserProfiles(
   ) {
     items {
       id
+      owner
       planTier
       defaultVisibility
       seedVersion
       seededAt
       onboardingVersion
       onboarding
+      onboardingUpdatedAt
       settingsVersion
       settings
+      settingsUpdatedAt
       displayName
       avatarUrl
       lastSeenAt
@@ -192,7 +202,6 @@ export const listUserProfiles = /* GraphQL */ `query ListUserProfiles(
       acceptedTermsAt
       createdAt
       updatedAt
-      owner
       __typename
     }
     nextToken
@@ -232,6 +241,7 @@ export const tasksByList = /* GraphQL */ `query TasksByList(
       completedAt
       assigneeId
       tagIds
+      isDemo
       createdAt
       updatedAt
       owner
@@ -274,6 +284,7 @@ export const tasksByParent = /* GraphQL */ `query TasksByParent(
       completedAt
       assigneeId
       tagIds
+      isDemo
       createdAt
       updatedAt
       owner

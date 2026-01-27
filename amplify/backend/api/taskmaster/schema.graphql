@@ -2,11 +2,13 @@
 type TaskList
   @model
   @auth(rules: [
-    { allow: owner },
+    { allow: owner, ownerField: "owner", identityClaim: "sub" },
     { allow: groups, groups: ["Admin"] }
   ]) {
   id: ID! @primaryKey
+
   name: String!
+  isDemo: Boolean!
   isFavorite: Boolean!
   sortOrder: Int!
 
@@ -16,7 +18,7 @@ type TaskList
 type Task
   @model
   @auth(rules: [
-    { allow: owner },
+    { allow: owner, ownerField: "owner", identityClaim: "sub" },
     { allow: groups, groups: ["Admin"] }
   ]) {
   id: ID! @primaryKey
@@ -39,6 +41,8 @@ type Task
   assigneeId: String
   tagIds: [String!]!
 
+  isDemo: Boolean!
+
   list: TaskList @belongsTo(fields: ["listId"])
 
   # OPTIONAL (not needed for MVP; safe to omit for now)
@@ -48,29 +52,30 @@ type Task
 type UserProfile
   @model
   @auth(rules: [
-    # Owner is the Cognito user sub (stable unique id)
     { allow: owner, ownerField: "owner", identityClaim: "sub" },
-
-    # Admin override
     { allow: groups, groups: ["Admin"] }
   ]) {
   # Use the Cognito sub as the record id
   id: ID! @primaryKey
 
+  owner: String
+
   planTier: PlanTier!
   defaultVisibility: DefaultVisibility!
 
   # demo seeding + upgrades
-  seedVersion: Int!            # start at 1
-  seededAt: AWSDateTime        # nice for debugging
+  seedVersion: Int!            # 0 = not seeded; bump when seed recipe changes
+  seededAt: AWSDateTime        # timestamp of last successful seeding
 
   # onboarding seeding + upgrades
-  onboardingVersion: Int!
+  onboardingVersion: Int!        # 0 = not seeded; bump when seed recipe changes
   onboarding: AWSJSON
+  onboardingUpdatedAt: AWSDateTime
 
   # settings blob + updates
-  settingsVersion: Int!        # start at 1
+  settingsVersion: Int!        # 0 = not seeded; bump when seed recipe changes
   settings: AWSJSON
+  settingsUpdatedAt: AWSDateTime
 
   # optional profile fields
   displayName: String
