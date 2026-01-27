@@ -5,12 +5,21 @@
 This file is a running backlog of ideas, cleanups, and future improvements.
 Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tree extension.
 
+Last refreshed: Jan 26 2026
+
+---
+
+## Recently Completed (highlights)
+- [x] TODO(P1) Zustand is the source of truth for tasks/lists (GraphQL-backed) with TTL + persistence.
+- [x] TODO(P1) Cross-user cache hygiene: clear all user-scoped caches on sign-out + auth lifecycle guards.
+- [x] TODO(P2) Dev tools: add a one-click "Clear all user caches" button.
+- [x] TODO(P2) Docs overhaul: bring docs/README in sync with current architecture and remove any references to deleted local dev-only data/files.
+
 ---
 
 ## Platform / Foundations
 - [ ] TODO(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times
   - display
-  - storage
   - comparisons
 
 ---
@@ -24,27 +33,67 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
     - Pass `prevStatus` (or a snapshot) from UI to the API wrapper as metadata
     - Fetch the task before update (extra round-trip; be careful about latency)
 
-- [ ] TODO(P1) Zustand state (post-MVP)
-  - [ ] tasks (GraphQL-backed, cached client-side)
-  - [ ] taskLists
-  - [ ] update feed (derived from updatedAt / createdAt)
-  - [ ] updates read-state (lastReadAt / clearedBeforeAt)
+---
 
-- [ ] TODO(P1) Gradually migrate any remaining legacy page logic → store hooks/actions
-  - [ ] InboxPage
-  - [ ] ListDetailsPage
-  - [ ] UpdatesPage
+## Demo Mode + UserProfile seeding (MVP-critical)
 
-- [ ] TODO(P2) Persist client-side state (later)
-  - Goal: make offline-ish UX smoother by caching state between sessions.
-  - Targets to persist (candidates):
-    - tasks/lists cache (optional; versioned + TTL; safe to drop and refetch)
-    - updates events feed (optional; derived from task history or recorded client-side)
+- [ ] TODO(P1) Add `UserProfile` GraphQL model (owned by sub)
+  - Fields: `id (sub)`, `owner`, `seedVersion`, `seededAt`, `settingsVersion`, `settings (AWSJSON)`, optional onboarding blob/version, display fields
+  - Planned schema shape is documented in [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
+
+- [ ] TODO(P1) Implement bootstrap: fetch/create `UserProfile` on login
+  - If missing or `seedVersion < CURRENT_SEED_VERSION`, run the seed flow
+  - Keep this as a single, centralized bootstrap step (avoid multiple pages each trying to seed)
+
+- [ ] TODO(P1) Implement seed flow (idempotent + race-safe)
+  - Create example lists + tasks + subtasks + due-soon tasks + done tasks
+  - Update `UserProfile.seedVersion` + `UserProfile.seededAt`
+  - Idempotency options:
+    - store seeded entity ids in `UserProfile` seed metadata
+    - or use deterministic “create once” semantics and only run when version is behind
+  - Race-safety options:
+    - optional `seedLock` field in `UserProfile`
+    - or conditional create + single bootstrap call
+
+- [ ] TODO(P1) Add “Demo seed” UX (minimal)
+  - Option A: Always seed on first profile creation
+  - Option B: Toggle on welcome/setup page before seeding (optional)
+
+- [ ] TODO(P1) Account-switch cleanup for user-scoped caches + bootstrap
+  - [x] On sign out: clear `taskStore` persisted cache + user UI cache (and other user-scoped caches)
+  - [ ] On sign in: Hub listener (or equivalent) triggers bootstrap and ensures no stale caches leak across users
+
+---
+
+## Settings + onboarding blob strategy (light MVP)
+
+- [ ] TODO(P2) Add runtime validators + normalizers for `settings` and `onboarding` blobs
+  - Default-fill + version migrations (forward-only)
+  - Validate shape aggressively before using any values in UI
+
+- [ ] TODO(P2) Decide Pattern B → Pattern A timeline
+  - During iteration: local-first + optional sync
+  - Final MVP: server-authoritative in `UserProfile`
+
+- [x] TODO(P1) Zustand state (MVP shipped)
+  - [x] tasks + taskLists (GraphQL-backed, cached client-side)
+  - [x] updates feed (persisted event feed)
+  - [x] updates read-state (lastReadAt / clearedBeforeAt)
+  - [x] inbox UX state (dismissals, lastViewedAt, dueSoonWindowDays)
+
+- [x] TODO(P1) Migrate page reads/writes → store hooks/actions
+  - [x] InboxPage
+  - [x] ListDetailsPage
+  - [x] UpdatesPage
+  - [x] TasksPage
+
+- [x] TODO(P2) Persist client-side state (localStorage)
+  - Implemented:
+    - tasks/lists cache (versioned + TTL)
     - inbox local state (dismissed ids, lastViewedAt, dueSoonWindowDays)
-    - userUI cache (optional; username/email/role with short TTL)
-  - Notes:
-    - Persist only serializable slices (arrays/records/primitives); keep functions out of persisted state.
-    - Add store versioning + migrations before enabling persistence.
+    - updates feed + read markers
+    - userUI cache (username/email/role with TTL)
+  - Future: consider moving persistence to IndexedDB for offline mode.
 
 - [ ] TODO(stretch) Persist Inbox + Updates in DynamoDB per user
   - Goal: Make Inbox “dismissed/new/due-soon” state + Updates feed/read markers follow the user across devices.
@@ -67,6 +116,11 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - Notes:
     - Prefer capped events to avoid unbounded growth.
     - Consider idempotent seeds / deterministic ids for update events.
+
+- [ ] TODO(P3) Scope inbox/updates localStorage keys by user sub (optional polish)
+  - e.g. `taskmaster:inbox:<sub>` and `taskmaster:updates:<sub>`
+  - On sign out: remove only current user keys (not a global wipe)
+  - This is a stepping-stone if DynamoDB-per-user persistence is deferred
 
 
 ---
@@ -126,8 +180,12 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 - [ ] TODO(P2) Add date formatting helper for task due dates
   - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string
 
-- [ ] TODO(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
-  - Ensure it uses `useUserUI` and does not rely on hard-coded values
+- [x] TODO(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
+  - Uses `useUserUI` via the profile page data hook.
+
+- [ ] TODO(P2) Ensure user metadata always updates on account switch
+  - Goal: avoid requiring a full browser reload to see username/email/role updates.
+  - Today: fixed by clearing authService in-memory cache in `clearAllUserCaches()`; consider also keying `useUserUI` re-fetch on auth user identity.
 
 - [ ] TODO(P3) Add an app footer
   - [ ] Link to the showcase site
@@ -135,13 +193,10 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
   - [ ] Add an email link: `mailto:nick@nickhanson.me`
 
 - [ ] TODO(P3) Replace the tick/refresh() pattern everywhere (after migration)
-  - Do **not** refactor during GraphQL migration
-  - Known locations:
-    - ListPage
-    - UpdatesPage
-    - InboxPage
-    - TasksPage
-  - When Zustand lands, refresh() disappears and components re-render via selectors
+  - Zustand is now in place; this is now safe refactor work.
+  - Targets:
+    - Remove redundant `refresh()` calls after mutations where store actions already `refreshAll()`.
+    - Prefer selectors/views over pushing refresh callbacks deep into components.
 
 - [ ] TODO(P3) Find a way to ensure refreshing of favorites sidebar section upon starring/un-starring lists for favorites.
 - [ ] TODO(P3) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage.
@@ -151,13 +206,21 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 
 ## Testing & Quality
 
-- [ ] TODO(P3) Add a tiny “dev reset local state” helper (optional but helpful)
-  - [ ] a function (or dev-only button) that clears:
-    - `taskmaster.taskPatches.v1`
-    - `taskmaster.updateEvents.v1`
-    - `taskmaster.updates.v1`
-  - Useful during GraphQL / Zustand migration
-  - Saves spelunking in localStorage
+- [x] TODO(P3) Add a tiny “dev reset local state” helper
+  - Implemented via DevPage: "Clear all user caches".
+  - Clears/reset keys:
+    - `taskmaster:taskStore`
+    - `taskmaster:inbox`
+    - `taskmaster:updates`
+    - `taskmaster:user`
+
+- [ ] TODO(P2) Investigate dev server exit (if still happening)
+  - If `npm run dev` exits with code 1, capture the first error line and fix root cause.
+
+- [ ] TODO(P3) Add a manual QA checklist for auth/cache hygiene
+  - Sign in as User A → verify tasks + user metadata
+  - Sign out → sign in as User B → verify no cross-user flashes
+  - Verify DevPage "Clear all user caches" produces a clean, correct state
 
 ---
 
@@ -168,7 +231,9 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 ---
 
 ## Routing & Navigation
-- [ ] TODO(P4) . . .
+- [ ] TODO(P3) Improve navigation for system Inbox list
+  - Today: Inbox is a dedicated triage view; the system Inbox list is not directly reachable like normal lists.
+  - Decide: should system Inbox be a normal list route (read-only/edit-disabled) or remain hidden behind the Inbox triage?
 
 ## Performance / Bundling
 
@@ -200,7 +265,7 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
     - ListsPage
     - FavoritesPage
     - ProfilePage / SettingsPage / MonthPage
-    - DevPage (tiny; defer)
+    - DevPage (already lazy-loaded)
   - Suspense fallback:
     - Place the primary `<Suspense fallback={...}>` in AppShell’s main content area wrapping the `<Outlet />` region
     - Keep the sidebar/topbar always-rendered so navigation remains responsive while a page chunk loads
@@ -210,7 +275,6 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 
 ### Demo Feature:
 
-- [ ] TODO(P2) Wire Post Confirmation to include the addition of demo data. This means pre-seeding all newly created accounts with mock data the user can feel free to play with and lose.
 - [ ] TODO(P2) Add a Demo data section within SettingsPage that contains these features:
    - [ ] A button to clear all demo data.
    - [ ] A button to re-seed all demo data.
@@ -232,4 +296,7 @@ Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tre
 - [ ] TODO(P2) The details SubtaskRow are not truncating and need to be because it breaks the UI by pushing the badges behind the action buttons.
 
 - [ ] TODO(P1) Right now Inbox has the ability to "dismiss" tasks. Should it? Without using a URL"hack," it is not possible to get to the system inbox list--and this list is technically just a staging area for tasks with no list.
+
+- [ ] TODO(P3) Cleanup: remove stray debug logging
+  - Remove `console.log(user)` in App.tsx once you’re done debugging auth flows.
 

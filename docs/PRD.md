@@ -19,6 +19,15 @@ TaskMaster is a task management app prototype focused on:
 - As a user, I can create tasks and see them persist (GraphQL-backed, with a cached store for fast reloads).
 - As a user, I can mark tasks done/open and see an activity feed.
 
+## MVP polish goal (planned): Seeded first-run experience
+- New accounts should have an immediate “demo mode” experience (example lists/tasks) after login.
+- This must preserve strong owner scoping (no weakening auth rules).
+- Planned approach: a `UserProfile` model with a versioned `seedVersion` and a client-run bootstrap seed flow.
+
+References:
+- Architecture plan: [docs/ARCHITECTURE.md](ARCHITECTURE.md)
+- Data model plan: [docs/DATA_MODEL.md](DATA_MODEL.md)
+
 ## Key UX requirements
 - Consistent layout via AppShell (top bar + sidebar).
 - Deep-linkable task details via the “pane stack” route.
