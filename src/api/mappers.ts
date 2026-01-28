@@ -1,6 +1,7 @@
-import type { TaskPriority, TaskStatus } from "../API";
+import type { DefaultVisibility, PlanTier, TaskPriority, TaskStatus } from "../API";
 import type { TaskUI } from "../types/task";
 import type { ListUI } from "../types/list";
+import type { UserProfileUI } from "../types/userProfile";
 
 /*
 * Map from GraphQL types (from AppSync) to local types
@@ -16,6 +17,7 @@ import type { ListUI } from "../types/list";
 type ApiListLike = {
   id: string;
   name: string;
+  isDemo?: boolean | null;
   isFavorite: boolean;
   sortOrder: number;
   createdAt: string;
@@ -36,8 +38,42 @@ type ApiTaskLike = {
   completedAt?: string | null;
   assigneeId?: string | null;
   tagIds?: string[];
+  isDemo?: boolean | null;
   createdAt: string;
   updatedAt: string;
+};
+
+type ApiUserProfileLike = {
+  id: string;
+  owner?: string | null;
+
+  planTier: PlanTier;
+  defaultVisibility: DefaultVisibility;
+
+  seedVersion: number;
+  seededAt?: string | null;
+
+  onboardingVersion: number;
+  onboarding?: unknown | null;
+  onboardingUpdatedAt?: string | null;
+
+  settingsVersion: number;
+  settings?: unknown | null;
+  settingsUpdatedAt?: string | null;
+
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  lastSeenAt?: string | null;
+  preferredName?: string | null;
+  bio?: string | null;
+  timezone?: string | null;
+  locale?: string | null;
+
+  lastDeviceId?: string | null;
+  acceptedTermsAt?: string | null;
+
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export function toListUI(apiList: ApiListLike): ListUI {
@@ -45,6 +81,7 @@ export function toListUI(apiList: ApiListLike): ListUI {
     id: apiList.id,
     name: apiList.name,
     description: apiList.description ?? null,
+    isDemo: Boolean(apiList.isDemo),
     isFavorite: apiList.isFavorite,
     sortOrder: apiList.sortOrder,
     createdAt: apiList.createdAt,
@@ -66,7 +103,43 @@ export function toTaskUI(apiTask: ApiTaskLike): TaskUI {
     completedAt: apiTask.completedAt ?? null,
     assigneeId: apiTask.assigneeId ?? null,
     tagIds: apiTask.tagIds ?? [],
+    isDemo: Boolean(apiTask.isDemo),
     createdAt: apiTask.createdAt,
     updatedAt: apiTask.updatedAt,
+  };
+}
+
+export function toUserProfileUI(api: ApiUserProfileLike): UserProfileUI {
+  return {
+    id: api.id,
+    owner: api.owner ?? null,
+
+    planTier: api.planTier,
+    defaultVisibility: api.defaultVisibility,
+
+    seedVersion: api.seedVersion,
+    seededAt: api.seededAt ?? null,
+
+    onboardingVersion: api.onboardingVersion,
+    onboarding: api.onboarding ?? null,
+    onboardingUpdatedAt: api.onboardingUpdatedAt ?? null,
+
+    settingsVersion: api.settingsVersion,
+    settings: api.settings ?? null,
+    settingsUpdatedAt: api.settingsUpdatedAt ?? null,
+
+    displayName: api.displayName ?? null,
+    avatarUrl: api.avatarUrl ?? null,
+    lastSeenAt: api.lastSeenAt ?? null,
+    preferredName: api.preferredName ?? null,
+    bio: api.bio ?? null,
+    timezone: api.timezone ?? null,
+    locale: api.locale ?? null,
+
+    lastDeviceId: api.lastDeviceId ?? null,
+    acceptedTermsAt: api.acceptedTermsAt ?? null,
+
+    createdAt: api.createdAt ?? null,
+    updatedAt: api.updatedAt ?? null,
   };
 }
