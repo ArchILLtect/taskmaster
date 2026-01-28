@@ -338,7 +338,7 @@ export const useTaskStore = create<TaskStoreState>()(
           safeSet({ loading: true, error: null });
 
           try {
-            const listPage = await taskmasterApi.listTaskLists({ limit: opts?.listLimit ?? 200 });
+            const listPage = await taskmasterApi.listTaskListsOwned({ limit: opts?.listLimit ?? 200 });
             const fetchedLists = listPage.items
               .filter((l): l is NonNullable<typeof l> => !!l)
               .map(toListUI);
