@@ -178,6 +178,11 @@ Last refreshed: Jan 28 2026
     - Amplify warning: “owners may reassign ownership”
     - Deferred intentionally for MVP speed
 
+- [ ] TODO(stretch) Admin: delete Cognito user accounts from the app
+  - Would require a backend function (Lambda) with Cognito admin permissions (e.g. `AdminDeleteUser`).
+  - UI alone can’t securely delete Cognito identities.
+  - Consider coupling with an app-data cleanup flow (delete UserProfile + tasks/lists) for a full deprovision.
+
 ---
 
 ## UI / UX
