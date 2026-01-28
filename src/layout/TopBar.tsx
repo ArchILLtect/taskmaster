@@ -21,6 +21,7 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
   const username = effectiveUserUI?.username ?? user?.username ?? user?.userId;
   const role = effectiveUserUI?.role ?? user?.role;
   const signedIn = Boolean(username);
+  const isAdmin = role === "Admin";
 
   return (
     <HStack px={4} py={3} borderBottomWidth="1px" bg="white" position={"sticky"} minW="400px">
@@ -51,7 +52,15 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
             )}
             </RouterLink>
 
-            {role ? <Badge rounded="md">{role}</Badge> : null}
+            {isAdmin ? (
+              <RouterLink to="/admin">
+                {({ isActive }) => (
+                  <Badge rounded="md" bg={isActive ? "purple.100" : undefined}>
+                    Admin
+                  </Badge>
+                )}
+              </RouterLink>
+            ) : null}
 
             {onSignOut ? (
               <Button size="sm" variant="outline" onClick={onSignOut}>

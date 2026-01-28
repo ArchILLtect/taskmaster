@@ -14,6 +14,7 @@ import { UpdatesPage } from "./pages/UpdatesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { ListDetailsPage } from "./pages/ListDetailsPage";
+import { AdminPage } from "./pages/AdminPage";
 import { lazy, Suspense } from "react";
 import { BasicSpinner } from "./components/ui/BasicSpinner";
 import { Hub } from "aws-amplify/utils";
@@ -123,6 +124,7 @@ export default function App() {
               <Route path="/lists/:listId/tasks/*" element={<ListDetailsPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="/profile" element={<ProfilePage user={user} onSignOut={signOutWithCleanup} />} />
               <Route path="/settings" element={<SettingsPage />} />
               {import.meta.env.DEV ? (
