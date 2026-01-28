@@ -82,8 +82,8 @@ export const getTaskListMinimal = /* GraphQL */ `
 >;
 
 export const listTaskListsMinimal = /* GraphQL */ `
-  query ListTaskLists($limit: Int, $nextToken: String) {
-    listTaskLists(limit: $limit, nextToken: $nextToken) {
+  query ListTaskLists($id: ID, $filter: ModelTaskListFilterInput, $limit: Int, $nextToken: String, $sortDirection: ModelSortDirection) {
+    listTaskLists(id: $id, filter: $filter, limit: $limit, nextToken: $nextToken, sortDirection: $sortDirection) {
       items {
         id
         name
@@ -234,6 +234,24 @@ export const getUserProfileMinimal = /* GraphQL */ `
   APITypes.GetUserProfileQuery
 >;
 
+// Probe variant: includes `email` so legacy records missing it will error.
+// Useful for admin diagnostics and migrations.
+export const getUserProfileEmailProbeMinimal = /* GraphQL */ `
+  query GetUserProfile($id: ID!) {
+    getUserProfile(id: $id) {
+      id
+      owner
+      email
+      seedVersion
+      createdAt
+      updatedAt
+    }
+  }
+` as GeneratedQuery<
+  APITypes.GetUserProfileQueryVariables,
+  APITypes.GetUserProfileQuery
+>;
+
 export const createUserProfileMinimal = /* GraphQL */ `
   mutation CreateUserProfile($input: CreateUserProfileInput!) {
     createUserProfile(input: $input) {
@@ -266,6 +284,81 @@ export const createUserProfileMinimal = /* GraphQL */ `
 ` as GeneratedMutation<
   APITypes.CreateUserProfileMutationVariables,
   APITypes.CreateUserProfileMutation
+>;
+
+export const listUserProfilesMinimal = /* GraphQL */ `
+  query ListUserProfiles($id: ID, $filter: ModelUserProfileFilterInput, $limit: Int, $nextToken: String, $sortDirection: ModelSortDirection) {
+    listUserProfiles(id: $id, filter: $filter, limit: $limit, nextToken: $nextToken, sortDirection: $sortDirection) {
+      items {
+        id
+        owner
+        planTier
+        defaultVisibility
+        seedVersion
+        seededAt
+        onboardingVersion
+        onboarding
+        onboardingUpdatedAt
+        settingsVersion
+        settings
+        settingsUpdatedAt
+        displayName
+        email
+        avatarUrl
+        lastSeenAt
+        preferredName
+        bio
+        timezone
+        locale
+        lastDeviceId
+        acceptedTermsAt
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+` as GeneratedQuery<
+  APITypes.ListUserProfilesQueryVariables,
+  APITypes.ListUserProfilesQuery
+>;
+
+// Safe variant for legacy/backfill situations: omits `email` so GraphQL won't error on
+// records missing the now-required field.
+export const listUserProfilesSafeMinimal = /* GraphQL */ `
+  query ListUserProfiles($id: ID, $filter: ModelUserProfileFilterInput, $limit: Int, $nextToken: String, $sortDirection: ModelSortDirection) {
+    listUserProfiles(id: $id, filter: $filter, limit: $limit, nextToken: $nextToken, sortDirection: $sortDirection) {
+      items {
+        id
+        owner
+        planTier
+        defaultVisibility
+        seedVersion
+        seededAt
+        onboardingVersion
+        onboarding
+        onboardingUpdatedAt
+        settingsVersion
+        settings
+        settingsUpdatedAt
+        displayName
+        avatarUrl
+        lastSeenAt
+        preferredName
+        bio
+        timezone
+        locale
+        lastDeviceId
+        acceptedTermsAt
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+` as GeneratedQuery<
+  APITypes.ListUserProfilesQueryVariables,
+  APITypes.ListUserProfilesQuery
 >;
 
 export const updateUserProfileMinimal = /* GraphQL */ `

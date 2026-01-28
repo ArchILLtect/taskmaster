@@ -1,5 +1,6 @@
 import { getClient } from "../amplifyClient";
-import { getCurrentUser } from "aws-amplify/auth";
+import type { ModelTaskListFilterInput, ModelSortDirection } from "../API";
+import { getCurrentUserSub } from "../services/authIdentity";
 import type {
   CreateTaskInput,
   CreateTaskListInput,
@@ -9,7 +10,6 @@ import type {
   UpdateUserProfileInput,
   ModelUserProfileConditionInput,
   ModelIntKeyConditionInput,
-  ModelSortDirection,
   UpdateTaskInput,
   UpdateTaskListInput,
 } from "../API";
@@ -25,16 +25,20 @@ import {
   deleteTaskMinimal,
   tasksByListMinimal,
   getUserProfileMinimal,
+  getUserProfileEmailProbeMinimal,
   createUserProfileMinimal,
   updateUserProfileMinimal,
+  listUserProfilesMinimal,
+  listUserProfilesSafeMinimal,
   // tasksByParentMinimal, // later if needed
 } from "./operationsMinimal";
-import type { ListTaskListsQuery, TasksByListQuery } from "../API";
+import type { ListTaskListsQuery, ListUserProfilesQuery, TasksByListQuery } from "../API";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useUpdatesStore } from "../store/updatesStore";
 
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
+type UserProfileItem = NonNullable<NonNullable<ListUserProfilesQuery["listUserProfiles"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
 
 type CreateTaskListInputClient = Omit<CreateTaskListInput, "owner"> & { owner?: string };
@@ -69,8 +73,7 @@ async function getOwnerSub(): Promise<string> {
   if (ownerSubInFlight) return ownerSubInFlight;
 
   ownerSubInFlight = (async () => {
-    const u = await getCurrentUser();
-    return u.userId;
+    return await getCurrentUserSub();
   })();
 
   try {
@@ -118,6 +121,12 @@ export const taskmasterApi = {
   },
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
+  async getUserProfileEmailProbe(id: string) {
+    const data = await runQuery(getUserProfileEmailProbeMinimal as any, { id });
+    return (data as any).getUserProfile ?? null;
+  },
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   async createUserProfile(input: CreateUserProfileInput) {
     const data = await runMutation(createUserProfileMinimal as any, { input });
     return (data as any).createUserProfile;
@@ -129,12 +138,63 @@ export const taskmasterApi = {
     return (data as any).updateUserProfile;
   },
 
+  async listUserProfiles(opts?: {
+    id?: string | null;
+    filter?: import("../API").ModelUserProfileFilterInput | null;
+    limit?: number;
+    nextToken?: string | null;
+    sortDirection?: import("../API").ModelSortDirection | null;
+  }): Promise<Page<UserProfileItem>> {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const data = await runQuery(listUserProfilesMinimal as any, {
+      id: opts?.id ?? null,
+      filter: opts?.filter ?? null,
+      sortDirection: opts?.sortDirection ?? null,
+      limit: opts?.limit ?? 50,
+      nextToken: opts?.nextToken ?? null,
+    });
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const conn = (data as any).listUserProfiles as ListUserProfilesQuery["listUserProfiles"];
+    return toPage<UserProfileItem>(conn);
+  },
+
+  async listUserProfilesSafe(opts?: {
+    id?: string | null;
+    filter?: import("../API").ModelUserProfileFilterInput | null;
+    limit?: number;
+    nextToken?: string | null;
+    sortDirection?: import("../API").ModelSortDirection | null;
+  }): Promise<Page<UserProfileItem>> {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const data = await runQuery(listUserProfilesSafeMinimal as any, {
+      id: opts?.id ?? null,
+      filter: opts?.filter ?? null,
+      sortDirection: opts?.sortDirection ?? null,
+      limit: opts?.limit ?? 50,
+      nextToken: opts?.nextToken ?? null,
+    });
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const conn = (data as any).listUserProfiles as ListUserProfilesQuery["listUserProfiles"];
+    return toPage<UserProfileItem>(conn);
+  },
+
   // -----------------------------
   // TaskLists
   // -----------------------------
-  async listTaskLists(opts?: { limit?: number; nextToken?: string | null }): Promise<Page<TaskListItem>> {
+  async listTaskLists(opts?: {
+    id?: string | null;
+    filter?: ModelTaskListFilterInput | null;
+    limit?: number;
+    nextToken?: string | null;
+    sortDirection?: ModelSortDirection | null;
+  }): Promise<Page<TaskListItem>> {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const data = await runQuery(listTaskListsMinimal as any, {
+      id: opts?.id ?? null,
+      filter: opts?.filter ?? null,
+      sortDirection: opts?.sortDirection ?? null,
       limit: opts?.limit ?? 50,
       nextToken: opts?.nextToken ?? null,
     });
@@ -142,6 +202,19 @@ export const taskmasterApi = {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const conn = (data as any).listTaskLists as ListTaskListsQuery["listTaskLists"];
     return toPage<TaskListItem>(conn);
+  },
+
+  async listTaskListsOwned(opts?: {
+    limit?: number;
+    nextToken?: string | null;
+    ownerSub?: string;
+  }): Promise<Page<TaskListItem>> {
+    const owner = opts?.ownerSub ?? (await getOwnerSub());
+    return await this.listTaskLists({
+      limit: opts?.limit,
+      nextToken: opts?.nextToken,
+      filter: { owner: { eq: owner } },
+    });
   },
 
   /* eslint-disable @typescript-eslint/no-explicit-any */

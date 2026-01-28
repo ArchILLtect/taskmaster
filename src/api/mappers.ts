@@ -62,7 +62,7 @@ type ApiUserProfileLike = {
   settingsUpdatedAt?: string | null;
 
   displayName?: string | null;
-  email: string;
+  email?: string | null;
   avatarUrl?: string | null;
   lastSeenAt?: string | null;
   preferredName?: string | null;
@@ -111,6 +111,14 @@ export function toTaskUI(apiTask: ApiTaskLike): TaskUI {
 }
 
 export function toUserProfileUI(api: ApiUserProfileLike): UserProfileUI {
+  const email = typeof api.email === "string" ? api.email : "";
+  if (import.meta.env.DEV && !email) {
+    console.warn(
+      `[mappers] UserProfile missing email (id=${api.id}, owner=${api.owner}). ` +
+        "This should not happen once the schema requirement is fully enforced/backfilled."
+    );
+  }
+
   return {
     id: api.id,
     owner: api.owner,
@@ -130,7 +138,7 @@ export function toUserProfileUI(api: ApiUserProfileLike): UserProfileUI {
     settingsUpdatedAt: api.settingsUpdatedAt ?? null,
 
     displayName: api.displayName ?? null,
-    email: api.email,
+  email,
     avatarUrl: api.avatarUrl ?? null,
     lastSeenAt: api.lastSeenAt ?? null,
     preferredName: api.preferredName ?? null,
