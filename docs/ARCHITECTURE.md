@@ -135,9 +135,10 @@ We start with **Pattern B** while the app is evolving quickly, then switch to **
 
 ---
 
-## Plan: Demo Mode + UserProfile + Seeding Strategy (MVP path)
+## Demo Mode + UserProfile + Seeding Strategy (implemented)
 
-This is a documentation-only plan for MVP polish. It is not implemented yet.
+TaskMaster seeds a demo-first experience for new (or unseeded) accounts using a versioned, idempotent bootstrap.
+This is safe to run on every authenticated boot because it only writes when the profile is missing or behind.
 
 ### Current state (already implemented)
 - Task data layer migrated to Zustand:
@@ -154,19 +155,16 @@ This is a documentation-only plan for MVP polish. It is not implemented yet.
 	- These are locally persisted (per browser), not per user (by design for MVP)
 	- We decided to defer per-user persistence as a stretch goal
 
-### Problem to solve (MVP polish)
-- “Demo mode” / seeded experience:
-	- New users should be able to experience the app immediately without manually creating lists/tasks.
-	- We want owner scoping to remain intact (no weakening auth rules).
+### Goal
+- New users should be able to experience the app immediately without manually creating lists/tasks.
+- Owner scoping remains intact (no weakening auth rules).
 
 ### Decision: Use `UserProfile` model + `seedVersion`
-We will add a new GraphQL model: `UserProfile`, owned by `sub`, that tracks:
-- whether the account has been seeded
-- what seed version was applied
-- settings blob + version
-- optional onboarding blob + version
+We use a GraphQL model `UserProfile` owned by `sub`, that tracks:
+- whether the account has been seeded (`seedVersion`, `seededAt`)
+- settings/onboarding blobs + versions (future use)
 
-See also: [docs/DATA_MODEL.md](DATA_MODEL.md) for the planned schema shape.
+Schema: [amplify/backend/api/taskmaster/schema.graphql](../amplify/backend/api/taskmaster/schema.graphql)
 
 **Reasoning**
 - Avoid PostConfirmation Lambda seeding for now (more IAM/auth complexity and harder to debug).
@@ -177,33 +175,32 @@ See also: [docs/DATA_MODEL.md](DATA_MODEL.md) for the planned schema shape.
 ### Strategy: Pattern B during rapid iteration, Pattern A for finalized MVP
 See: “Client-owned state strategy (Settings + Onboarding)” in this document.
 
-### Demo Mode UX plan (not implemented yet)
-We want a seeded experience without clunky pre-login UI.
+### Bootstrap behavior
+MVP behavior: demo seeding runs for **all accounts by default**.
+Temporary opt-out is supported via `?demo=0` or `localStorage.taskmaster:seedDemo = "0"`.
 
 #### UX approach (recommended)
 - After login, app runs a bootstrap step:
-	1) Fetch `UserProfile` by `id = sub`
-	2) If missing OR `seedVersion < CURRENT_SEED_VERSION`:
-		 - Create/Update `UserProfile`
-		 - Seed initial TaskLists + Tasks using normal GraphQL mutations
-		 - Update `UserProfile`: `seedVersion = CURRENT_SEED_VERSION`, `seededAt = now`
-	3) Continue to app normally
+	1) Resolve current identity (Cognito `sub`) and ensure `UserProfile` exists.
+		- `UserProfile.id = sub`
+		- `UserProfile.owner = sub`
+		- `UserProfile.email` is populated from Cognito attributes
+	2) If `seedVersion < CURRENT_SEED_VERSION`:
+		- Claim seeding (multi-tab safe) by conditionally setting `seedVersion = -1`
+		- Create demo TaskLists/Tasks (all created with `isDemo: true`)
+		- Finalize by setting `seedVersion = CURRENT_SEED_VERSION` and `seededAt = now`
+	3) If `seedVersion >= CURRENT_SEED_VERSION`: do nothing
 
-#### Seed behavior
-- Seed includes:
-	- Inbox list (if not already created/ensured)
-	- 2–4 example lists (e.g., “Personal”, “Work”, “Someday”)
-	- Example tasks + a few subtasks to demo pane-stack navigation
-	- 1–2 tasks with due dates to demo “Due soon”
-	- A couple “Done” tasks to demo completed toggle
+#### Where the logic lives
+- Bootstrap trigger: [src/hooks/useBootstrapUserProfile.ts](../src/hooks/useBootstrapUserProfile.ts)
+- Bootstrap + seeding: [src/services/userBootstrapService.ts](../src/services/userBootstrapService.ts)
+- GraphQL boundary: [src/api/taskmasterApi.ts](../src/api/taskmasterApi.ts)
+- Minimal GraphQL docs: [src/api/operationsMinimal.ts](../src/api/operationsMinimal.ts)
 
 #### Safety + correctness
-- Seeding must be idempotent:
-	- If it partially ran, rerunning should not create duplicates.
-	- Prefer “create once” semantics: either store IDs in profile seed metadata, or seed only when version is behind.
-- Seeding must be race-safe:
-	- Ensure only one seed run happens even if multiple tabs open.
-	- Use a `seedLock` field in `UserProfile` (optional), or rely on conditional create + single bootstrap call.
+- Idempotent by versioning: writes only happen when `seedVersion` is behind.
+- Race-safe: conditional update claims seeding by setting `seedVersion = -1` (in-progress).
+- After seeding, the app expires the task cache and refreshes so seeded data appears immediately.
 
 ### Account switching / cache cleanup plan (MVP)
 - On sign-out:

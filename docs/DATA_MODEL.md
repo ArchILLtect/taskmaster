@@ -66,11 +66,11 @@ UI-facing models (`TaskUI`, `ListUI`) are mapped from GraphQL responses via [src
 
 ---
 
-## Planned: `UserProfile` (Demo seeding + Settings + Onboarding)
+## `UserProfile` (Demo seeding + Settings + Onboarding)
 
-This model is planned for MVP polish. It is not implemented yet.
+This model is implemented in the Amplify backend schema and used at runtime for demo seeding and future settings/onboarding blobs.
 
-### Planned GraphQL schema shape for user profile
+### Current GraphQL schema shape for user profile
 ```graphql
 type UserProfile
   @model
@@ -83,6 +83,8 @@ type UserProfile
   ]) {
   # Use the Cognito sub as the record id
   id: ID! @primaryKey
+
+  owner: String!
 
   planTier: PlanTier!
   defaultVisibility: DefaultVisibility!
@@ -101,6 +103,7 @@ type UserProfile
 
   # optional profile fields
   displayName: String
+  email: AWSEmail!
   avatarUrl: String
   lastSeenAt: AWSDateTime
   preferredName: String

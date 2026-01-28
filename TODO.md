@@ -5,7 +5,7 @@
 This file is a running backlog of ideas, cleanups, and future improvements.
 Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tree extension.
 
-Last refreshed: Jan 26 2026
+Last refreshed: Jan 28 2026
 
 ---
 
@@ -14,6 +14,8 @@ Last refreshed: Jan 26 2026
 - [x] TODO(P1) Cross-user cache hygiene: clear all user-scoped caches on sign-out + auth lifecycle guards.
 - [x] TODO(P2) Dev tools: add a one-click "Clear all user caches" button.
 - [x] TODO(P2) Docs overhaul: bring docs/README in sync with current architecture and remove any references to deleted local dev-only data/files.
+- [x] TODO(P1) Demo seeding: UserProfile bootstrap + versioned, idempotent demo seed (multi-tab safe).
+- [x] TODO(P1) MVP decision: seed demo data for all accounts by default (opt-out supported).
 
 ---
 
@@ -37,31 +39,26 @@ Last refreshed: Jan 26 2026
 
 ## Demo Mode + UserProfile seeding (MVP-critical)
 
-- [ ] TODO(P1) Add `UserProfile` GraphQL model (owned by sub)
-  - Fields: `id (sub)`, `owner`, `seedVersion`, `seededAt`, `settingsVersion`, `settings (AWSJSON)`, optional onboarding blob/version, display fields
-  - Planned schema shape is documented in [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
+- [x] TODO(P1) Add `UserProfile` GraphQL model (owned by sub)
+  - Implemented in [amplify/backend/api/taskmaster/schema.graphql](amplify/backend/api/taskmaster/schema.graphql)
+  - Key fields: `id (sub)`, `owner (sub)`, `email`, `seedVersion`, `seededAt`, `settingsVersion/settings`, `onboardingVersion/onboarding`
 
-- [ ] TODO(P1) Implement bootstrap: fetch/create `UserProfile` on login
-  - If missing or `seedVersion < CURRENT_SEED_VERSION`, run the seed flow
-  - Keep this as a single, centralized bootstrap step (avoid multiple pages each trying to seed)
+- [x] TODO(P1) Implement bootstrap: fetch/create `UserProfile` on login
+  - Centralized in the app shell; runs once per authenticated session.
+  - Version gate: if missing or `seedVersion < CURRENT_SEED_VERSION`, run the seed flow.
 
-- [ ] TODO(P1) Implement seed flow (idempotent + race-safe)
-  - Create example lists + tasks + subtasks + due-soon tasks + done tasks
-  - Update `UserProfile.seedVersion` + `UserProfile.seededAt`
-  - Idempotency options:
-    - store seeded entity ids in `UserProfile` seed metadata
-    - or use deterministic “create once” semantics and only run when version is behind
-  - Race-safety options:
-    - optional `seedLock` field in `UserProfile`
-    - or conditional create + single bootstrap call
+- [x] TODO(P1) Implement seed flow (idempotent + race-safe)
+  - Seed creates example lists + tasks (including subtasks) and marks them `isDemo: true`.
+  - Multi-tab safety uses conditional updates on `UserProfile.seedVersion` with an in-progress lock value (`-1`).
+  - Finalizes by setting `seedVersion = CURRENT_SEED_VERSION` and `seededAt = now`.
 
-- [ ] TODO(P1) Add “Demo seed” UX (minimal)
-  - Option A: Always seed on first profile creation
-  - Option B: Toggle on welcome/setup page before seeding (optional)
+- [x] TODO(P1) Add “Demo seed” UX (minimal)
+  - MVP behavior: always seed for all accounts by default.
+  - Temporary opt-out supported (e.g. `?demo=0` or `localStorage.taskmaster:seedDemo = "0"`).
 
 - [ ] TODO(P1) Account-switch cleanup for user-scoped caches + bootstrap
   - [x] On sign out: clear `taskStore` persisted cache + user UI cache (and other user-scoped caches)
-  - [ ] On sign in: Hub listener (or equivalent) triggers bootstrap and ensures no stale caches leak across users
+  - [x] On sign in: bootstrap runs after auth restore and cache guards prevent cross-user flashes
 
 - [ ] TODO(P2) Add a Demo data section within SettingsPage that contains these features:
    - [ ] A button to clear all demo data.
