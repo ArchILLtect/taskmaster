@@ -1,9 +1,13 @@
 import { getClient } from "../amplifyClient";
+import { getCurrentUser } from "aws-amplify/auth";
 import type {
   CreateTaskInput,
   CreateTaskListInput,
   DeleteTaskInput,
   DeleteTaskListInput,
+  CreateUserProfileInput,
+  UpdateUserProfileInput,
+  ModelUserProfileConditionInput,
   ModelIntKeyConditionInput,
   ModelSortDirection,
   UpdateTaskInput,
@@ -20,6 +24,9 @@ import {
   updateTaskMinimal,
   deleteTaskMinimal,
   tasksByListMinimal,
+  getUserProfileMinimal,
+  createUserProfileMinimal,
+  updateUserProfileMinimal,
   // tasksByParentMinimal, // later if needed
 } from "./operationsMinimal";
 import type { ListTaskListsQuery, TasksByListQuery } from "../API";
@@ -29,6 +36,9 @@ import { useUpdatesStore } from "../store/updatesStore";
 
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
+
+type CreateTaskListInputClient = Omit<CreateTaskListInput, "owner"> & { owner?: string };
+type CreateTaskInputClient = Omit<CreateTaskInput, "owner"> & { owner?: string };
 
 /**
  * Single shared Amplify GraphQL client for the app.
@@ -50,6 +60,31 @@ async function runMutation<I, O>(query: GenMutation<I, O>, variables: I): Promis
   const client = getClient();
   const res = await client.graphql({ query, variables });
   return (res as { data: O }).data;
+}
+
+let ownerSubInFlight: Promise<string> | null = null;
+let didLogOwnerSub = false;
+async function getOwnerSub(): Promise<string> {
+  // Share a single in-flight lookup across concurrent createTask/createTaskList calls.
+  if (ownerSubInFlight) return ownerSubInFlight;
+
+  ownerSubInFlight = (async () => {
+    const u = await getCurrentUser();
+    return u.userId;
+  })();
+
+  try {
+    const sub = await ownerSubInFlight;
+
+    if (import.meta.env.DEV && !didLogOwnerSub) {
+      didLogOwnerSub = true;
+      console.debug(`[taskmasterApi] resolved owner(sub)=${sub}`);
+    }
+
+    return sub;
+  } finally {
+    ownerSubInFlight = null;
+  }
 }
 
 /**
@@ -74,6 +109,27 @@ function toPage<T>(conn: { items?: (T | null)[] | null; nextToken?: string | nul
  */
 export const taskmasterApi = {
   // -----------------------------
+  // UserProfile
+  // -----------------------------
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  async getUserProfile(id: string) {
+    const data = await runQuery(getUserProfileMinimal as any, { id });
+    return (data as any).getUserProfile ?? null;
+  },
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  async createUserProfile(input: CreateUserProfileInput) {
+    const data = await runMutation(createUserProfileMinimal as any, { input });
+    return (data as any).createUserProfile;
+  },
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  async updateUserProfile(input: UpdateUserProfileInput, condition?: ModelUserProfileConditionInput | null) {
+    const data = await runMutation(updateUserProfileMinimal as any, { input, condition: condition ?? null });
+    return (data as any).updateUserProfile;
+  },
+
+  // -----------------------------
   // TaskLists
   // -----------------------------
   async listTaskLists(opts?: { limit?: number; nextToken?: string | null }): Promise<Page<TaskListItem>> {
@@ -95,8 +151,9 @@ export const taskmasterApi = {
   },
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  async createTaskList(input: CreateTaskListInput) {
-    const data = await runMutation(createTaskListMinimal as any, { input });
+  async createTaskList(input: CreateTaskListInputClient) {
+    const owner = input.owner ?? (await getOwnerSub());
+    const data = await runMutation(createTaskListMinimal as any, { input: { ...input, owner } });
     return (data as any).createTaskList;
   },
 
@@ -143,8 +200,9 @@ export const taskmasterApi = {
   },
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  async createTask(input: CreateTaskInput) {
-    const data = await runMutation(createTaskMinimal as any, { input });
+  async createTask(input: CreateTaskInputClient) {
+    const owner = input.owner ?? (await getOwnerSub());
+    const data = await runMutation(createTaskMinimal as any, { input: { ...input, owner } });
     const created = (data as any).createTask;
 
     if (created?.id && created?.listId) {

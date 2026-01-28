@@ -37,6 +37,9 @@ export type TaskUI = {
   assigneeId?: string | null; // User ID or null = unassigned
   tagIds: string[];
 
+  // Schema field (required)
+  isDemo: boolean;
+
   createdAt: string; // ISO string
   updatedAt: string; // ISO string
 };

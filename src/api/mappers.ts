@@ -45,7 +45,7 @@ type ApiTaskLike = {
 
 type ApiUserProfileLike = {
   id: string;
-  owner?: string | null;
+  owner: string;
 
   planTier: PlanTier;
   defaultVisibility: DefaultVisibility;
@@ -62,6 +62,7 @@ type ApiUserProfileLike = {
   settingsUpdatedAt?: string | null;
 
   displayName?: string | null;
+  email: string;
   avatarUrl?: string | null;
   lastSeenAt?: string | null;
   preferredName?: string | null;
@@ -112,7 +113,7 @@ export function toTaskUI(apiTask: ApiTaskLike): TaskUI {
 export function toUserProfileUI(api: ApiUserProfileLike): UserProfileUI {
   return {
     id: api.id,
-    owner: api.owner ?? null,
+    owner: api.owner,
 
     planTier: api.planTier,
     defaultVisibility: api.defaultVisibility,
@@ -129,6 +130,7 @@ export function toUserProfileUI(api: ApiUserProfileLike): UserProfileUI {
     settingsUpdatedAt: api.settingsUpdatedAt ?? null,
 
     displayName: api.displayName ?? null,
+    email: api.email,
     avatarUrl: api.avatarUrl ?? null,
     lastSeenAt: api.lastSeenAt ?? null,
     preferredName: api.preferredName ?? null,

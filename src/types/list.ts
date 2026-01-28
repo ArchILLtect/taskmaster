@@ -4,6 +4,9 @@ export type ListUI = {
   name: string;
   description?: string | null;
 
+  // Schema field (required)
+  isDemo: boolean;
+
   isFavorite: boolean;
   sortOrder: number;
 
@@ -15,6 +18,7 @@ export type ListItem = {
   id: string;
   name: string;
   description?: string | null;
+  isDemo: boolean;
   isFavorite: boolean;
   sortOrder: number;
 };

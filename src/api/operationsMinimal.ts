@@ -20,6 +20,7 @@ export const createTaskListMinimal = /* GraphQL */ `
     createTaskList(input: $input) {
       id
       name
+      description
       isFavorite
       sortOrder
       owner
@@ -37,6 +38,7 @@ export const updateTaskListMinimal = /* GraphQL */ `
     updateTaskList(input: $input) {
       id
       name
+      description
       isFavorite
       sortOrder
       owner
@@ -66,6 +68,7 @@ export const getTaskListMinimal = /* GraphQL */ `
     getTaskList(id: $id) {
       id
       name
+      description
       isFavorite
       sortOrder
       owner
@@ -84,6 +87,7 @@ export const listTaskListsMinimal = /* GraphQL */ `
       items {
         id
         name
+        description
         isFavorite
         sortOrder
         owner
@@ -191,6 +195,111 @@ export const tasksByListMinimal = /* GraphQL */ `
 ` as GeneratedQuery<
   APITypes.TasksByListQueryVariables,
   APITypes.TasksByListQuery
+>;
+
+// -----------------------------
+// UserProfile (bootstrap + demo seed gate)
+// -----------------------------
+
+export const getUserProfileMinimal = /* GraphQL */ `
+  query GetUserProfile($id: ID!) {
+    getUserProfile(id: $id) {
+      id
+      owner
+      planTier
+      defaultVisibility
+      seedVersion
+      seededAt
+      onboardingVersion
+      onboarding
+      onboardingUpdatedAt
+      settingsVersion
+      settings
+      settingsUpdatedAt
+      displayName
+      avatarUrl
+      lastSeenAt
+      preferredName
+      bio
+      timezone
+      locale
+      lastDeviceId
+      acceptedTermsAt
+      createdAt
+      updatedAt
+    }
+  }
+` as GeneratedQuery<
+  APITypes.GetUserProfileQueryVariables,
+  APITypes.GetUserProfileQuery
+>;
+
+export const createUserProfileMinimal = /* GraphQL */ `
+  mutation CreateUserProfile($input: CreateUserProfileInput!) {
+    createUserProfile(input: $input) {
+      id
+      owner
+      planTier
+      defaultVisibility
+      seedVersion
+      seededAt
+      onboardingVersion
+      onboarding
+      onboardingUpdatedAt
+      settingsVersion
+      settings
+      settingsUpdatedAt
+      displayName
+      email
+      avatarUrl
+      lastSeenAt
+      preferredName
+      bio
+      timezone
+      locale
+      lastDeviceId
+      acceptedTermsAt
+      createdAt
+      updatedAt
+    }
+  }
+` as GeneratedMutation<
+  APITypes.CreateUserProfileMutationVariables,
+  APITypes.CreateUserProfileMutation
+>;
+
+export const updateUserProfileMinimal = /* GraphQL */ `
+  mutation UpdateUserProfile($input: UpdateUserProfileInput!, $condition: ModelUserProfileConditionInput) {
+    updateUserProfile(input: $input, condition: $condition) {
+      id
+      owner
+      planTier
+      defaultVisibility
+      seedVersion
+      seededAt
+      onboardingVersion
+      onboarding
+      onboardingUpdatedAt
+      settingsVersion
+      settings
+      settingsUpdatedAt
+      displayName
+      email
+      avatarUrl
+      lastSeenAt
+      preferredName
+      bio
+      timezone
+      locale
+      lastDeviceId
+      acceptedTermsAt
+      createdAt
+      updatedAt
+    }
+  }
+` as GeneratedMutation<
+  APITypes.UpdateUserProfileMutationVariables,
+  APITypes.UpdateUserProfileMutation
 >;
 
 /**

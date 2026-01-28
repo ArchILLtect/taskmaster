@@ -5,10 +5,12 @@ import { Sidebar } from "./Sidebar.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import type { AuthUserLike } from "../types";
 import { useBootstrapTaskStore } from "../hooks/useBootstrapTaskStore";
+import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 
 const TOPBAR_H = "64px";
 
 export function AppShell({ user, onSignOut }: { user?: AuthUserLike | null; onSignOut?: () => void }) {
+  useBootstrapUserProfile(user);
   useBootstrapTaskStore();
 
   return (
