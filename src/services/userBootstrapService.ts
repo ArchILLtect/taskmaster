@@ -1,6 +1,7 @@
 import { fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
 import {
   DefaultVisibility,
+  ModelAttributeTypes,
   PlanTier,
   TaskPriority,
   TaskStatus,
@@ -17,7 +18,22 @@ type BootstrapUserResult = {
 
 function errorToMessage(err: unknown): string {
   if (typeof err === "string") return err;
-  if (typeof err === "object" && err !== null && "message" in err) return String((err as { message: unknown }).message);
+  if (typeof err === "object" && err !== null) {
+    // Amplify often throws `{ data, errors }` for GraphQL failures.
+    if ("errors" in err && Array.isArray((err as { errors?: unknown }).errors)) {
+      const errors = (err as { errors: Array<{ message?: unknown; errorType?: unknown }> }).errors;
+      const messages = errors
+        .map((e) => {
+          const msg = typeof e?.message === "string" ? e.message : "Unknown GraphQL error";
+          const type = typeof e?.errorType === "string" ? e.errorType : "";
+          return type ? `${msg} (${type})` : msg;
+        })
+        .filter(Boolean);
+      if (messages.length) return messages.join("; ");
+    }
+
+    if ("message" in err) return String((err as { message: unknown }).message);
+  }
   return "Unknown error";
 }
 
@@ -29,6 +45,32 @@ function isConditionalFailure(err: unknown): boolean {
     msg.includes("conditionalcheckfailed") ||
     msg.includes("condition check")
   );
+}
+
+async function selfHealUserProfileEmail(profileId: string, email: string) {
+  // If legacy records exist without the now-required email, patch it opportunistically
+  // when that user logs in. This is safe because the conditional prevents overwriting.
+  const condition: ModelUserProfileConditionInput = {
+    or: [
+      { email: { attributeExists: false } },
+      { email: { attributeType: ModelAttributeTypes._null } },
+      { email: { eq: "" } },
+    ],
+  };
+
+  try {
+    await taskmasterApi.updateUserProfile({ id: profileId, email }, condition);
+    if (import.meta.env.DEV) {
+      console.info(`[user bootstrap] healed missing email for profileId=${profileId}`);
+    }
+  } catch (err) {
+    // If condition fails, email was already set (or another tab fixed it).
+    if (isConditionalFailure(err)) return;
+    // Any other failure should surface, but don't hard-break the app.
+    if (import.meta.env.DEV) {
+      console.warn("[user bootstrap] email self-heal failed", err);
+    }
+  }
 }
 
 function buildIsoAtMidnightUtcFromNow(daysFromNow: number): string {
@@ -48,12 +90,22 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
 
   const attrs = await fetchUserAttributes();
   const email = attrs.email;
-  if (!email) {
-    throw new Error("UserProfile requires an email, but none was found in user attributes.");
-  }
+  const emailString = typeof email === "string" ? email : "";
 
   const existing = await taskmasterApi.getUserProfile(profileId);
-  if (existing) return existing;
+  if (existing) {
+    // If the profile already exists, opportunistically fix legacy missing/null email.
+    if (emailString) {
+      await selfHealUserProfileEmail(profileId, emailString);
+    } else if (import.meta.env.DEV) {
+      console.warn("[user bootstrap] Cognito email missing; cannot self-heal UserProfile.email");
+    }
+    return existing;
+  }
+
+  if (!emailString) {
+    throw new Error("UserProfile requires an email, but none was found in user attributes.");
+  }
 
   const base = {
     id: profileId,
@@ -69,7 +121,7 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
     settings: null,
     settingsUpdatedAt: null,
     displayName: null,
-    email,
+    email: emailString,
     avatarUrl: null,
     lastSeenAt: null,
     preferredName: null,
