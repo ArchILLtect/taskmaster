@@ -20,6 +20,23 @@ function shouldSeedDemoFromStorage(): boolean {
   }
 }
 
+function shouldDisableDemoFromLocation(): boolean {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("demo") === "0";
+  } catch {
+    return false;
+  }
+}
+
+function shouldDisableDemoFromStorage(): boolean {
+  try {
+    return localStorage.getItem("taskmaster:seedDemo") === "0";
+  } catch {
+    return false;
+  }
+}
+
 export function useBootstrapUserProfile(user?: AuthUserLike | null) {
   const { expireTaskCache, refreshAll } = useTaskActions();
 
@@ -39,7 +56,14 @@ export function useBootstrapUserProfile(user?: AuthUserLike | null) {
     if (didRunForUserKey.current === userKey) return;
     didRunForUserKey.current = userKey;
 
-    const seedDemo = shouldSeedDemoFromLocation() || shouldSeedDemoFromStorage();
+    // MVP decision: seed demo data for all accounts by default.
+    // You can temporarily disable with `?demo=0` or `localStorage.taskmaster:seedDemo="0"`.
+    const disabled = shouldDisableDemoFromLocation() || shouldDisableDemoFromStorage();
+    const explicitlyEnabled = shouldSeedDemoFromLocation() || shouldSeedDemoFromStorage();
+
+    // Default ON unless explicitly disabled.
+    // `explicitlyEnabled` is currently redundant (kept for clarity + future UX).
+    const seedDemo = !disabled || explicitlyEnabled;
 
     void (async () => {
       try {

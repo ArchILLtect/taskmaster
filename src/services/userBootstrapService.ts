@@ -354,7 +354,7 @@ async function seedDemoData() {
 }
 
 export async function bootstrapUser(opts?: { seedDemo?: boolean }): Promise<BootstrapUserResult> {
-  const seedDemo = opts?.seedDemo === true;
+  const seedDemo = opts?.seedDemo ?? true;
 
   const current = await getCurrentUser();
   const profileId = current.userId;
