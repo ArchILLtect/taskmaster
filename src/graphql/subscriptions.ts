@@ -13,6 +13,7 @@ export const onCreateTaskList = /* GraphQL */ `subscription OnCreateTaskList(
 ) {
   onCreateTaskList(filter: $filter, owner: $owner) {
     id
+    owner
     name
     description
     isDemo
@@ -24,7 +25,6 @@ export const onCreateTaskList = /* GraphQL */ `subscription OnCreateTaskList(
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -38,6 +38,7 @@ export const onUpdateTaskList = /* GraphQL */ `subscription OnUpdateTaskList(
 ) {
   onUpdateTaskList(filter: $filter, owner: $owner) {
     id
+    owner
     name
     description
     isDemo
@@ -49,7 +50,6 @@ export const onUpdateTaskList = /* GraphQL */ `subscription OnUpdateTaskList(
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -63,6 +63,7 @@ export const onDeleteTaskList = /* GraphQL */ `subscription OnDeleteTaskList(
 ) {
   onDeleteTaskList(filter: $filter, owner: $owner) {
     id
+    owner
     name
     description
     isDemo
@@ -74,7 +75,6 @@ export const onDeleteTaskList = /* GraphQL */ `subscription OnDeleteTaskList(
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -88,6 +88,7 @@ export const onCreateTask = /* GraphQL */ `subscription OnCreateTask(
 ) {
   onCreateTask(filter: $filter, owner: $owner) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -102,6 +103,7 @@ export const onCreateTask = /* GraphQL */ `subscription OnCreateTask(
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -109,12 +111,10 @@ export const onCreateTask = /* GraphQL */ `subscription OnCreateTask(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -128,6 +128,7 @@ export const onUpdateTask = /* GraphQL */ `subscription OnUpdateTask(
 ) {
   onUpdateTask(filter: $filter, owner: $owner) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -142,6 +143,7 @@ export const onUpdateTask = /* GraphQL */ `subscription OnUpdateTask(
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -149,12 +151,10 @@ export const onUpdateTask = /* GraphQL */ `subscription OnUpdateTask(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -168,6 +168,7 @@ export const onDeleteTask = /* GraphQL */ `subscription OnDeleteTask(
 ) {
   onDeleteTask(filter: $filter, owner: $owner) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -182,6 +183,7 @@ export const onDeleteTask = /* GraphQL */ `subscription OnDeleteTask(
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -189,12 +191,10 @@ export const onDeleteTask = /* GraphQL */ `subscription OnDeleteTask(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -220,6 +220,7 @@ export const onCreateUserProfile = /* GraphQL */ `subscription OnCreateUserProfi
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName
@@ -255,6 +256,7 @@ export const onUpdateUserProfile = /* GraphQL */ `subscription OnUpdateUserProfi
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName
@@ -290,6 +292,7 @@ export const onDeleteUserProfile = /* GraphQL */ `subscription OnDeleteUserProfi
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName

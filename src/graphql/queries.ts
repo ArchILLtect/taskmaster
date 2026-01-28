@@ -10,6 +10,7 @@ type GeneratedQuery<InputType, OutputType> = string & {
 export const getTaskList = /* GraphQL */ `query GetTaskList($id: ID!) {
   getTaskList(id: $id) {
     id
+    owner
     name
     description
     isDemo
@@ -21,7 +22,6 @@ export const getTaskList = /* GraphQL */ `query GetTaskList($id: ID!) {
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -45,6 +45,7 @@ export const listTaskLists = /* GraphQL */ `query ListTaskLists(
   ) {
     items {
       id
+      owner
       name
       description
       isDemo
@@ -52,7 +53,6 @@ export const listTaskLists = /* GraphQL */ `query ListTaskLists(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     nextToken
@@ -66,6 +66,7 @@ export const listTaskLists = /* GraphQL */ `query ListTaskLists(
 export const getTask = /* GraphQL */ `query GetTask($id: ID!) {
   getTask(id: $id) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -80,6 +81,7 @@ export const getTask = /* GraphQL */ `query GetTask($id: ID!) {
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -87,12 +89,10 @@ export const getTask = /* GraphQL */ `query GetTask($id: ID!) {
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -113,6 +113,7 @@ export const listTasks = /* GraphQL */ `query ListTasks(
   ) {
     items {
       id
+      owner
       listId
       sortOrder
       parentTaskId
@@ -127,7 +128,6 @@ export const listTasks = /* GraphQL */ `query ListTasks(
       isDemo
       createdAt
       updatedAt
-      owner
       __typename
     }
     nextToken
@@ -150,6 +150,7 @@ export const getUserProfile = /* GraphQL */ `query GetUserProfile($id: ID!) {
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName
@@ -195,6 +196,7 @@ export const listUserProfiles = /* GraphQL */ `query ListUserProfiles(
       settings
       settingsUpdatedAt
       displayName
+      email
       avatarUrl
       lastSeenAt
       preferredName
@@ -233,6 +235,7 @@ export const tasksByList = /* GraphQL */ `query TasksByList(
   ) {
     items {
       id
+      owner
       listId
       sortOrder
       parentTaskId
@@ -247,7 +250,6 @@ export const tasksByList = /* GraphQL */ `query TasksByList(
       isDemo
       createdAt
       updatedAt
-      owner
       __typename
     }
     nextToken
@@ -276,6 +278,7 @@ export const tasksByParent = /* GraphQL */ `query TasksByParent(
   ) {
     items {
       id
+      owner
       listId
       sortOrder
       parentTaskId
@@ -290,7 +293,6 @@ export const tasksByParent = /* GraphQL */ `query TasksByParent(
       isDemo
       createdAt
       updatedAt
-      owner
       __typename
     }
     nextToken

@@ -6,6 +6,7 @@ type TaskList
     { allow: groups, groups: ["Admin"] }
   ]) {
   id: ID! @primaryKey
+  owner: String!
 
   name: String!
   description: String
@@ -23,6 +24,7 @@ type Task
     { allow: groups, groups: ["Admin"] }
   ]) {
   id: ID! @primaryKey
+  owner: String!
 
   # Query tasks in a list ordered by sortOrder
   listId: ID! @index(name: "byList", sortKeyFields: ["sortOrder"], queryField: "tasksByList")
@@ -59,7 +61,7 @@ type UserProfile
   # Use the Cognito sub as the record id
   id: ID! @primaryKey
 
-  owner: String
+  owner: String!
 
   planTier: PlanTier!
   defaultVisibility: DefaultVisibility!
@@ -80,6 +82,7 @@ type UserProfile
 
   # optional profile fields
   displayName: String
+  email: AWSEmail!
   avatarUrl: String
   lastSeenAt: AWSDateTime
   preferredName: String

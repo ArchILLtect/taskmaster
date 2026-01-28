@@ -13,6 +13,7 @@ export const createTaskList = /* GraphQL */ `mutation CreateTaskList(
 ) {
   createTaskList(input: $input, condition: $condition) {
     id
+    owner
     name
     description
     isDemo
@@ -24,7 +25,6 @@ export const createTaskList = /* GraphQL */ `mutation CreateTaskList(
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -38,6 +38,7 @@ export const updateTaskList = /* GraphQL */ `mutation UpdateTaskList(
 ) {
   updateTaskList(input: $input, condition: $condition) {
     id
+    owner
     name
     description
     isDemo
@@ -49,7 +50,6 @@ export const updateTaskList = /* GraphQL */ `mutation UpdateTaskList(
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -63,6 +63,7 @@ export const deleteTaskList = /* GraphQL */ `mutation DeleteTaskList(
 ) {
   deleteTaskList(input: $input, condition: $condition) {
     id
+    owner
     name
     description
     isDemo
@@ -74,7 +75,6 @@ export const deleteTaskList = /* GraphQL */ `mutation DeleteTaskList(
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -88,6 +88,7 @@ export const createTask = /* GraphQL */ `mutation CreateTask(
 ) {
   createTask(input: $input, condition: $condition) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -102,6 +103,7 @@ export const createTask = /* GraphQL */ `mutation CreateTask(
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -109,12 +111,10 @@ export const createTask = /* GraphQL */ `mutation CreateTask(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -128,6 +128,7 @@ export const updateTask = /* GraphQL */ `mutation UpdateTask(
 ) {
   updateTask(input: $input, condition: $condition) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -142,6 +143,7 @@ export const updateTask = /* GraphQL */ `mutation UpdateTask(
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -149,12 +151,10 @@ export const updateTask = /* GraphQL */ `mutation UpdateTask(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -168,6 +168,7 @@ export const deleteTask = /* GraphQL */ `mutation DeleteTask(
 ) {
   deleteTask(input: $input, condition: $condition) {
     id
+    owner
     listId
     sortOrder
     parentTaskId
@@ -182,6 +183,7 @@ export const deleteTask = /* GraphQL */ `mutation DeleteTask(
     isDemo
     list {
       id
+      owner
       name
       description
       isDemo
@@ -189,12 +191,10 @@ export const deleteTask = /* GraphQL */ `mutation DeleteTask(
       sortOrder
       createdAt
       updatedAt
-      owner
       __typename
     }
     createdAt
     updatedAt
-    owner
     __typename
   }
 }
@@ -220,6 +220,7 @@ export const createUserProfile = /* GraphQL */ `mutation CreateUserProfile(
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName
@@ -255,6 +256,7 @@ export const updateUserProfile = /* GraphQL */ `mutation UpdateUserProfile(
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName
@@ -290,6 +292,7 @@ export const deleteUserProfile = /* GraphQL */ `mutation DeleteUserProfile(
     settings
     settingsUpdatedAt
     displayName
+    email
     avatarUrl
     lastSeenAt
     preferredName

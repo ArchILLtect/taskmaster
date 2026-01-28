@@ -3,6 +3,7 @@
 
 export type CreateTaskListInput = {
   id?: string | null,
+  owner: string,
   name: string,
   description?: string | null,
   isDemo: boolean,
@@ -11,6 +12,7 @@ export type CreateTaskListInput = {
 };
 
 export type ModelTaskListConditionInput = {
+  owner?: ModelStringInput | null,
   name?: ModelStringInput | null,
   description?: ModelStringInput | null,
   isDemo?: ModelBooleanInput | null,
@@ -21,7 +23,6 @@ export type ModelTaskListConditionInput = {
   not?: ModelTaskListConditionInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
-  owner?: ModelStringInput | null,
 };
 
 export type ModelStringInput = {
@@ -86,6 +87,7 @@ export type ModelIntInput = {
 export type TaskList = {
   __typename: "TaskList",
   id: string,
+  owner: string,
   name: string,
   description?: string | null,
   isDemo: boolean,
@@ -94,7 +96,6 @@ export type TaskList = {
   tasks?: ModelTaskConnection | null,
   createdAt: string,
   updatedAt: string,
-  owner?: string | null,
 };
 
 export type ModelTaskConnection = {
@@ -106,6 +107,7 @@ export type ModelTaskConnection = {
 export type Task = {
   __typename: "Task",
   id: string,
+  owner: string,
   listId: string,
   sortOrder: number,
   parentTaskId?: string | null,
@@ -121,7 +123,6 @@ export type Task = {
   list?: TaskList | null,
   createdAt: string,
   updatedAt: string,
-  owner?: string | null,
 };
 
 export enum TaskStatus {
@@ -139,6 +140,7 @@ export enum TaskPriority {
 
 export type UpdateTaskListInput = {
   id: string,
+  owner?: string | null,
   name?: string | null,
   description?: string | null,
   isDemo?: boolean | null,
@@ -152,6 +154,7 @@ export type DeleteTaskListInput = {
 
 export type CreateTaskInput = {
   id?: string | null,
+  owner: string,
   listId: string,
   sortOrder: number,
   parentTaskId?: string | null,
@@ -167,6 +170,7 @@ export type CreateTaskInput = {
 };
 
 export type ModelTaskConditionInput = {
+  owner?: ModelStringInput | null,
   listId?: ModelIDInput | null,
   sortOrder?: ModelIntInput | null,
   parentTaskId?: ModelIDInput | null,
@@ -184,7 +188,6 @@ export type ModelTaskConditionInput = {
   not?: ModelTaskConditionInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
-  owner?: ModelStringInput | null,
 };
 
 export type ModelIDInput = {
@@ -215,6 +218,7 @@ export type ModelTaskPriorityInput = {
 
 export type UpdateTaskInput = {
   id: string,
+  owner?: string | null,
   listId?: string | null,
   sortOrder?: number | null,
   parentTaskId?: string | null,
@@ -235,7 +239,7 @@ export type DeleteTaskInput = {
 
 export type CreateUserProfileInput = {
   id?: string | null,
-  owner?: string | null,
+  owner: string,
   planTier: PlanTier,
   defaultVisibility: DefaultVisibility,
   seedVersion: number,
@@ -247,6 +251,7 @@ export type CreateUserProfileInput = {
   settings?: string | null,
   settingsUpdatedAt?: string | null,
   displayName?: string | null,
+  email: string,
   avatarUrl?: string | null,
   lastSeenAt?: string | null,
   preferredName?: string | null,
@@ -284,6 +289,7 @@ export type ModelUserProfileConditionInput = {
   settings?: ModelStringInput | null,
   settingsUpdatedAt?: ModelStringInput | null,
   displayName?: ModelStringInput | null,
+  email?: ModelStringInput | null,
   avatarUrl?: ModelStringInput | null,
   lastSeenAt?: ModelStringInput | null,
   preferredName?: ModelStringInput | null,
@@ -312,7 +318,7 @@ export type ModelDefaultVisibilityInput = {
 export type UserProfile = {
   __typename: "UserProfile",
   id: string,
-  owner?: string | null,
+  owner: string,
   planTier: PlanTier,
   defaultVisibility: DefaultVisibility,
   seedVersion: number,
@@ -324,6 +330,7 @@ export type UserProfile = {
   settings?: string | null,
   settingsUpdatedAt?: string | null,
   displayName?: string | null,
+  email: string,
   avatarUrl?: string | null,
   lastSeenAt?: string | null,
   preferredName?: string | null,
@@ -350,6 +357,7 @@ export type UpdateUserProfileInput = {
   settings?: string | null,
   settingsUpdatedAt?: string | null,
   displayName?: string | null,
+  email?: string | null,
   avatarUrl?: string | null,
   lastSeenAt?: string | null,
   preferredName?: string | null,
@@ -366,6 +374,7 @@ export type DeleteUserProfileInput = {
 
 export type ModelTaskListFilterInput = {
   id?: ModelIDInput | null,
+  owner?: ModelStringInput | null,
   name?: ModelStringInput | null,
   description?: ModelStringInput | null,
   isDemo?: ModelBooleanInput | null,
@@ -376,7 +385,6 @@ export type ModelTaskListFilterInput = {
   and?: Array< ModelTaskListFilterInput | null > | null,
   or?: Array< ModelTaskListFilterInput | null > | null,
   not?: ModelTaskListFilterInput | null,
-  owner?: ModelStringInput | null,
 };
 
 export enum ModelSortDirection {
@@ -393,6 +401,7 @@ export type ModelTaskListConnection = {
 
 export type ModelTaskFilterInput = {
   id?: ModelIDInput | null,
+  owner?: ModelStringInput | null,
   listId?: ModelIDInput | null,
   sortOrder?: ModelIntInput | null,
   parentTaskId?: ModelIDInput | null,
@@ -410,7 +419,6 @@ export type ModelTaskFilterInput = {
   and?: Array< ModelTaskFilterInput | null > | null,
   or?: Array< ModelTaskFilterInput | null > | null,
   not?: ModelTaskFilterInput | null,
-  owner?: ModelStringInput | null,
 };
 
 export type ModelUserProfileFilterInput = {
@@ -427,6 +435,7 @@ export type ModelUserProfileFilterInput = {
   settings?: ModelStringInput | null,
   settingsUpdatedAt?: ModelStringInput | null,
   displayName?: ModelStringInput | null,
+  email?: ModelStringInput | null,
   avatarUrl?: ModelStringInput | null,
   lastSeenAt?: ModelStringInput | null,
   preferredName?: ModelStringInput | null,
@@ -552,6 +561,7 @@ export type ModelSubscriptionUserProfileFilterInput = {
   settings?: ModelSubscriptionStringInput | null,
   settingsUpdatedAt?: ModelSubscriptionStringInput | null,
   displayName?: ModelSubscriptionStringInput | null,
+  email?: ModelSubscriptionStringInput | null,
   avatarUrl?: ModelSubscriptionStringInput | null,
   lastSeenAt?: ModelSubscriptionStringInput | null,
   preferredName?: ModelSubscriptionStringInput | null,
@@ -576,6 +586,7 @@ export type CreateTaskListMutation = {
   createTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -587,7 +598,6 @@ export type CreateTaskListMutation = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -600,6 +610,7 @@ export type UpdateTaskListMutation = {
   updateTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -611,7 +622,6 @@ export type UpdateTaskListMutation = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -624,6 +634,7 @@ export type DeleteTaskListMutation = {
   deleteTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -635,7 +646,6 @@ export type DeleteTaskListMutation = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -648,6 +658,7 @@ export type CreateTaskMutation = {
   createTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -663,6 +674,7 @@ export type CreateTaskMutation = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -670,11 +682,9 @@ export type CreateTaskMutation = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -687,6 +697,7 @@ export type UpdateTaskMutation = {
   updateTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -702,6 +713,7 @@ export type UpdateTaskMutation = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -709,11 +721,9 @@ export type UpdateTaskMutation = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -726,6 +736,7 @@ export type DeleteTaskMutation = {
   deleteTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -741,6 +752,7 @@ export type DeleteTaskMutation = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -748,11 +760,9 @@ export type DeleteTaskMutation = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -765,7 +775,7 @@ export type CreateUserProfileMutation = {
   createUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -777,6 +787,7 @@ export type CreateUserProfileMutation = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
@@ -799,7 +810,7 @@ export type UpdateUserProfileMutation = {
   updateUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -811,6 +822,7 @@ export type UpdateUserProfileMutation = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
@@ -833,7 +845,7 @@ export type DeleteUserProfileMutation = {
   deleteUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -845,6 +857,7 @@ export type DeleteUserProfileMutation = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
@@ -866,6 +879,7 @@ export type GetTaskListQuery = {
   getTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -877,7 +891,6 @@ export type GetTaskListQuery = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -895,6 +908,7 @@ export type ListTaskListsQuery = {
     items:  Array< {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -902,7 +916,6 @@ export type ListTaskListsQuery = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null >,
     nextToken?: string | null,
   } | null,
@@ -916,6 +929,7 @@ export type GetTaskQuery = {
   getTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -931,6 +945,7 @@ export type GetTaskQuery = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -938,11 +953,9 @@ export type GetTaskQuery = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -960,6 +973,7 @@ export type ListTasksQuery = {
     items:  Array< {
       __typename: "Task",
       id: string,
+      owner: string,
       listId: string,
       sortOrder: number,
       parentTaskId?: string | null,
@@ -974,7 +988,6 @@ export type ListTasksQuery = {
       isDemo: boolean,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null >,
     nextToken?: string | null,
   } | null,
@@ -988,7 +1001,7 @@ export type GetUserProfileQuery = {
   getUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -1000,6 +1013,7 @@ export type GetUserProfileQuery = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
@@ -1027,7 +1041,7 @@ export type ListUserProfilesQuery = {
     items:  Array< {
       __typename: "UserProfile",
       id: string,
-      owner?: string | null,
+      owner: string,
       planTier: PlanTier,
       defaultVisibility: DefaultVisibility,
       seedVersion: number,
@@ -1039,6 +1053,7 @@ export type ListUserProfilesQuery = {
       settings?: string | null,
       settingsUpdatedAt?: string | null,
       displayName?: string | null,
+      email: string,
       avatarUrl?: string | null,
       lastSeenAt?: string | null,
       preferredName?: string | null,
@@ -1069,6 +1084,7 @@ export type TasksByListQuery = {
     items:  Array< {
       __typename: "Task",
       id: string,
+      owner: string,
       listId: string,
       sortOrder: number,
       parentTaskId?: string | null,
@@ -1083,7 +1099,6 @@ export type TasksByListQuery = {
       isDemo: boolean,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null >,
     nextToken?: string | null,
   } | null,
@@ -1104,6 +1119,7 @@ export type TasksByParentQuery = {
     items:  Array< {
       __typename: "Task",
       id: string,
+      owner: string,
       listId: string,
       sortOrder: number,
       parentTaskId?: string | null,
@@ -1118,7 +1134,6 @@ export type TasksByParentQuery = {
       isDemo: boolean,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null >,
     nextToken?: string | null,
   } | null,
@@ -1133,6 +1148,7 @@ export type OnCreateTaskListSubscription = {
   onCreateTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -1144,7 +1160,6 @@ export type OnCreateTaskListSubscription = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -1157,6 +1172,7 @@ export type OnUpdateTaskListSubscription = {
   onUpdateTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -1168,7 +1184,6 @@ export type OnUpdateTaskListSubscription = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -1181,6 +1196,7 @@ export type OnDeleteTaskListSubscription = {
   onDeleteTaskList?:  {
     __typename: "TaskList",
     id: string,
+    owner: string,
     name: string,
     description?: string | null,
     isDemo: boolean,
@@ -1192,7 +1208,6 @@ export type OnDeleteTaskListSubscription = {
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -1205,6 +1220,7 @@ export type OnCreateTaskSubscription = {
   onCreateTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -1220,6 +1236,7 @@ export type OnCreateTaskSubscription = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -1227,11 +1244,9 @@ export type OnCreateTaskSubscription = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -1244,6 +1259,7 @@ export type OnUpdateTaskSubscription = {
   onUpdateTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -1259,6 +1275,7 @@ export type OnUpdateTaskSubscription = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -1266,11 +1283,9 @@ export type OnUpdateTaskSubscription = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -1283,6 +1298,7 @@ export type OnDeleteTaskSubscription = {
   onDeleteTask?:  {
     __typename: "Task",
     id: string,
+    owner: string,
     listId: string,
     sortOrder: number,
     parentTaskId?: string | null,
@@ -1298,6 +1314,7 @@ export type OnDeleteTaskSubscription = {
     list?:  {
       __typename: "TaskList",
       id: string,
+      owner: string,
       name: string,
       description?: string | null,
       isDemo: boolean,
@@ -1305,11 +1322,9 @@ export type OnDeleteTaskSubscription = {
       sortOrder: number,
       createdAt: string,
       updatedAt: string,
-      owner?: string | null,
     } | null,
     createdAt: string,
     updatedAt: string,
-    owner?: string | null,
   } | null,
 };
 
@@ -1322,7 +1337,7 @@ export type OnCreateUserProfileSubscription = {
   onCreateUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -1334,6 +1349,7 @@ export type OnCreateUserProfileSubscription = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
@@ -1356,7 +1372,7 @@ export type OnUpdateUserProfileSubscription = {
   onUpdateUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -1368,6 +1384,7 @@ export type OnUpdateUserProfileSubscription = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
@@ -1390,7 +1407,7 @@ export type OnDeleteUserProfileSubscription = {
   onDeleteUserProfile?:  {
     __typename: "UserProfile",
     id: string,
-    owner?: string | null,
+    owner: string,
     planTier: PlanTier,
     defaultVisibility: DefaultVisibility,
     seedVersion: number,
@@ -1402,6 +1419,7 @@ export type OnDeleteUserProfileSubscription = {
     settings?: string | null,
     settingsUpdatedAt?: string | null,
     displayName?: string | null,
+    email: string,
     avatarUrl?: string | null,
     lastSeenAt?: string | null,
     preferredName?: string | null,
