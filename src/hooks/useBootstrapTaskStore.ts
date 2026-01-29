@@ -1,14 +1,28 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { isCacheFresh, useTaskActions, useTaskStore } from "../store/taskStore";
 
-export function useBootstrapTaskStore(opts?: { listLimit?: number; enabled?: boolean }) {
-  const { hydrateAndRefreshIfStale } = useTaskActions();
-  const didRunRef = useRef(false);
+export function useBootstrapTaskStore(opts?: {
+  listLimit?: number;
+  enabled?: boolean;
+  authKey?: string | null;
+}) {
+  const { hydrateAndRefreshIfStale, refreshAll } = useTaskActions();
+  const lastRunKeyRef = useRef<string | null>(null);
+
+  const runKey = useMemo(() => {
+    if (opts?.enabled === false) return null;
+    // When signed in, key the bootstrap to the auth identity so user switches re-trigger.
+    return opts?.authKey ?? "signed-in";
+  }, [opts?.authKey, opts?.enabled]);
 
   useEffect(() => {
-    if (opts?.enabled === false) return;
-    if (didRunRef.current) return;
-    didRunRef.current = true;
+    if (!runKey) {
+      lastRunKeyRef.current = null;
+      return;
+    }
+
+    const isFirstForKey = lastRunKeyRef.current !== runKey;
+    lastRunKeyRef.current = runKey;
 
     const persistApi = (useTaskStore as unknown as { persist?: unknown }).persist as
       | {
@@ -66,6 +80,13 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number; enabled?: boo
 
     const run = () => {
       logStatus("run");
+
+      // On sign-in (or user switch), always force a network refresh so the UI is correct immediately.
+      if (isFirstForKey) {
+        void refreshAll({ listLimit: opts?.listLimit }, { reason: "manual" });
+        return;
+      }
+
       void hydrateAndRefreshIfStale({ listLimit: opts?.listLimit });
     };
 
@@ -96,5 +117,5 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number; enabled?: boo
       unsubscribeRefreshComplete();
       if (typeof unsub === "function") unsub();
     };
-  }, [hydrateAndRefreshIfStale, opts?.enabled, opts?.listLimit]);
+  }, [hydrateAndRefreshIfStale, refreshAll, runKey, opts?.listLimit]);
 }
