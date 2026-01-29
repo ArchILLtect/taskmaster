@@ -88,6 +88,33 @@ export const listTaskListsMinimal = /* GraphQL */ `
         id
         name
         description
+        # Intentionally omitted in normal UI minimal query to avoid legacy non-null errors:
+        # isDemo
+        isFavorite
+        sortOrder
+        owner
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+` as GeneratedQuery<
+  APITypes.ListTaskListsQueryVariables,
+  APITypes.ListTaskListsQuery
+>;
+
+// Admin variant: includes `isDemo` for owner-first browsing.
+// NOTE: This can hard-fail if legacy items are missing the now-required `isDemo` field.
+// Admin services should fall back to `listTaskListsMinimal` if that happens.
+export const listTaskListsAdminMinimal = /* GraphQL */ `
+  query ListTaskLists($id: ID, $filter: ModelTaskListFilterInput, $limit: Int, $nextToken: String, $sortDirection: ModelSortDirection) {
+    listTaskLists(id: $id, filter: $filter, limit: $limit, nextToken: $nextToken, sortDirection: $sortDirection) {
+      items {
+        id
+        name
+        description
+        isDemo
         isFavorite
         sortOrder
         owner
@@ -185,6 +212,39 @@ export const tasksByListMinimal = /* GraphQL */ `
         completedAt
         assigneeId
         tagIds
+        # Intentionally omitted in normal UI minimal query to avoid legacy non-null errors:
+        # isDemo
+        owner
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+` as GeneratedQuery<
+  APITypes.TasksByListQueryVariables,
+  APITypes.TasksByListQuery
+>;
+
+// Admin variant: includes `isDemo` for diagnostics and filtering.
+// Admin services should fall back to `tasksByListMinimal` if legacy items break non-null.
+export const tasksByListAdminMinimal = /* GraphQL */ `
+  query TasksByList($listId: ID!, $sortOrder: ModelIntKeyConditionInput, $limit: Int, $nextToken: String) {
+    tasksByList(listId: $listId, sortOrder: $sortOrder, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        listId
+        sortOrder
+        parentTaskId
+        title
+        description
+        status
+        priority
+        dueAt
+        completedAt
+        assigneeId
+        tagIds
+        isDemo
         owner
         createdAt
         updatedAt

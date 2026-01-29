@@ -19,11 +19,13 @@ import {
   updateTaskListMinimal,
   deleteTaskListMinimal,
   listTaskListsMinimal,
+  listTaskListsAdminMinimal,
   getTaskListMinimal,
   createTaskMinimal,
   updateTaskMinimal,
   deleteTaskMinimal,
   tasksByListMinimal,
+  tasksByListAdminMinimal,
   getUserProfileMinimal,
   getUserProfileEmailProbeMinimal,
   createUserProfileMinimal,
@@ -204,6 +206,28 @@ export const taskmasterApi = {
     return toPage<TaskListItem>(conn);
   },
 
+  // Admin-only: includes `isDemo` in selection set.
+  async listTaskListsAdmin(opts?: {
+    id?: string | null;
+    filter?: ModelTaskListFilterInput | null;
+    limit?: number;
+    nextToken?: string | null;
+    sortDirection?: ModelSortDirection | null;
+  }): Promise<Page<TaskListItem>> {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const data = await runQuery(listTaskListsAdminMinimal as any, {
+      id: opts?.id ?? null,
+      filter: opts?.filter ?? null,
+      sortDirection: opts?.sortDirection ?? null,
+      limit: opts?.limit ?? 50,
+      nextToken: opts?.nextToken ?? null,
+    });
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const conn = (data as any).listTaskLists as ListTaskListsQuery["listTaskLists"];
+    return toPage<TaskListItem>(conn);
+  },
+
   async listTaskListsOwned(opts?: {
     limit?: number;
     nextToken?: string | null;
@@ -211,6 +235,19 @@ export const taskmasterApi = {
   }): Promise<Page<TaskListItem>> {
     const owner = opts?.ownerSub ?? (await getOwnerSub());
     return await this.listTaskLists({
+      limit: opts?.limit,
+      nextToken: opts?.nextToken,
+      filter: { owner: { eq: owner } },
+    });
+  },
+
+  async listTaskListsOwnedAdmin(opts?: {
+    limit?: number;
+    nextToken?: string | null;
+    ownerSub?: string;
+  }): Promise<Page<TaskListItem>> {
+    const owner = opts?.ownerSub ?? (await getOwnerSub());
+    return await this.listTaskListsAdmin({
       limit: opts?.limit,
       nextToken: opts?.nextToken,
       filter: { owner: { eq: owner } },
@@ -260,6 +297,28 @@ export const taskmasterApi = {
   }): Promise<Page<TaskItem>> {
       /* eslint-disable @typescript-eslint/no-explicit-any */
     const data = await runQuery(tasksByListMinimal as any, {
+      listId: opts.listId,
+      sortOrder: opts.sortOrder ?? { ge: 0 },
+      sortDirection: opts.sortDirection,
+      limit: opts.limit ?? 200,
+      nextToken: opts.nextToken ?? null,
+    });
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const conn = (data as any).tasksByList as TasksByListQuery["tasksByList"];
+    return toPage<TaskItem>(conn);
+  },
+
+  // Admin-only: includes `isDemo` in selection set.
+  async tasksByListAdmin(opts: {
+    listId: string;
+    sortOrder?: ModelIntKeyConditionInput;
+    sortDirection?: ModelSortDirection;
+    limit?: number;
+    nextToken?: string | null;
+  }): Promise<Page<TaskItem>> {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const data = await runQuery(tasksByListAdminMinimal as any, {
       listId: opts.listId,
       sortOrder: opts.sortOrder ?? { ge: 0 },
       sortDirection: opts.sortDirection,

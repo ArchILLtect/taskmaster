@@ -30,6 +30,11 @@ function shouldFallbackUserProfilesWithoutEmail(err: unknown): boolean {
   return msg.includes("Cannot return null for non-nullable type") && msg.includes("UserProfile") && msg.includes("email");
 }
 
+function shouldFallbackMissingIsDemo(err: unknown): boolean {
+  const msg = errorToMessage(err);
+  return msg.includes("Cannot return null for non-nullable type") && msg.includes("isDemo");
+}
+
 function isConditionalCheckFailed(err: unknown): boolean {
   const msg = errorToMessage(err).toLowerCase();
   return msg.includes("conditional") || msg.includes("conditionalcheckfailed");
@@ -40,6 +45,24 @@ function placeholderEmailForProfile(profileId: string): string {
   // The UI can treat `missing+...@taskmaster.local` as "missing".
   const safe = profileId.replace(/[^a-zA-Z0-9._-]/g, "-");
   return `missing+${safe}@taskmaster.local`;
+}
+
+function mapWithConcurrency<T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const safeConcurrency = Math.max(1, Math.floor(concurrency || 1));
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const workerCount = Math.min(safeConcurrency, items.length);
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (true) {
+      const idx = nextIndex;
+      nextIndex += 1;
+      if (idx >= items.length) return;
+      results[idx] = await fn(items[idx]);
+    }
+  });
+
+  return Promise.all(workers).then(() => results);
 }
 
 export type AdminSnapshot = {
@@ -233,4 +256,187 @@ export async function probeUserProfilesMissingEmail(opts?: { limit?: number }): 
   }
 
   return { missing, ok, failed };
+}
+
+// -----------------------------
+// AdminPage v2 (owner-first)
+// -----------------------------
+
+export type AdminEmailMode = "full" | "safe";
+
+export type AdminUserProfilesPage = {
+  items: UserProfileUI[];
+  nextToken: string | null;
+  emailMode: AdminEmailMode;
+};
+
+export async function listUserProfilesAdminPage(opts?: {
+  limit?: number;
+  nextToken?: string | null;
+  emailMode?: AdminEmailMode;
+}): Promise<AdminUserProfilesPage> {
+  const limit = opts?.limit ?? 50;
+  const nextToken = opts?.nextToken ?? null;
+  const requestedMode: AdminEmailMode | undefined = opts?.emailMode;
+
+  if (requestedMode === "safe") {
+    const page = await taskmasterApi.listUserProfilesSafe({ limit, nextToken });
+    return {
+      items: page.items.map((p) => toUserProfileUI(p as Parameters<typeof toUserProfileUI>[0])),
+      nextToken: page.nextToken ?? null,
+      emailMode: "safe",
+    };
+  }
+
+  try {
+    const page = await taskmasterApi.listUserProfiles({ limit, nextToken });
+    return {
+      items: page.items.map((p) => toUserProfileUI(p as Parameters<typeof toUserProfileUI>[0])),
+      nextToken: page.nextToken ?? null,
+      emailMode: "full",
+    };
+  } catch (err) {
+    if (!shouldFallbackUserProfilesWithoutEmail(err)) throw err;
+    const page = await taskmasterApi.listUserProfilesSafe({ limit, nextToken });
+    return {
+      items: page.items.map((p) => toUserProfileUI(p as Parameters<typeof toUserProfileUI>[0])),
+      nextToken: page.nextToken ?? null,
+      emailMode: "safe",
+    };
+  }
+}
+
+export type AdminTaskListsPage = {
+  items: ListUI[];
+  nextToken: string | null;
+  isDemoMode: "full" | "safe";
+};
+
+export async function listTaskListsOwnedAdminPage(opts: {
+  ownerSub: string;
+  limit?: number;
+  nextToken?: string | null;
+}): Promise<AdminTaskListsPage> {
+  try {
+    const page = await taskmasterApi.listTaskListsOwnedAdmin({
+      ownerSub: opts.ownerSub,
+      limit: opts.limit ?? 50,
+      nextToken: opts.nextToken ?? null,
+    });
+
+    return {
+      items: page.items.map((l) => toListUI(l as Parameters<typeof toListUI>[0])),
+      nextToken: page.nextToken ?? null,
+      isDemoMode: "full",
+    };
+  } catch (err) {
+    if (!shouldFallbackMissingIsDemo(err)) throw err;
+
+    // Safe fallback: omit isDemo selection (will map to false).
+    const page = await taskmasterApi.listTaskListsOwned({
+      ownerSub: opts.ownerSub,
+      limit: opts.limit ?? 50,
+      nextToken: opts.nextToken ?? null,
+    });
+
+    return {
+      items: page.items.map((l) => toListUI(l as Parameters<typeof toListUI>[0])),
+      nextToken: page.nextToken ?? null,
+      isDemoMode: "safe",
+    };
+  }
+}
+
+export type AdminTasksLoadResult = {
+  tasksByListId: Record<string, TaskUI[]>;
+  loadedListCount: number;
+  loadedTaskCount: number;
+  cappedLists: string[];
+  hasMoreByListId: Record<string, boolean>;
+  isDemoMode: "full" | "safe";
+};
+
+async function fetchTasksForListCapped(listId: string, opts?: { perPageLimit?: number; maxTasks?: number }) {
+  const perPageLimit = opts?.perPageLimit ?? 200;
+  const maxTasks = opts?.maxTasks ?? 300;
+
+  const tasks: TaskUI[] = [];
+  let nextToken: string | null | undefined = null;
+
+  let isDemoMode: "full" | "safe" = "full";
+
+  do {
+    const limit = Math.min(perPageLimit, Math.max(1, maxTasks - tasks.length));
+
+    let page: Awaited<ReturnType<typeof taskmasterApi.tasksByListAdmin>>;
+    try {
+      page = await taskmasterApi.tasksByListAdmin({
+        listId,
+        sortOrder: { ge: 0 },
+        limit,
+        nextToken,
+      });
+    } catch (err) {
+      if (!shouldFallbackMissingIsDemo(err)) throw err;
+      isDemoMode = "safe";
+      page = await taskmasterApi.tasksByList({
+        listId,
+        sortOrder: { ge: 0 },
+        limit,
+        nextToken,
+      });
+    }
+
+    tasks.push(...page.items.map((t) => toTaskUI(t as Parameters<typeof toTaskUI>[0])));
+    nextToken = page.nextToken ?? null;
+
+    if (tasks.length >= maxTasks) {
+      // Cap reached: stop even if server has more.
+      break;
+    }
+  } while (nextToken);
+
+  const capped = tasks.length >= maxTasks && !!nextToken;
+  const hasMore = !!nextToken && !capped;
+
+  return { listId, tasks, capped, hasMore, isDemoMode };
+}
+
+export async function loadTasksForListsAdminPage(opts: {
+  listIds: string[];
+  concurrency?: number;
+  perListPageLimit?: number;
+  maxTasksPerList?: number;
+}): Promise<AdminTasksLoadResult> {
+  const listIds = (opts.listIds ?? []).filter(Boolean);
+  const concurrency = opts.concurrency ?? 4;
+  const perListPageLimit = opts.perListPageLimit ?? 200;
+  const maxTasksPerList = opts.maxTasksPerList ?? 300;
+
+  const results = await mapWithConcurrency(listIds, concurrency, async (listId) => {
+    return await fetchTasksForListCapped(listId, { perPageLimit: perListPageLimit, maxTasks: maxTasksPerList });
+  });
+
+  const tasksByListId: Record<string, TaskUI[]> = {};
+  const hasMoreByListId: Record<string, boolean> = {};
+  const cappedLists: string[] = [];
+  let isDemoMode: "full" | "safe" = "full";
+
+  for (const r of results) {
+    tasksByListId[r.listId] = r.tasks;
+    hasMoreByListId[r.listId] = r.hasMore;
+    if (r.capped) cappedLists.push(r.listId);
+    if (r.isDemoMode === "safe") isDemoMode = "safe";
+  }
+
+  const loadedTaskCount = Object.values(tasksByListId).reduce((acc, arr) => acc + arr.length, 0);
+
+  return {
+    tasksByListId,
+    loadedListCount: listIds.length,
+    loadedTaskCount,
+    cappedLists,
+    hasMoreByListId,
+    isDemoMode,
+  };
 }

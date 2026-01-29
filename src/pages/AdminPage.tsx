@@ -1,12 +1,18 @@
-import { Box, Heading, HStack, Spinner, Text, VStack, Badge, Separator, Button } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
+import { Box, Heading, HStack, Spinner, Text, VStack, Badge, Separator, Button, Input } from "@chakra-ui/react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { isCurrentUserAdmin } from "../services/authIdentity";
 import {
   backfillMissingUserProfileEmails,
-  fetchAdminSnapshot,
+  listTaskListsOwnedAdminPage,
+  listUserProfilesAdminPage,
+  loadTasksForListsAdminPage,
   probeUserProfilesMissingEmail,
-  type AdminSnapshot,
+  type AdminEmailMode,
 } from "../services/adminDataService";
+import { TaskPriority, TaskStatus } from "../API";
+import type { ListUI } from "../types/list";
+import type { TaskUI } from "../types/task";
+import type { UserProfileUI } from "../types/userProfile";
 
 function errorToMessage(err: unknown): string {
   if (typeof err === "string") return err;
@@ -28,13 +34,69 @@ function errorToMessage(err: unknown): string {
   return "Unknown error";
 }
 
+function parseStatusFilter(value: string): "all" | TaskStatus {
+  if (value === "all") return "all";
+  if (value === TaskStatus.Open) return TaskStatus.Open;
+  if (value === TaskStatus.Done) return TaskStatus.Done;
+  return "all";
+}
+
+function parsePriorityFilter(value: string): "all" | TaskPriority {
+  if (value === "all") return "all";
+  if (value === TaskPriority.Low) return TaskPriority.Low;
+  if (value === TaskPriority.Medium) return TaskPriority.Medium;
+  if (value === TaskPriority.High) return TaskPriority.High;
+  return "all";
+}
+
+function parseDemoFilter(value: string): "all" | "demo" | "non-demo" {
+  if (value === "all" || value === "demo" || value === "non-demo") return value;
+  return "all";
+}
+
 export function AdminPage() {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [snapshot, setSnapshot] = useState<AdminSnapshot | null>(null);
+
+  type TabKey = "users" | "lists" | "tasks";
+  const [tab, setTab] = useState<TabKey>("users");
+
+  const [selectedOwnerSub, setSelectedOwnerSub] = useState<string | null>(null);
+  const [selectedOwnerEmail, setSelectedOwnerEmail] = useState<string | null>(null);
+
+  // Users (paginated)
+  const [users, setUsers] = useState<UserProfileUI[]>([]);
+  const [usersNextToken, setUsersNextToken] = useState<string | null>(null);
+  const [usersEmailMode, setUsersEmailMode] = useState<AdminEmailMode>("full");
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersErr, setUsersErr] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+  const [showUsersListInSafeMode, setShowUsersListInSafeMode] = useState(false);
+
+  // Lists (paginated)
+  const [lists, setLists] = useState<ListUI[]>([]);
+  const [listsNextToken, setListsNextToken] = useState<string | null>(null);
+  const [listsIsDemoMode, setListsIsDemoMode] = useState<"full" | "safe">("full");
+  const [listsLoading, setListsLoading] = useState(false);
+  const [listsErr, setListsErr] = useState<string | null>(null);
+
+  // Tasks (incremental, per loaded lists)
+  const [taskLists, setTaskLists] = useState<ListUI[]>([]);
+  const [taskListsNextToken, setTaskListsNextToken] = useState<string | null>(null);
+  const [taskListsLoading, setTaskListsLoading] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksErr, setTasksErr] = useState<string | null>(null);
+  const [tasksByListId, setTasksByListId] = useState<Record<string, TaskUI[]>>({});
+  const [cappedTaskListIds, setCappedTaskListIds] = useState<string[]>([]);
+  const [tasksIsDemoMode, setTasksIsDemoMode] = useState<"full" | "safe">("full");
+
+  const [taskSearch, setTaskSearch] = useState("");
+  const [taskStatusFilter, setTaskStatusFilter] = useState<"all" | TaskStatus>("all");
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState<"all" | TaskPriority>("all");
+  const [taskDemoFilter, setTaskDemoFilter] = useState<"all" | "demo" | "non-demo">("all");
+
   const [repairingEmails, setRepairingEmails] = useState(false);
   const [emailRepairMsg, setEmailRepairMsg] = useState<string | null>(null);
 
@@ -42,7 +104,7 @@ export function AdminPage() {
   const [probeMsg, setProbeMsg] = useState<string | null>(null);
   const [probeMissingOwners, setProbeMissingOwners] = useState<string[]>([]);
 
-  const [showUserProfiles, setShowUserProfiles] = useState(true);
+  const initialUsersLoadedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,43 +129,76 @@ export function AdminPage() {
     };
   }, []);
 
+  const loadUsersPage = async (opts?: { reset?: boolean }) => {
+    if (!isAdmin) return;
+    if (usersLoading) return;
+
+    setUsersLoading(true);
+    setUsersErr(null);
+    setErr(null);
+
+    try {
+      const nextToken = opts?.reset ? null : usersNextToken;
+      const emailMode = opts?.reset ? "full" : usersEmailMode;
+
+      const page = await listUserProfilesAdminPage({
+        limit: 50,
+        nextToken,
+        emailMode,
+      });
+
+      setUsersEmailMode(page.emailMode);
+      if (page.emailMode === "safe") {
+        // Default hide in safe mode to avoid "everything missing" confusion.
+        setShowUsersListInSafeMode(false);
+      }
+
+      setUsers((prev) => (opts?.reset ? page.items : [...prev, ...page.items]));
+      setUsersNextToken(page.nextToken);
+    } catch (e) {
+      setUsersErr(errorToMessage(e));
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
-
-    let cancelled = false;
-
-    (async () => {
-      setLoading(true);
-      setErr(null);
-      setEmailRepairMsg(null);
-      try {
-        const data = await fetchAdminSnapshot();
-        if (cancelled) return;
-        setSnapshot(data);
-      } catch (e) {
-        if (cancelled) return;
-        setErr(errorToMessage(e));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    if (initialUsersLoadedRef.current) return;
+    initialUsersLoadedRef.current = true;
+    void loadUsersPage({ reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
-  const userProfilesEmailMode = snapshot?.meta?.userProfilesEmailMode ?? "full";
+  const resetOwnerScopedData = () => {
+    setLists([]);
+    setListsNextToken(null);
+    setListsErr(null);
+    setListsIsDemoMode("full");
 
-  useEffect(() => {
-    // Default: when safe-mode is active, hide the per-profile list (since all emails
-    // display as missing in safe-mode and it can be confusing/noisy).
-    if (userProfilesEmailMode === "safe") {
-      setShowUserProfiles(false);
-      return;
+    setTaskLists([]);
+    setTaskListsNextToken(null);
+    setTasksByListId({});
+    setTasksErr(null);
+    setCappedTaskListIds([]);
+    setTasksIsDemoMode("full");
+  };
+
+  const clearOwnerSelection = () => {
+    setSelectedOwnerSub(null);
+    setSelectedOwnerEmail(null);
+    resetOwnerScopedData();
+  };
+
+  const copySelectedOwnerSub = async () => {
+    const sub = selectedOwnerSub;
+    if (!sub) return;
+    try {
+      await navigator.clipboard.writeText(sub);
+    } catch {
+      // ignore
     }
-    setShowUserProfiles(true);
-  }, [userProfilesEmailMode]);
+  };
 
   const runEmailBackfill = async () => {
     setRepairingEmails(true);
@@ -111,8 +206,8 @@ export function AdminPage() {
     try {
       const res = await backfillMissingUserProfileEmails();
       setEmailRepairMsg(`Backfill complete: updated=${res.updated}, skipped=${res.skipped}, failed=${res.failed}`);
-      const data = await fetchAdminSnapshot();
-      setSnapshot(data);
+      // Refresh users list after backfill.
+      await loadUsersPage({ reset: true });
     } catch (e) {
       setEmailRepairMsg(`Backfill failed: ${errorToMessage(e)}`);
     } finally {
@@ -165,12 +260,149 @@ export function AdminPage() {
   };
 
   const counts = useMemo(() => {
+    const listCount = lists.length;
+    const taskListCount = taskLists.length;
+    const taskCount = Object.values(tasksByListId).reduce((acc, arr) => acc + arr.length, 0);
     return {
-      lists: snapshot?.lists.length ?? 0,
-      tasks: snapshot?.tasks.length ?? 0,
-      userProfiles: snapshot?.userProfiles.length ?? 0,
+      users: users.length,
+      lists: listCount,
+      taskLists: taskListCount,
+      tasks: taskCount,
     };
-  }, [snapshot]);
+  }, [lists.length, taskLists.length, tasksByListId, users.length]);
+
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const email = (u.email ?? "").toLowerCase();
+      const owner = (u.owner ?? "").toLowerCase();
+      const id = (u.id ?? "").toLowerCase();
+      return email.includes(q) || owner.includes(q) || id.includes(q);
+    });
+  }, [users, userSearch]);
+
+  const usersHasMore = !!usersNextToken;
+  const listsHasMore = !!listsNextToken;
+  const taskListsHasMore = !!taskListsNextToken;
+
+  const selectUser = (u: UserProfileUI) => {
+    const owner = u.owner || u.id;
+    if (!owner) return;
+    setSelectedOwnerSub(owner);
+    setSelectedOwnerEmail(u.email || null);
+    resetOwnerScopedData();
+  };
+
+  const loadListsPage = async (opts?: { reset?: boolean }) => {
+    const ownerSub = selectedOwnerSub;
+    if (!ownerSub) return;
+    if (listsLoading) return;
+
+    setListsLoading(true);
+    setListsErr(null);
+
+    try {
+      const nextToken = opts?.reset ? null : listsNextToken;
+      const page = await listTaskListsOwnedAdminPage({ ownerSub, limit: 50, nextToken });
+
+      setListsIsDemoMode(page.isDemoMode);
+      setLists((prev) => (opts?.reset ? page.items : [...prev, ...page.items]));
+      setListsNextToken(page.nextToken);
+    } catch (e) {
+      setListsErr(errorToMessage(e));
+    } finally {
+      setListsLoading(false);
+    }
+  };
+
+  const loadMoreTaskListsAndTasks = async (opts?: { reset?: boolean }) => {
+    const ownerSub = selectedOwnerSub;
+    if (!ownerSub) return;
+    if (taskListsLoading || tasksLoading) return;
+
+    setTaskListsLoading(true);
+    setTasksLoading(true);
+    setTasksErr(null);
+
+    try {
+      const nextToken = opts?.reset ? null : taskListsNextToken;
+      const page = await listTaskListsOwnedAdminPage({ ownerSub, limit: 25, nextToken });
+
+      const prevLists = opts?.reset ? [] : taskLists;
+      const mergedLists = [...prevLists, ...page.items];
+      setTaskLists(mergedLists);
+      setTaskListsNextToken(page.nextToken);
+
+      const newListIds = page.items.map((l) => l.id);
+
+      if (newListIds.length) {
+        const res = await loadTasksForListsAdminPage({
+          listIds: newListIds,
+          concurrency: 4,
+          perListPageLimit: 200,
+          maxTasksPerList: 300,
+        });
+
+        setTasksIsDemoMode(res.isDemoMode);
+
+        setTasksByListId((prev) => {
+          const next: Record<string, TaskUI[]> = { ...prev };
+          for (const listId of Object.keys(res.tasksByListId)) {
+            next[listId] = res.tasksByListId[listId];
+          }
+          return next;
+        });
+
+        setCappedTaskListIds((prev) => {
+          const set = new Set([...prev, ...res.cappedLists]);
+          return Array.from(set);
+        });
+      }
+    } catch (e) {
+      setTasksErr(errorToMessage(e));
+    } finally {
+      setTaskListsLoading(false);
+      setTasksLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Auto-load first page of lists when entering Lists tab.
+    if (tab !== "lists") return;
+    if (!selectedOwnerSub) return;
+    if (lists.length) return;
+    void loadListsPage({ reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, selectedOwnerSub]);
+
+  const tasksListNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const l of taskLists) map.set(l.id, l.name);
+    return map;
+  }, [taskLists]);
+
+  const visibleTasks = useMemo((): Array<TaskUI & { __listName?: string }> => {
+    const all: Array<TaskUI & { __listName?: string }> = [];
+    for (const [listId, tasks] of Object.entries(tasksByListId)) {
+      const listName = tasksListNameById.get(listId) ?? "(unknown list)";
+      for (const t of tasks) {
+        all.push(Object.assign({ __listName: listName }, t));
+      }
+    }
+
+    const q = taskSearch.trim().toLowerCase();
+    return all
+      .filter((t) => {
+        if (taskStatusFilter !== "all" && t.status !== taskStatusFilter) return false;
+        if (taskPriorityFilter !== "all" && t.priority !== taskPriorityFilter) return false;
+        if (taskDemoFilter === "demo" && !t.isDemo) return false;
+        if (taskDemoFilter === "non-demo" && t.isDemo) return false;
+        if (q && !(t.title ?? "").toLowerCase().includes(q)) return false;
+        return true;
+      })
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [taskDemoFilter, taskPriorityFilter, taskSearch, taskStatusFilter, tasksByListId, tasksListNameById]);
 
   if (checkingAdmin) {
     return (
@@ -196,19 +428,12 @@ export function AdminPage() {
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <HStack justify="space-between" w="100%">
         <Heading size="md">Admin</Heading>
-        <HStack gap={2}>
+        <HStack gap={2} align="center">
+          <Badge>Users: {counts.users}</Badge>
           <Badge>Lists: {counts.lists}</Badge>
           <Badge>Tasks: {counts.tasks}</Badge>
-          <Badge>UserProfiles: {counts.userProfiles}</Badge>
         </HStack>
       </HStack>
-
-      {loading ? (
-        <HStack gap={2} color="gray.600">
-          <Spinner size="sm" />
-          <Text fontSize="sm">Loading global data…</Text>
-        </HStack>
-      ) : null}
 
       {err ? (
         <Box bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" p={3} w="100%">
@@ -221,153 +446,544 @@ export function AdminPage() {
         </Box>
       ) : null}
 
-      {snapshot && userProfilesEmailMode === "safe" ? (
-        <Box bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={3} w="100%">
-          <HStack justify="space-between" align="start" w="100%" gap={3}>
-            <Box>
-              <Text color="yellow.900" fontWeight={700}>
-                UserProfiles loaded in safe mode
-              </Text>
-              <Text color="yellow.900" fontSize="sm">
-                Some legacy UserProfile records are missing the required `email` field, so the full query fails.
-                You can backfill placeholder emails to unblock admin views.
-              </Text>
-              <Text color="yellow.900" fontSize="sm" mt={1}>
-                Alternative (no placeholders): sign into the affected older accounts once. On login, the app will
-                self-heal that account’s `UserProfile.email` from Cognito, then reload this page.
-              </Text>
-              <Text color="yellow.900" fontSize="sm" mt={1}>
-                Tip: use “Detect broken profiles” to list which accounts are missing email.
-              </Text>
-              {emailRepairMsg ? (
-                <Text mt={2} fontSize="sm" color="yellow.900">
-                  {emailRepairMsg}
-                </Text>
-              ) : null}
-              {probeMsg ? (
-                <Text mt={2} fontSize="sm" color="yellow.900">
-                  {probeMsg}
-                </Text>
-              ) : null}
-              {probeMissingOwners.length ? (
-                <Box mt={2} bg="white" borderWidth="1px" borderColor="yellow.200" rounded="md" p={2}>
-                  <HStack justify="space-between" align="center" mb={1}>
-                    <Text fontSize="sm" color="yellow.900" fontWeight={700}>
-                      Accounts missing email (owner/sub)
-                    </Text>
-                    <Button size="xs" variant="outline" onClick={copyProbeList}>
-                      Copy list
+      {/* Owner selector (visible on all tabs) */}
+      <Box w="100%" borderWidth="1px" borderColor="gray.200" rounded="md" p={3}>
+        <HStack justify="space-between" align="start" w="100%" gap={4}>
+          <VStack align="start" gap={2} flex={1}>
+            <HStack justify="space-between" w="100%">
+              <Heading size="sm">Owner</Heading>
+              <HStack gap={2}>
+                {selectedOwnerSub ? (
+                  <>
+                    <Button size="xs" variant="outline" onClick={copySelectedOwnerSub}>
+                      Copy ownerSub
                     </Button>
-                  </HStack>
-                  <Text fontSize="sm" color="yellow.900" whiteSpace="pre-wrap">
-                    {probeMissingOwners.join("\n")}
-                  </Text>
-                </Box>
-              ) : null}
-            </Box>
-            <VStack align="end" gap={2}>
-              <Button size="sm" variant="outline" onClick={runEmailProbe} loading={probingEmails}>
-                Detect broken profiles
-              </Button>
-              <Button size="sm" variant="outline" onClick={runEmailBackfill} loading={repairingEmails}>
-                Backfill placeholder emails
-              </Button>
-            </VStack>
-          </HStack>
-        </Box>
-      ) : null}
-
-      {snapshot ? (
-        <VStack align="start" gap={4} w="100%">
-          <Box w="100%">
-            <HStack justify="space-between" align="center" mb={2} w="100%">
-              <Heading size="sm">User Profiles</Heading>
-              {userProfilesEmailMode === "safe" ? (
-                <Button size="xs" variant="outline" onClick={() => setShowUserProfiles((v) => !v)}>
-                  {showUserProfiles ? "Hide" : "Show"}
-                </Button>
-              ) : null}
+                    <Button size="xs" variant="outline" onClick={clearOwnerSelection}>
+                      Clear selection
+                    </Button>
+                  </>
+                ) : null}
+              </HStack>
             </HStack>
-            <Separator mb={2} />
-            {userProfilesEmailMode === "safe" && !showUserProfiles ? (
-              <Box bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={3}>
-                <Text fontSize="sm" color="yellow.900" fontWeight={700}>
-                  UserProfiles hidden
+
+            {selectedOwnerSub ? (
+              <Box>
+                <Text fontSize="sm" color="gray.700">
+                  Selected: <Badge>{selectedOwnerSub}</Badge>
                 </Text>
-                <Text fontSize="sm" color="yellow.900">
-                  Hidden because safe mode is active (at least one legacy profile is missing `email`, so emails can’t be shown reliably).
-                  Use “Detect broken profiles” above to find which accounts need self-heal, or backfill placeholders.
+                {selectedOwnerEmail ? (
+                  <Text fontSize="sm" color="gray.600">
+                    Email: {selectedOwnerEmail}
+                  </Text>
+                ) : null}
+              </Box>
+            ) : (
+              <Text fontSize="sm" color="gray.600">
+                No user selected.
+              </Text>
+            )}
+
+            <Input
+              placeholder="Search users (email / owner / id)"
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              size="sm"
+            />
+          </VStack>
+
+          <VStack align="end" gap={2} minW="240px">
+            <HStack gap={2}>
+              <Badge>{usersEmailMode === "safe" ? "Safe mode" : "Full"}</Badge>
+              <Badge>Loaded: {users.length}</Badge>
+            </HStack>
+            <HStack gap={2}>
+              <Button size="xs" variant="outline" onClick={() => loadUsersPage({ reset: true })} loading={usersLoading}>
+                Refresh users
+              </Button>
+              <Button size="xs" variant="outline" onClick={() => loadUsersPage()} loading={usersLoading} disabled={!usersHasMore}>
+                Load more
+              </Button>
+            </HStack>
+          </VStack>
+        </HStack>
+
+        {usersErr ? (
+          <Box mt={3} bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" p={2}>
+            <Text color="red.700" fontSize="sm">
+              {usersErr}
+            </Text>
+          </Box>
+        ) : null}
+
+        {usersEmailMode === "safe" && !showUsersListInSafeMode ? (
+          <HStack mt={3} justify="space-between" align="center" bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={2}>
+            <Text fontSize="sm" color="yellow.900">
+              Users list hidden because safe mode is active (legacy profiles missing `email` make emails unreliable). You can still select users by owner/sub.
+            </Text>
+            <Button size="xs" variant="outline" onClick={() => setShowUsersListInSafeMode(true)}>
+              Show users
+            </Button>
+          </HStack>
+        ) : (
+          <Box mt={3} maxH="240px" overflowY="auto" borderWidth="1px" borderColor="gray.100" rounded="md">
+            {filteredUsers.length === 0 ? (
+              <Box p={3}>
+                <Text fontSize="sm" color="gray.600">
+                  No users loaded (or search filtered everything).
                 </Text>
               </Box>
             ) : (
-              <VStack align="stretch" gap={2} w="100%">
-                {snapshot.userProfiles.slice(0, 25).map((p) => (
-                  <HStack key={p.id} justify="space-between" w="100%">
-                    <HStack gap={2}>
-                      {(() => {
-                        const isPlaceholder = p.email.startsWith("missing+") && p.email.endsWith("@taskmaster.local");
-                        const isMissing = !p.email || isPlaceholder;
-                        const displayEmail = isMissing ? "(missing)" : p.email;
-                        return (
-                          <>
-                            <Text fontWeight={600}>{displayEmail}</Text>
-                            {isMissing ? (
-                              <Badge bg="red.100" color="red.800" rounded="md">
-                                Missing email
-                              </Badge>
-                            ) : null}
-                          </>
-                        );
-                      })()}
-                    </HStack>
-                    <HStack gap={3}>
-                      <Text fontSize="sm" color="gray.600">
-                        owner={p.owner}
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        seedVersion={p.seedVersion}
-                      </Text>
-                    </HStack>
-                  </HStack>
-                ))}
-                {snapshot.userProfiles.length > 25 ? (
-                  <Text fontSize="sm" color="gray.500">
-                    Showing first 25 of {snapshot.userProfiles.length}.
-                  </Text>
-                ) : null}
+              <VStack align="stretch" gap={0}>
+                {filteredUsers.slice(0, 200).map((u) => {
+                  const isSelected = selectedOwnerSub === (u.owner || u.id);
+                  const email = u.email || "(email unavailable)";
+                  return (
+                    <Box
+                      key={u.id}
+                      px={3}
+                      py={2}
+                      borderBottomWidth="1px"
+                      borderColor="gray.100"
+                      bg={isSelected ? "blue.50" : "white"}
+                      _hover={{ bg: "gray.50" }}
+                      cursor="pointer"
+                      onClick={() => selectUser(u)}
+                    >
+                      <HStack justify="space-between" align="start" w="100%">
+                        <VStack align="start" gap={0}>
+                          <Text fontSize="sm" fontWeight={700}>
+                            {email}
+                          </Text>
+                          <Text fontSize="xs" color="gray.600">
+                            owner={u.owner}
+                          </Text>
+                          <Text fontSize="xs" color="gray.600">
+                            id={u.id}
+                          </Text>
+                        </VStack>
+                        {isSelected ? <Badge>Selected</Badge> : null}
+                      </HStack>
+                    </Box>
+                  );
+                })}
               </VStack>
             )}
           </Box>
+        )}
+      </Box>
+
+      {/* Tabs */}
+      <HStack gap={2}>
+        <Button size="sm" variant={tab === "users" ? "solid" : "outline"} onClick={() => setTab("users")}>
+          Users
+        </Button>
+        <Button size="sm" variant={tab === "lists" ? "solid" : "outline"} onClick={() => setTab("lists")}>
+          Lists
+        </Button>
+        <Button size="sm" variant={tab === "tasks" ? "solid" : "outline"} onClick={() => setTab("tasks")}>
+          Tasks
+        </Button>
+      </HStack>
+
+      {/* Users tab */}
+      {tab === "users" ? (
+        <VStack align="start" gap={3} w="100%">
+          {usersEmailMode === "safe" ? (
+            <Box bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={3} w="100%">
+              <HStack justify="space-between" align="start" w="100%" gap={3}>
+                <Box>
+                  <Text color="yellow.900" fontWeight={700}>
+                    UserProfiles loaded in safe mode
+                  </Text>
+                  <Text color="yellow.900" fontSize="sm">
+                    Some legacy UserProfile records are missing the required `email` field, so the full query fails.
+                    You can backfill placeholder emails to unblock full admin browsing.
+                  </Text>
+                  <Text color="yellow.900" fontSize="sm" mt={1}>
+                    Alternative (no placeholders): sign into the affected older accounts once. On login, the app will self-heal that account’s `UserProfile.email` from Cognito.
+                  </Text>
+                  <Text color="yellow.900" fontSize="sm" mt={1}>
+                    Tip: use “Detect broken profiles” to list which accounts are missing email.
+                  </Text>
+                  {emailRepairMsg ? (
+                    <Text mt={2} fontSize="sm" color="yellow.900">
+                      {emailRepairMsg}
+                    </Text>
+                  ) : null}
+                  {probeMsg ? (
+                    <Text mt={2} fontSize="sm" color="yellow.900">
+                      {probeMsg}
+                    </Text>
+                  ) : null}
+                  {probeMissingOwners.length ? (
+                    <Box mt={2} bg="white" borderWidth="1px" borderColor="yellow.200" rounded="md" p={2}>
+                      <HStack justify="space-between" align="center" mb={1}>
+                        <Text fontSize="sm" color="yellow.900" fontWeight={700}>
+                          Accounts missing email (owner/sub)
+                        </Text>
+                        <Button size="xs" variant="outline" onClick={copyProbeList}>
+                          Copy list
+                        </Button>
+                      </HStack>
+                      <Text fontSize="sm" color="yellow.900" whiteSpace="pre-wrap">
+                        {probeMissingOwners.join("\n")}
+                      </Text>
+                    </Box>
+                  ) : null}
+                </Box>
+                <VStack align="end" gap={2}>
+                  <Button size="sm" variant="outline" onClick={runEmailProbe} loading={probingEmails}>
+                    Detect broken profiles
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={runEmailBackfill} loading={repairingEmails}>
+                    Backfill placeholder emails
+                  </Button>
+                </VStack>
+              </HStack>
+            </Box>
+          ) : null}
+
+          {usersEmailMode !== "safe" ? (
+            <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" rounded="md" p={3} w="100%">
+              <HStack justify="space-between" align="start" w="100%" gap={3}>
+                <Box>
+                  <Text color="gray.800" fontWeight={700}>
+                    Diagnostics
+                  </Text>
+                  <Text color="gray.600" fontSize="sm">
+                    These are only needed if you suspect legacy UserProfiles are missing required fields (like `email`).
+                  </Text>
+                  {emailRepairMsg ? (
+                    <Text mt={2} fontSize="sm" color="gray.700">
+                      {emailRepairMsg}
+                    </Text>
+                  ) : null}
+                  {probeMsg ? (
+                    <Text mt={2} fontSize="sm" color="gray.700">
+                      {probeMsg}
+                    </Text>
+                  ) : null}
+                  {probeMissingOwners.length ? (
+                    <Box mt={2} bg="white" borderWidth="1px" borderColor="gray.200" rounded="md" p={2}>
+                      <HStack justify="space-between" align="center" mb={1}>
+                        <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                          Accounts missing email (owner/sub)
+                        </Text>
+                        <Button size="xs" variant="outline" onClick={copyProbeList}>
+                          Copy list
+                        </Button>
+                      </HStack>
+                      <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">
+                        {probeMissingOwners.join("\n")}
+                      </Text>
+                    </Box>
+                  ) : null}
+                </Box>
+                <VStack align="end" gap={2}>
+                  <Button size="sm" variant="outline" onClick={runEmailProbe} loading={probingEmails}>
+                    Detect broken profiles
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={runEmailBackfill} loading={repairingEmails}>
+                    Backfill placeholder emails
+                  </Button>
+                </VStack>
+              </HStack>
+            </Box>
+          ) : null}
 
           <Box w="100%">
             <Heading size="sm" mb={2}>
-              Lists
+              Pagination
             </Heading>
             <Separator mb={2} />
-            <VStack align="stretch" gap={2} w="100%">
-              {snapshot.lists.slice(0, 25).map((l) => (
-                <HStack key={l.id} justify="space-between" w="100%">
-                  <Text fontWeight={600}>{l.name}</Text>
-                  <Text fontSize="sm" color="gray.600">{l.id}</Text>
-                </HStack>
-              ))}
-              {snapshot.lists.length > 25 ? (
-                <Text fontSize="sm" color="gray.500">
-                  Showing first 25 of {snapshot.lists.length}.
-                </Text>
+            <HStack justify="space-between" w="100%">
+              <Text fontSize="sm" color="gray.600">
+                Loaded {users.length} user profiles{usersHasMore ? " (more available)" : ""}.
+              </Text>
+              <HStack gap={2}>
+                <Button size="sm" variant="outline" onClick={() => loadUsersPage()} loading={usersLoading} disabled={!usersHasMore}>
+                  Load more
+                </Button>
+              </HStack>
+            </HStack>
+          </Box>
+        </VStack>
+      ) : null}
+
+      {/* Lists tab */}
+      {tab === "lists" ? (
+        <VStack align="start" gap={3} w="100%">
+          {!selectedOwnerSub ? (
+            <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" rounded="md" p={3} w="100%">
+              <Text color="gray.700" fontWeight={600}>
+                Select a user to view lists.
+              </Text>
+            </Box>
+          ) : (
+            <>
+              {listsErr ? (
+                <Box bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" p={3} w="100%">
+                  <Text color="red.700" fontWeight={600}>
+                    Failed to load lists
+                  </Text>
+                  <Text color="red.700" fontSize="sm">
+                    {listsErr}
+                  </Text>
+                </Box>
               ) : null}
-            </VStack>
-          </Box>
 
-          <Box w="100%">
-            <Heading size="sm" mb={2}>
-              Tasks
-            </Heading>
-            <Separator mb={2} />
-            <Text fontSize="sm" color="gray.600">
-              Total tasks loaded: {snapshot.tasks.length}
-            </Text>
-          </Box>
+              <HStack justify="space-between" w="100%">
+                <Text fontSize="sm" color="gray.600">
+                  Loaded {lists.length} lists{listsHasMore ? " (more available)" : ""}.
+                </Text>
+                <HStack gap={2}>
+                  <Badge>{listsIsDemoMode === "safe" ? "isDemo safe" : "isDemo full"}</Badge>
+                  <Button size="sm" variant="outline" onClick={() => loadListsPage({ reset: true })} loading={listsLoading}>
+                    Refresh
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => loadListsPage()} loading={listsLoading} disabled={!listsHasMore}>
+                    Load more
+                  </Button>
+                </HStack>
+              </HStack>
+
+              {listsIsDemoMode === "safe" ? (
+                <Box bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={3} w="100%">
+                  <Text color="yellow.900" fontWeight={700} fontSize="sm">
+                    Lists loaded without isDemo
+                  </Text>
+                  <Text color="yellow.900" fontSize="sm">
+                    Some legacy TaskList records are missing the required `isDemo` field, so admin is falling back to a safe query.
+                    The isDemo column may be incorrect until legacy records are backfilled.
+                  </Text>
+                </Box>
+              ) : null}
+
+              <Box w="100%" borderWidth="1px" borderColor="gray.200" rounded="md" overflowX="auto">
+                <HStack px={3} py={2} bg="gray.50" borderBottomWidth="1px" borderColor="gray.200" justify="space-between">
+                  <Text fontSize="sm" fontWeight={700} w="240px">
+                    Name
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="90px" textAlign="right">
+                    isDemo
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="100px" textAlign="right">
+                    Favorite
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="100px" textAlign="right">
+                    sortOrder
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="260px" textAlign="right">
+                    id
+                  </Text>
+                </HStack>
+                <VStack align="stretch" gap={0}>
+                  {lists.map((l) => (
+                    <HStack key={l.id} px={3} py={2} borderBottomWidth="1px" borderColor="gray.100" justify="space-between">
+                      <Text fontSize="sm" w="240px" fontWeight={600}>
+                        {l.name}
+                      </Text>
+                      <Text fontSize="sm" w="90px" textAlign="right">
+                        {String(l.isDemo)}
+                      </Text>
+                      <Text fontSize="sm" w="100px" textAlign="right">
+                        {String(l.isFavorite)}
+                      </Text>
+                      <Text fontSize="sm" w="100px" textAlign="right">
+                        {String(l.sortOrder)}
+                      </Text>
+                      <Text fontSize="xs" w="260px" textAlign="right" color="gray.600">
+                        {l.id}
+                      </Text>
+                    </HStack>
+                  ))}
+                  {lists.length === 0 && !listsLoading ? (
+                    <Box p={3}>
+                      <Text fontSize="sm" color="gray.600">
+                        No lists loaded.
+                      </Text>
+                    </Box>
+                  ) : null}
+                </VStack>
+              </Box>
+            </>
+          )}
+        </VStack>
+      ) : null}
+
+      {/* Tasks tab */}
+      {tab === "tasks" ? (
+        <VStack align="start" gap={3} w="100%">
+          {!selectedOwnerSub ? (
+            <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" rounded="md" p={3} w="100%">
+              <Text color="gray.700" fontWeight={600}>
+                Select a user to view tasks.
+              </Text>
+            </Box>
+          ) : (
+            <>
+              {tasksErr ? (
+                <Box bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" p={3} w="100%">
+                  <Text color="red.700" fontWeight={600}>
+                    Failed to load tasks
+                  </Text>
+                  <Text color="red.700" fontSize="sm">
+                    {tasksErr}
+                  </Text>
+                </Box>
+              ) : null}
+
+              <HStack justify="space-between" w="100%">
+                <Text fontSize="sm" color="gray.600">
+                  Loaded tasks for {taskLists.length} lists. Total tasks loaded: {counts.tasks}.
+                </Text>
+                <HStack gap={2}>
+                  <Badge>{tasksIsDemoMode === "safe" ? "isDemo safe" : "isDemo full"}</Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => loadMoreTaskListsAndTasks({ reset: true })}
+                    loading={taskListsLoading || tasksLoading}
+                  >
+                    Load tasks (first page)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => loadMoreTaskListsAndTasks()}
+                    loading={taskListsLoading || tasksLoading}
+                    disabled={!taskListsHasMore}
+                  >
+                    Load tasks for more lists
+                  </Button>
+                </HStack>
+              </HStack>
+
+              {tasksIsDemoMode === "safe" ? (
+                <Box bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={3} w="100%">
+                  <Text color="yellow.900" fontWeight={700} fontSize="sm">
+                    Tasks loaded without isDemo
+                  </Text>
+                  <Text color="yellow.900" fontSize="sm">
+                    Some legacy Task records are missing the required `isDemo` field, so admin is falling back to a safe query.
+                    The isDemo filter/column may be incorrect until legacy records are backfilled.
+                  </Text>
+                </Box>
+              ) : null}
+
+              {cappedTaskListIds.length ? (
+                <Box bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" p={3} w="100%">
+                  <Text color="yellow.900" fontWeight={700} fontSize="sm">
+                    Task loading capped
+                  </Text>
+                  <Text color="yellow.900" fontSize="sm">
+                    Some lists have more than the per-list cap (currently 300). Loaded partial results for: {cappedTaskListIds.slice(0, 10).join(", ")}
+                    {cappedTaskListIds.length > 10 ? " …" : ""}
+                  </Text>
+                </Box>
+              ) : null}
+
+              <Box w="100%" borderWidth="1px" borderColor="gray.200" rounded="md" p={3}>
+                <Heading size="sm" mb={2}>
+                  Filters
+                </Heading>
+                <Separator mb={2} />
+                <HStack gap={3} flexWrap="wrap">
+                  <Input placeholder="Search title" size="sm" value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} maxW="260px" />
+                  <Box borderWidth="1px" rounded="md" px={2} py={1}>
+                    <select
+                      value={taskStatusFilter}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setTaskStatusFilter(parseStatusFilter(e.target.value))}
+                      style={{ background: "transparent", fontSize: "0.875rem" }}
+                    >
+                      <option value="all">All statuses</option>
+                      <option value={TaskStatus.Open}>Open</option>
+                      <option value={TaskStatus.Done}>Done</option>
+                    </select>
+                  </Box>
+                  <Box borderWidth="1px" rounded="md" px={2} py={1}>
+                    <select
+                      value={taskPriorityFilter}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setTaskPriorityFilter(parsePriorityFilter(e.target.value))}
+                      style={{ background: "transparent", fontSize: "0.875rem" }}
+                    >
+                      <option value="all">All priorities</option>
+                      <option value={TaskPriority.Low}>Low</option>
+                      <option value={TaskPriority.Medium}>Medium</option>
+                      <option value={TaskPriority.High}>High</option>
+                    </select>
+                  </Box>
+                  <Box borderWidth="1px" rounded="md" px={2} py={1}>
+                    <select
+                      value={taskDemoFilter}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) => setTaskDemoFilter(parseDemoFilter(e.target.value))}
+                      style={{ background: "transparent", fontSize: "0.875rem" }}
+                    >
+                      <option value="all">All</option>
+                      <option value="demo">Demo only</option>
+                      <option value="non-demo">Non-demo only</option>
+                    </select>
+                  </Box>
+                  <Badge>Visible: {visibleTasks.length}</Badge>
+                </HStack>
+              </Box>
+
+              <Box w="100%" borderWidth="1px" borderColor="gray.200" rounded="md" overflowX="auto">
+                <HStack px={3} py={2} bg="gray.50" borderBottomWidth="1px" borderColor="gray.200" justify="space-between">
+                  <Text fontSize="sm" fontWeight={700} w="320px">
+                    Title
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="160px">
+                    List
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="90px" textAlign="right">
+                    Status
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="90px" textAlign="right">
+                    Priority
+                  </Text>
+                  <Text fontSize="sm" fontWeight={700} w="80px" textAlign="right">
+                    isDemo
+                  </Text>
+                </HStack>
+                <VStack align="stretch" gap={0}>
+                  {visibleTasks.slice(0, 500).map((t) => (
+                    <HStack key={t.id} px={3} py={2} borderBottomWidth="1px" borderColor="gray.100" justify="space-between">
+                      <Text fontSize="sm" w="320px" fontWeight={600} lineClamp={1}>
+                        {t.title}
+                      </Text>
+                      <Text fontSize="sm" w="160px" color="gray.700" lineClamp={1}>
+                        {t.__listName ?? "(unknown list)"}
+                      </Text>
+                      <Text fontSize="sm" w="90px" textAlign="right">
+                        {t.status}
+                      </Text>
+                      <Text fontSize="sm" w="90px" textAlign="right">
+                        {t.priority}
+                      </Text>
+                      <Text fontSize="sm" w="80px" textAlign="right">
+                        {String(t.isDemo)}
+                      </Text>
+                    </HStack>
+                  ))}
+                  {visibleTasks.length > 500 ? (
+                    <Box p={3}>
+                      <Text fontSize="sm" color="gray.600">
+                        Showing first 500 matching tasks.
+                      </Text>
+                    </Box>
+                  ) : null}
+                  {visibleTasks.length === 0 && !tasksLoading ? (
+                    <Box p={3}>
+                      <Text fontSize="sm" color="gray.600">
+                        No tasks loaded yet (or filters removed everything).
+                      </Text>
+                    </Box>
+                  ) : null}
+                </VStack>
+              </Box>
+            </>
+          )}
         </VStack>
       ) : null}
     </VStack>
