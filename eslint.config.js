@@ -6,7 +6,11 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores([
+    "dist",
+    // Legacy: was previously in .eslintignore
+    "amplify-codegen-temp/**",
+  ]),
 
   // Base config for all TS/TSX
   {
@@ -21,7 +25,7 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
-    ignores: ["**/node_modules/**", "amplify-codegen-temp/models/models.ts"],
+    ignores: ["**/node_modules/**"],
     rules: {
       // Optional nicety:
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
