@@ -1,13 +1,12 @@
-import { Heading, Text, VStack, Button } from "@chakra-ui/react";
+import { Heading, Text, VStack } from "@chakra-ui/react";
 import { useProfilePageData } from "./useProfilePageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 type ProfilePageProps = {
   user?: { username?: string; userId?: string } | null;
-  onSignOut?: () => void;
 };
   
-export function ProfilePage({ user, onSignOut }: ProfilePageProps) {
+export function ProfilePage({ user }: ProfilePageProps) {
   const { userUI, loading, error } = useProfilePageData();
   const signedIn = Boolean(userUI?.username ?? user?.username ?? user?.userId);
 
@@ -26,7 +25,6 @@ export function ProfilePage({ user, onSignOut }: ProfilePageProps) {
     );
   } else {
     return (
-      <>
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
         <Text>Username: {username ?? "(unknown)"}</Text>
@@ -34,12 +32,6 @@ export function ProfilePage({ user, onSignOut }: ProfilePageProps) {
         {role ? <Text>Role: {role}</Text> : null}
         {error ? <Text color="orange.600">{error}</Text> : null}
       </VStack>
-      {onSignOut ? (
-        <Button size="sm" variant="outline" onClick={onSignOut}>
-          Sign out
-        </Button>
-      ) : null}
-      </>
     );
   }
 }
