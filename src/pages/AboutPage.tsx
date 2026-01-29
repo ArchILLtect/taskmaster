@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, Text, VStack, Image } from "@chakra-ui/react";
 
 export function AboutPage() {
   return (
@@ -56,21 +56,43 @@ export function AboutPage() {
 
         <HStack gap={6} align="start" flexWrap="wrap">
           <Box
-            w="160px"
-            h="160px"
-            bg="gray.100"
-            borderWidth="1px"
-            borderColor="gray.200"
-            rounded="md"
+            w="170px"
+            h="168px"
+            rounded="full"
+            border="4px solid gold"
             display="flex"
             alignItems="center"
             justifyContent="center"
           >
-            <Text color="gray.500" fontSize="sm" textAlign="center">
-              Photo
-              <br />
-              (coming soon)
-            </Text>
+            <Box
+              w="164px"
+              h="162px"
+              rounded="full"
+              border="4px solid black"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Box
+                w="160px"
+                h="160px"
+                rounded="full"
+                border="3px solid gold"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Image
+                  w="100%"
+                  h="100%"
+                  rounded="full"
+                  objectFit="cover"
+                  loading="lazy"
+                  src="/pics/NickSr-ProfilePic-Formal02.jpg"
+                  alt="Photo of Nick Hanson"
+                />
+              </Box>
+            </Box>
           </Box>
 
           <VStack align="start" gap={2} flex="1" minW="260px">
