@@ -1,4 +1,3 @@
-import { Authenticator } from "@aws-amplify/ui-react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import "@aws-amplify/ui-react/styles.css";
 
@@ -20,6 +19,11 @@ import { BasicSpinner } from "./components/ui/BasicSpinner";
 import { Hub } from "aws-amplify/utils";
 import { clearAllUserCaches } from "./store/clearUserCaches";
 import { USER_UI_STORAGE_KEY } from "./services/userUICacheStore";
+import { useAuthUser } from "./hooks/useAuthUser";
+import { RequireAuth } from "./routes/RequireAuth";
+import { HomePage } from "./pages/HomePage";
+import { LoginPage } from "./pages/LoginPage";
+import { AboutPage } from "./pages/AboutPage";
 
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
@@ -91,60 +95,49 @@ function maybeClearCachesBeforeFirstAuthedRender(user?: { username?: string; use
 }
 
 export default function App() {
+  const { user, signedIn, signOutWithCleanup } = useAuthUser();
+
+  // Only relevant once we have a signed-in identity.
+  maybeClearCachesBeforeFirstAuthedRender(user);
+
   return (
-    <Authenticator>
-      {({ signOut, user }) => {
-        maybeClearCachesBeforeFirstAuthedRender(user as unknown as { username?: string; userId?: string } | null);
+    <Routes>
+      <Route element={<AppShell user={user} onSignOut={signOutWithCleanup} signedIn={signedIn} />}>
+        {/* Public routes */}
+        <Route path="/" element={<HomePage signedIn={signedIn} />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/login" element={<LoginPage signedIn={signedIn} />} />
 
-        console.log(user);
-        const signOutWithCleanup = async () => {
-          try {
-            await signOut?.();
-          } finally {
-            // Clear after signOut so that if Amplify triggers any downstream auth events,
-            // we are already in a signed-out state when caches disappear.
-            clearAllUserCaches();
-          }
-        };
+        {/* Protected routes */}
+        <Route element={<RequireAuth signedIn={signedIn} />}>
+          <Route path="/inbox" element={<InboxPage />} />
+          <Route path="/today" element={<TodayPage />} />
+          <Route path="/week" element={<WeekPage />} />
+          <Route path="/month" element={<MonthPage />} />
+          <Route path="/updates" element={<UpdatesPage />} />
+          <Route path="/lists" element={<ListsPage />} />
+          <Route path="/lists/:listId" element={<ListDetailsPage />} />
+          <Route path="/lists/:listId/tasks/*" element={<ListDetailsPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/profile" element={<ProfilePage user={user} />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          {import.meta.env.DEV ? (
+            <Route
+              path="/dev"
+              element={
+                <Suspense fallback={<BasicSpinner />}>
+                  <DevPage />
+                </Suspense>
+              }
+            />
+          ) : null}
+        </Route>
 
-        return (
-        <>
-          <Routes>
-            <Route element={<AppShell user={user} onSignOut={signOutWithCleanup} />}>
-              <Route path="/" element={<Navigate to="/today" replace />} />
-              <Route path="/inbox" element={<InboxPage />} />
-              <Route path="/today" element={<TodayPage />} />
-              <Route path="/week" element={<WeekPage />} />
-              <Route path="/month" element={<MonthPage />} />
-              <Route path="/updates" element={<UpdatesPage />} />
-              <Route path="/lists" element={<ListsPage />} />
-              <Route path="/lists/:listId" element={<ListDetailsPage />} />
-
-              {/* Optional focus route (single pane), if you want it later */}
-              <Route path="/lists/:listId/tasks/*" element={<ListDetailsPage />} />
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/favorites" element={<FavoritesPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/profile" element={<ProfilePage user={user} onSignOut={signOutWithCleanup} />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              {import.meta.env.DEV ? (
-                <Route
-                  path="/dev"
-                  element={
-                    <Suspense fallback={<BasicSpinner />}>
-                      <DevPage />
-                    </Suspense>
-                  }
-                />
-              ) : null}
-
-              {/* Optional: catch-all */}
-              <Route path="*" element={<Navigate to="/today" replace />} />
-            </Route>
-          </Routes>
-        </>
-        );
-      }}
-    </Authenticator>
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
   );
 }
