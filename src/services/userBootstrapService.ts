@@ -73,6 +73,52 @@ async function selfHealUserProfileEmail(profileId: string, email: string) {
   }
 }
 
+function pickDisplayName(opts: {
+  username?: string | null;
+  preferredUsername?: string | null;
+  name?: string | null;
+  email?: string | null;
+}): string {
+  const fromUsername = typeof opts.username === "string" ? opts.username.trim() : "";
+  if (fromUsername) return fromUsername;
+
+  const fromPreferred = typeof opts.preferredUsername === "string" ? opts.preferredUsername.trim() : "";
+  if (fromPreferred) return fromPreferred;
+
+  const fromName = typeof opts.name === "string" ? opts.name.trim() : "";
+  if (fromName) return fromName;
+
+  const email = typeof opts.email === "string" ? opts.email.trim() : "";
+  if (email && email.includes("@")) return email.split("@")[0];
+
+  return "";
+}
+
+async function selfHealUserProfileDisplayName(profileId: string, displayName: string) {
+  const trimmed = displayName.trim();
+  if (!trimmed) return;
+
+  const condition: ModelUserProfileConditionInput = {
+    or: [
+      { displayName: { attributeExists: false } },
+      { displayName: { attributeType: ModelAttributeTypes._null } },
+      { displayName: { eq: "" } },
+    ],
+  };
+
+  try {
+    await taskmasterApi.updateUserProfile({ id: profileId, displayName: trimmed }, condition);
+    if (import.meta.env.DEV) {
+      console.info(`[user bootstrap] healed missing displayName for profileId=${profileId}`);
+    }
+  } catch (err) {
+    if (isConditionalFailure(err)) return;
+    if (import.meta.env.DEV) {
+      console.warn("[user bootstrap] displayName self-heal failed", err);
+    }
+  }
+}
+
 function buildIsoAtMidnightUtcFromNow(daysFromNow: number): string {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + daysFromNow);
@@ -92,6 +138,13 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
   const email = attrs.email;
   const emailString = typeof email === "string" ? email : "";
 
+  const displayName = pickDisplayName({
+    username: current.username,
+    preferredUsername: typeof attrs.preferred_username === "string" ? attrs.preferred_username : null,
+    name: typeof attrs.name === "string" ? attrs.name : null,
+    email: emailString || null,
+  });
+
   const existing = await taskmasterApi.getUserProfile(profileId);
   if (existing) {
     // If the profile already exists, opportunistically fix legacy missing/null email.
@@ -99,6 +152,11 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
       await selfHealUserProfileEmail(profileId, emailString);
     } else if (import.meta.env.DEV) {
       console.warn("[user bootstrap] Cognito email missing; cannot self-heal UserProfile.email");
+    }
+
+    // Also self-heal legacy missing/null displayName.
+    if (displayName) {
+      await selfHealUserProfileDisplayName(profileId, displayName);
     }
     return existing;
   }
@@ -120,7 +178,7 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
     settingsVersion: 0,
     settings: null,
     settingsUpdatedAt: null,
-    displayName: null,
+    displayName: displayName || null,
     email: emailString,
     avatarUrl: null,
     lastSeenAt: null,

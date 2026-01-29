@@ -306,6 +306,66 @@ export async function listUserProfilesAdminPage(opts?: {
   }
 }
 
+export async function listUserProfilesWithEmailAdminPage(opts?: {
+  limit?: number;
+  nextToken?: string | null;
+}): Promise<{ items: UserProfileUI[]; nextToken: string | null }> {
+  // Email-first owner selection: only return profiles where `email` is a real string.
+  // This avoids the non-nullable email crash from legacy records missing/NULL email.
+  const page = await taskmasterApi.listUserProfiles({
+    limit: opts?.limit ?? 50,
+    nextToken: opts?.nextToken ?? null,
+    filter: {
+      email: {
+        attributeType: ModelAttributeTypes.string,
+      },
+    },
+  });
+
+  return {
+    items: page.items.map((p) => toUserProfileUI(p as Parameters<typeof toUserProfileUI>[0])),
+    nextToken: page.nextToken ?? null,
+  };
+}
+
+export async function listUserProfilesByEmailAdminPage(opts: {
+  email: string;
+  limit?: number;
+  nextToken?: string | null;
+}): Promise<AdminUserProfilesPage> {
+  const email = opts.email;
+  try {
+    const page = await taskmasterApi.listUserProfiles({
+      limit: opts.limit ?? 50,
+      nextToken: opts.nextToken ?? null,
+      filter: {
+        email: { eq: email },
+      },
+    });
+
+    return {
+      items: page.items.map((p) => toUserProfileUI(p as Parameters<typeof toUserProfileUI>[0])),
+      nextToken: page.nextToken ?? null,
+      emailMode: "full",
+    };
+  } catch (err) {
+    if (!shouldFallbackUserProfilesWithoutEmail(err)) throw err;
+    const page = await taskmasterApi.listUserProfilesSafe({
+      limit: opts.limit ?? 50,
+      nextToken: opts.nextToken ?? null,
+      filter: {
+        email: { eq: email },
+      },
+    });
+
+    return {
+      items: page.items.map((p) => toUserProfileUI(p as Parameters<typeof toUserProfileUI>[0])),
+      nextToken: page.nextToken ?? null,
+      emailMode: "safe",
+    };
+  }
+}
+
 export type AdminTaskListsPage = {
   items: ListUI[];
   nextToken: string | null;
