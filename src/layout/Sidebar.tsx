@@ -4,19 +4,33 @@ import { SidebarItem } from "../components/SidebarItem";
 import { viewLinks } from "../config/sidebar";
 import { useListsPageData } from "../pages/useListsPageData";
 
-export function Sidebar() {
+export function Sidebar({ variant = "app" }: { variant?: "app" | "public" }) {
+  return variant === "public" ? <PublicSidebar /> : <AppSidebar />;
+}
+
+function PublicSidebar() {
+  return (
+    <Box minW="18vw" borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
+      <SidebarItem to="/" label="Home" main />
+      <Separator my={3} />
+      <SidebarItem to="/about" label="About" main />
+      <Separator my={3} />
+      <SidebarItem to="/login" label="Login" main />
+    </Box>
+  );
+}
+
+function AppSidebar() {
   const { visibleFavorites } = useListsPageData();
 
   const favoriteLinks = visibleFavorites
     .filter((l) => l.isFavorite)
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((l) => ({ to: `/lists/${l.id}`, label: l.name }))
-  ;
+    .map((l) => ({ to: `/lists/${l.id}`, label: l.name }));
 
   return (
     <Box minW="18vw" borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
-
       <SidebarItem to="/inbox" label="Inbox" main />
 
       <Separator my={3} />
@@ -34,7 +48,7 @@ export function Sidebar() {
       <Separator my={3} />
 
       <SidebarItem to="/lists" label="Lists" main />
-      
+
       <Separator my={3} />
 
       <SidebarCollapse to="/favorites" label="Favorites" items={favoriteLinks} defaultOpen={false} />
@@ -42,7 +56,6 @@ export function Sidebar() {
       <Separator my={3} />
 
       <SidebarItem to="/dev" label="Dev" main />
-
     </Box>
   );
 }

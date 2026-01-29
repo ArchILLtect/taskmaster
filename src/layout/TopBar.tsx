@@ -8,10 +8,9 @@ import { useTaskStoreView } from "../store/taskStore";
 type TopBarProps = {
   user?: AuthUserLike | null;
   userUI?: UserUI | null;
-  onSignOut?: () => void;
 };
 
-export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
+export function TopBar({ user, userUI }: TopBarProps) {
   const { userUI: hookUserUI } = useUserUI();
   const effectiveUserUI = userUI ?? hookUserUI;
 
@@ -25,7 +24,7 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
 
   return (
     <HStack px={4} py={3} borderBottomWidth="1px" bg="white" position={"sticky"} minW="400px">
-      <Heading size="lg">{"< TaskMaster />"}</Heading>
+      <RouterLink to="/">{() => <Heading size="lg">{"< TaskMaster />"}</Heading>}</RouterLink>
       <Spacer />
 
       <HStack gap={3}>
@@ -61,35 +60,29 @@ export function TopBar({ user, userUI, onSignOut }: TopBarProps) {
                 )}
               </RouterLink>
             ) : null}
-
-            {onSignOut ? (
-              <Button size="sm" variant="outline" onClick={onSignOut}>
-                Sign out
-              </Button>
-            ) : null}
           </>
         ) : (
-          <Button size="sm" variant="solid">
-            Sign in
-          </Button>
+          <RouterLink to="/login">{() => <Button as="span" size="sm" variant="solid">Sign in</Button>}</RouterLink>
         )}
-        <RouterLink to={"/settings"}>
-          {({ isActive }) => (
-            <Button
-              as="span"
-              variant="ghost"
-              justifyContent="flex-start"
-              width="100%"
-              paddingX={2}
-              fontWeight="700"
-              color="black"
-              bg={isActive ? "blackAlpha.100" : "transparent"}
-              _hover={{ bg: "blackAlpha.100" }}
-            >
-              <IoSettingsSharp />
-            </Button>
-          )}
-        </RouterLink>
+        {signedIn ? (
+          <RouterLink to={"/settings"}>
+            {({ isActive }) => (
+              <Button
+                as="span"
+                variant="ghost"
+                justifyContent="flex-start"
+                width="100%"
+                paddingX={2}
+                fontWeight="700"
+                color="black"
+                bg={isActive ? "blackAlpha.100" : "transparent"}
+                _hover={{ bg: "blackAlpha.100" }}
+              >
+                <IoSettingsSharp />
+              </Button>
+            )}
+          </RouterLink>
+        ) : null}
       </HStack>
     </HStack>
   );
