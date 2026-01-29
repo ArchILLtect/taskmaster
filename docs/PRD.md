@@ -10,7 +10,7 @@ TaskMaster is a task management app prototype focused on:
 
 ## Target users
 - Single user (initially)
-- Optional admin role (planned via Cognito groups)
+- Optional admin role (implemented via Cognito groups)
 
 ## Core user stories (MVP)
 - As a user, I can view my task lists.
@@ -45,6 +45,7 @@ References:
 - Authentication is real (Cognito via Amplify Auth)
 	- user identity is available throughout the app shell
 	- Admin group support exists (read/write across users)
+	- Admin console exists (`/admin`) for cross-user inspection (read-only; editing/deleting intentionally deferred)
 - Data is real (AppSync GraphQL + DynamoDB via Amplify `@model`)
 		- Lists and tasks pages do not use local placeholder data for user-facing data
 	- Core CRUD works end-to-end for TaskLists + Tasks

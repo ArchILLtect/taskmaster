@@ -105,6 +105,7 @@ Suggested defaults:
 - [ ] Create a task, update it, mark it Done/Open; refresh the page and confirm data persists.
 - [ ] Deep link a list/task route and hard-refresh:
 	- `/lists/:listId/tasks/*` continues to work with host fallback rules.
+- [ ] If Admin is enabled, confirm `/admin` loads for an Admin user and does not load for non-admin users.
 
 ### Client cache sanity
 

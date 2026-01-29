@@ -91,6 +91,31 @@ User display info (email/role) is fetched client-side via:
 - [src/services/authService.ts](../src/services/authService.ts)
 - [src/hooks/useUserUI.ts](../src/hooks/useUserUI.ts)
 
+## Admin console (current)
+The app includes an admin-only route:
+- Route: `/admin`
+- Page: [src/pages/AdminPage.tsx](../src/pages/AdminPage.tsx)
+- Data helpers: [src/services/adminDataService.ts](../src/services/adminDataService.ts)
+
+### Access model
+- The TopBar shows the Admin link only when the signed-in user’s role resolves to `Admin`.
+- The page also defends itself (it won’t render admin data unless the user is an admin).
+
+### Step-by-step workflow (implemented)
+The Admin console is designed as a guided flow to reduce accidental cross-user data access:
+1) Select an **email**
+2) Select the specific **account** for that email (by `ownerSub`)
+3) Select one or more **lists** for that account
+4) Load **tasks** only for the selected lists
+
+### Safety: “safe mode” for legacy schema mismatches
+Some historical/legacy `UserProfile` records may be missing fields that are now required by the schema (notably `email`).
+Admin list queries therefore include a safe-mode fallback that can still enumerate accounts without breaking the entire admin view.
+
+### Intentional limitation (not forgotten)
+The Admin console is currently **read-only** (inspection/debugging only).
+Admin-driven item editing/deleting is intentionally deferred and tracked in the repo backlog.
+
 ---
 
 ## Plan: Client-owned state strategy (Settings + Onboarding)

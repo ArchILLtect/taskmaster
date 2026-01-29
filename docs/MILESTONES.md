@@ -32,6 +32,7 @@ Criteria:
   - Lists + List details (pane stack)
   - Tasks
   - Updates
+  - Admin console (`/admin`) for admins (read-only inspection)
 - Basic CRUD works end-to-end
 - Errors are surfaced cleanly
 - App is demoable without caveats

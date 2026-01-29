@@ -30,6 +30,8 @@ The UI is **store-driven**:
 - Task lists + tasks (GraphQL-backed)
 - Task details “pane stack” navigation (deep-linkable)
 - Updates feed + read markers (local/persisted UX state)
+- Admin-only console (`/admin`) for cross-user inspection (email → account → lists → tasks)
+  - Note: intentionally read-only for now (admin item editing/deleting is deferred)
 - Dev-only GraphQL smoke testing route (`/dev`)
 
 ---

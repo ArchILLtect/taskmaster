@@ -29,6 +29,7 @@ Primary goals:
   - Tasks
 - Owner-based access control
 - Admin group support (read/write)
+- Admin console (`/admin`) for cross-user inspection (read-only; editing/deleting deferred)
 - Stable routing & UI patterns
 - GraphQL smoke tests in `/dev`
 - Pages wired to real backend data (no local placeholder data)
@@ -92,7 +93,7 @@ No ad-hoc hacks.
 Possible directions:
 - Subscriptions / real-time updates
 - Collaboration / shared lists
-- Admin dashboards
+- Admin dashboards (expanded capabilities beyond read-only inspection)
 - Analytics / usage insights
 - Mobile-first polish
 

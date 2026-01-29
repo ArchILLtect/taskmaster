@@ -61,6 +61,9 @@ If a feature feels “missing,” check here before assuming it was forgotten.
 ### How-to guides
 - Troubleshooting & resets: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
+### Admin
+- Admin console overview (current behavior + limitations): [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ### Reference
 - Data model: [DATA_MODEL.md](DATA_MODEL.md)
 - Product spec (rules of the universe): [product-spec.md](product-spec.md)

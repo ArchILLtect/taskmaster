@@ -70,6 +70,14 @@ UI-facing models (`TaskUI`, `ListUI`) are mapped from GraphQL responses via [src
 
 This model is implemented in the Amplify backend schema and used at runtime for demo seeding and future settings/onboarding blobs.
 
+### Note on required fields + legacy records
+The schema treats some fields (notably `email`) as required.
+If legacy rows exist from before the field was enforced, they may be missing `email` and can break “full” list queries.
+
+Current guardrails:
+- On user login, bootstrap will opportunistically self-heal missing `UserProfile.email` and `UserProfile.displayName` when possible.
+- The Admin console uses safe-mode fallbacks for listing accounts when legacy records don’t match the latest schema.
+
 ### Current GraphQL schema shape for user profile
 ```graphql
 type UserProfile

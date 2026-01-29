@@ -195,6 +195,13 @@ Last refreshed: Jan 28 2026
   - Stretch: load remaining list pages for the selected account, then select all
   - Useful for power admins; keep optional to avoid extra AppSync load by default
 
+- [ ] TODO(stretch) Admin: enable editing/deleting items from the Admin console
+  - Scope: allow Admins to update/delete Tasks and TaskLists across users from `/admin`
+  - Add explicit UX guardrails (confirmations, clear labels, read-only defaults)
+  - Ensure mutations are protected by GraphQL `@auth` group rules (Admin override) and cannot reassign ownership
+  - Consider safe-mode behavior for legacy records (required fields / partial rows)
+  - Intentionally deferred for now so the new Admin UX ships without risky write paths
+
 - [x] TODO(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
   - Uses `useUserUI` via the profile page data hook.
 

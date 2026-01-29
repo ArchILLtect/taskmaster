@@ -53,6 +53,7 @@ Checklist:
 Operational verification:
 - [ ] Create two users and confirm User A cannot access User B’s lists/tasks.
 - [ ] If Admin is enabled, confirm an Admin user can access both.
+- [ ] Confirm non-admin users cannot access the Admin console route (`/admin`) or see the Admin link.
 
 ---
 

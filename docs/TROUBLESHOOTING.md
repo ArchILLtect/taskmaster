@@ -29,6 +29,29 @@ If `npm run dev` exits with code 1:
 2. If it’s a TypeScript error, try `npm run build` to get the full typecheck output.
 3. If it’s a dependency/Vite error, delete `node_modules` and reinstall: `npm install`.
 
+## I can’t access the Admin console (`/admin`)
+The Admin console is intentionally restricted.
+
+Expected behavior:
+- The Admin link appears in the TopBar only when your user role resolves to `Admin`.
+- Navigating to `/admin` as a non-admin should not load admin data.
+
+If you believe you *should* be an admin:
+1. Confirm your Cognito user is in the `Admin` group for the current environment.
+2. Sign out and sign back in (group membership changes may not reflect until a fresh session).
+3. Clear the cached user display/role key and refresh:
+	- `taskmaster:user`
+
+Notes:
+- The Admin console is currently **read-only** (inspection/debug only). Editing/deleting items from `/admin` is intentionally deferred.
+
+## Admin console shows “Safe mode” for accounts
+If the Admin page shows a “Safe mode” badge while listing accounts, it usually means some legacy `UserProfile` rows don’t match the latest schema (for example, missing a now-required `email`).
+
+What to do:
+- This is expected for legacy data; safe mode keeps the Admin view usable.
+- Have the affected user sign in once: the bootstrap flow opportunistically self-heals missing `UserProfile.email` / `displayName` when possible.
+
 ## I updated a task but Updates didn’t change
 Updates events are appended after successful task mutations (create/update/delete). If you don’t see an expected event:
 

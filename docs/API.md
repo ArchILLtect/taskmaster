@@ -46,6 +46,26 @@ Auth rules (current schema intent):
 
 The UI is backed by GraphQL via the API wrapper and Zustand store actions.
 
+## 3) Admin console data helpers (current)
+The admin page uses a small set of helpers in [src/services/adminDataService.ts](../src/services/adminDataService.ts).
+
+Admin console flow is:
+- email → account (`ownerSub`) → lists → tasks
+
+Key helpers (used by the Admin UI):
+- `listUserProfilesWithEmailAdminPage()`: email-first browsing (filters to profiles with a real email)
+- `listUserProfilesByEmailAdminPage()`: list accounts for a selected email (with safe-mode fallback)
+- `listTaskListsOwnedAdminPage()`: list task lists for a selected owner
+- `loadTasksForListsAdminPage()`: load tasks for selected list ids (concurrency-limited)
+
+Safe-mode note:
+- Some legacy records may not satisfy newly-required schema fields (e.g. `UserProfile.email`).
+- The admin helpers can fall back to a safe listing mode so the console remains usable.
+
+Intentional limitation:
+- The Admin console is currently **read-only** (inspection/debug only).
+- Admin-driven editing/deleting via the console is intentionally deferred and tracked in TODOs.
+
 Boundary rules:
 - Pages/components/hooks must not call Amplify GraphQL directly.
 - The API wrapper lives in [src/api/taskmasterApi.ts](../src/api/taskmasterApi.ts) and is the only module that calls `client.graphql`.
