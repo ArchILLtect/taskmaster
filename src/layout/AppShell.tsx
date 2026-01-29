@@ -28,7 +28,7 @@ export function AppShell({
     location.pathname.startsWith("/about");
 
   useBootstrapUserProfile(user);
-  useBootstrapTaskStore({ enabled: signedIn });
+  useBootstrapTaskStore({ enabled: signedIn, authKey: user?.username || user?.userId || null });
 
   return (
     <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell">

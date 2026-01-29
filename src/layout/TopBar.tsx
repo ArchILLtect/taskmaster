@@ -17,8 +17,14 @@ export function TopBar({ user, userUI }: TopBarProps) {
   const { loading, lists, tasks } = useTaskStoreView();
   const refreshing = loading && (lists.length > 0 || tasks.length > 0);
 
-  const username = effectiveUserUI?.username ?? user?.username ?? user?.userId;
-  const role = effectiveUserUI?.role ?? user?.role;
+  const authKey = user?.username ?? user?.userId;
+  const userUIMatchesAuth =
+    !authKey || !effectiveUserUI?.username || effectiveUserUI.username === authKey;
+
+  const safeUserUI = userUIMatchesAuth ? effectiveUserUI : null;
+
+  const username = authKey ?? safeUserUI?.username;
+  const role = safeUserUI?.role ?? user?.role;
   const signedIn = Boolean(username);
   const isAdmin = role === "Admin";
 

@@ -29,11 +29,6 @@ export async function getUserUIResult(): Promise<{ userUI: UserUI | null; error:
   // Dedupe concurrent calls (TopBar + ProfilePage, etc.)
   if (inFlight) return inFlight;
 
-  // Only cache signed-in results; signed-out can change quickly during auth flows.
-  if (cached && cached.userUI && Date.now() - cachedAtMs < CACHE_TTL_MS) {
-    return cached;
-  }
-
   inFlight = (async () => {
   let currentUser: Awaited<ReturnType<typeof getCurrentUser>>;
 
@@ -45,6 +40,16 @@ export async function getUserUIResult(): Promise<{ userUI: UserUI | null; error:
     }
 
     const username = currentUser.username || currentUser.userId;
+
+    // In-memory cache path (per-identity)
+    if (
+      cached &&
+      cached.userUI &&
+      cached.userUI.username === username &&
+      Date.now() - cachedAtMs < CACHE_TTL_MS
+    ) {
+      return cached;
+    }
 
     // Persisted cache path (across reloads)
     const persisted = useUserUICacheStore.getState();
