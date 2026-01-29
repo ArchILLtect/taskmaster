@@ -18,17 +18,30 @@ Remove “account creation + email verification” friction for portfolio review
 - creates a **fresh, unique demo user** in Cognito (no emails sent)
 - marks email as **verified**
 - returns `{ username, password }` to the client
-- client performs a normal `Auth.signIn()` (Amplify Gen 1)
+- client performs a normal sign-in via Amplify Auth (`aws-amplify/auth`)
 - existing UI “seed-on-first-login” logic runs as-is
 - avoids shared demo accounts (troll-proof)
 
 ---
 
+## Current app routing posture (as implemented)
+
+Public routes (no auth required):
+- `/` (Home) — includes **Try Demo** CTA
+- `/about` (About)
+- `/login` (Login)
+
+Protected routes:
+- All other app pages require auth and redirect to `/login?redirect=<path>` when signed out.
+
+Important UX goal:
+- The shared layout (TopBar/Sidebar/Footer) remains visible even when signed out.
+
 ## Current Assumptions (based on existing system)
 - Auth: **Amplify Gen 1** with **Cognito User Pool**
 - You already have a **Post Confirmation Lambda** (`add-to-group.js`) for admin assignment
 - Data: **GraphQL (AppSync)**, auth-protected by Cognito (standard)
-- Demo data seeding happens **client-side after login** (e.g., “if user has 0 lists then seed”)
+- Demo data seeding happens **client-side after login** (versioned + idempotent via `UserProfile.seedVersion`)
 
 ---
 
@@ -42,7 +55,8 @@ Remove “account creation + email verification” friction for portfolio review
 ## High-Level Architecture
 Public pages:
 - `/` (Home) — includes **Try Demo** CTA
-- `/login` (Login/Register) — normal flow still available
+- `/login` (Login) — normal flow still available
+- `/about` (About)
 
 New backend endpoint:
 - `POST /auth/demo` — **callable Lambda** (API Gateway OR Lambda Function URL OR Amplify REST API)
@@ -50,7 +64,7 @@ New backend endpoint:
   - Returns `{ username, password }`
 
 Client demo login:
-- call endpoint → receive creds → `Auth.signIn(username, password)` → redirect → existing seed logic
+- call endpoint → receive creds → `signIn({ username, password })` → redirect → existing seed logic
 
 ---
 
@@ -95,11 +109,9 @@ Client demo login:
 
 ## Step 1 — Define the Demo User Strategy
 ### Demo user identity format
-- Email/username: `demo+<uuid>@example.com` (or your domain)
+- Email/username: `demo+<uuid>@nickhanson.me`
   - Must NOT match your “admin email rule”
 - Password: random strong password (generated server-side)
-
-### Optional demo marker
 - Set Cognito attribute: `custom:isDemo = "true"` (recommended)
 - Or store a flag elsewhere; not required if UI seeds on empty data
 
@@ -161,8 +173,8 @@ On Home page:
 Client handler:
 1) `POST /auth/demo`
 2) Parse JSON: `{ username, password }`
-3) `await Auth.signIn(username, password)`
-4) `navigate('/app')` (or whatever your main route is)
+3) `await signIn({ username, password })`
+4) Redirect to `/today` (or to a `redirect` query param if present)
 5) Existing “post-login seed if empty” logic executes normally
 
 Add UI feedback:
