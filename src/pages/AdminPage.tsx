@@ -179,6 +179,20 @@ export function AdminPage() {
       setAccountsEmailMode(page.emailMode);
       setAccounts((prev) => (opts?.reset ? page.items : [...prev, ...page.items]));
       setAccountsNextToken(page.nextToken);
+
+      // Convenience: if this email only maps to a single account, auto-select it and
+      // jump straight to the next step.
+      const isFirstPage = opts?.reset === true;
+      const isSingleAccountTotal = isFirstPage && page.items.length === 1 && !page.nextToken;
+      if (isSingleAccountTotal && !selectedOwnerSub) {
+        const only = page.items[0];
+        const owner = only.owner || only.id;
+        if (owner) {
+          setSelectedOwnerSub(owner);
+          resetOwnerScopedData();
+          setTab("lists");
+        }
+      }
     } catch (e) {
       setAccountsErr(errorToMessage(e));
     } finally {
