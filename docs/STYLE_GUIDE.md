@@ -13,6 +13,12 @@ This guide documents *current* conventions found in the codebase.
   - [src/components/RouterLink.tsx](../src/components/RouterLink.tsx)
 - Sidebar items should use [src/components/SidebarItem.tsx](../src/components/SidebarItem.tsx)
 
+## Static assets
+- App UI images/icons:
+  - Use `src/assets/**` when you want Vite to bundle + fingerprint the asset (cache-busting, importable).
+  - Use `public/**` when you want a stable URL served from the site root (reference as `/...`, e.g. `/pics/me.jpg`).
+- Docs images belong in `docs/assets/**` and should be referenced only from markdown docs.
+
 ## Routing
 - Preserve the list “pane stack” route behavior:
   - `/lists/:listId/tasks/*`
