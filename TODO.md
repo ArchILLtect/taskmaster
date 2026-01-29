@@ -190,6 +190,11 @@ Last refreshed: Jan 28 2026
 - [ ] TODO(P2) Add date formatting helper for task due dates
   - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string
 
+- [ ] TODO(stretch) Admin: add “Select all across pagination” for list selection
+  - In Admin flow, Lists tab currently supports “Select all loaded”
+  - Stretch: load remaining list pages for the selected account, then select all
+  - Useful for power admins; keep optional to avoid extra AppSync load by default
+
 - [x] TODO(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
   - Uses `useUserUI` via the profile page data hook.
 
