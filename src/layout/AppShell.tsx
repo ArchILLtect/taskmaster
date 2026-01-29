@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { Box, Flex } from "@chakra-ui/react";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
@@ -7,6 +7,7 @@ import type { AuthUserLike } from "../types";
 import { useBootstrapTaskStore } from "../hooks/useBootstrapTaskStore";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { BottomBar } from "./BottomBar";
+import { PublicSidebar } from "./PublicSidebar.tsx";
 
 const TOPBAR_H = "64px";
 const BOTTOMBAR_H = "52px";
@@ -20,12 +21,6 @@ export function AppShell({
   onSignOut?: () => void;
   signedIn: boolean;
 }) {
-  const location = useLocation();
-
-  const isPublicRoute =
-    location.pathname === "/" ||
-    location.pathname.startsWith("/login") ||
-    location.pathname.startsWith("/about");
 
   useBootstrapUserProfile(user);
   useBootstrapTaskStore({ enabled: signedIn, authKey: user?.username || user?.userId || null });
@@ -47,7 +42,12 @@ export function AppShell({
           overflowY="auto"
           borderRightWidth="1px"
         >
-          <Sidebar variant={isPublicRoute ? "public" : "app"} />
+          {user ? (
+            <Sidebar />
+          ) : (
+            <PublicSidebar />
+          )
+        }
         </Box>
 
         {/* Main area is the primary scroll container */}
