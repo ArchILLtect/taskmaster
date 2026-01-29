@@ -10,6 +10,9 @@ const TASK_STORE_KEY = "taskmaster:taskStore";
 const INBOX_STORE_KEY = "taskmaster:inbox";
 const UPDATES_STORE_KEY = "taskmaster:updates";
 
+let clearInProgress = false;
+let lastClearedAtMs = 0;
+
 function safeRemoveLocalStorageKey(key: string) {
   try {
     localStorage.removeItem(key);
@@ -19,6 +22,13 @@ function safeRemoveLocalStorageKey(key: string) {
 }
 
 export function clearAllUserCaches(): void {
+  // Idempotency guard: multiple sign-out paths (Hub event + manual cleanup, StrictMode, etc.)
+  // can call this back-to-back. The operations are safe but the double log is confusing.
+  if (clearInProgress) return;
+  const now = Date.now();
+  if (now - lastClearedAtMs < 250) return;
+  clearInProgress = true;
+
   // 1) Clear in-memory state for the currently-running session.
   const taskState = useTaskStore.getState() as unknown as { clearAllLocal?: () => void; expireTaskCache?: () => void };
   if (typeof taskState.clearAllLocal === "function") taskState.clearAllLocal();
@@ -43,9 +53,14 @@ export function clearAllUserCaches(): void {
   safeRemoveLocalStorageKey(USER_UI_STORAGE_KEY);
 
   if (import.meta.env.DEV) {
-    console.debug(
-      "[auth] cleared user-scoped caches",
-      [TASK_STORE_KEY, INBOX_STORE_KEY, UPDATES_STORE_KEY, USER_UI_STORAGE_KEY]
-    );
+    console.debug("[auth] cleared user-scoped caches", [
+      TASK_STORE_KEY,
+      INBOX_STORE_KEY,
+      UPDATES_STORE_KEY,
+      USER_UI_STORAGE_KEY,
+    ]);
   }
+
+  lastClearedAtMs = now;
+  clearInProgress = false;
 }
