@@ -1,0 +1,128 @@
+import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+
+export function AboutPage() {
+  return (
+    <VStack align="stretch" gap={6} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+      <VStack align="start" gap={2}>
+        <Heading size="lg">About TaskMaster</Heading>
+        <Text color="gray.600">
+          TaskMaster is a showcase-friendly task app prototype focused on predictable data flow, clean UI patterns,
+          and a clear path to an offline-capable architecture.
+        </Text>
+      </VStack>
+
+      <Box>
+        <Heading size="md" mb={2}>
+          Mission
+        </Heading>
+        <Text color="gray.700">
+          Build a “simple to demo, easy to reason about” task app where state is explicit, navigation is deep-linkable,
+          and the data layer is boring (in a good way).
+        </Text>
+      </Box>
+
+      <Box>
+        <Heading size="md" mb={3}>
+          Tech stack
+        </Heading>
+        <HStack gap={2} flexWrap="wrap">
+          <Badge variant="solid" colorPalette="blue">React 19</Badge>
+          <Badge variant="solid" colorPalette="blue">TypeScript</Badge>
+          <Badge variant="solid" colorPalette="purple">Chakra UI</Badge>
+          <Badge variant="solid" colorPalette="orange">AWS Amplify (Gen 1)</Badge>
+          <Badge variant="solid" colorPalette="orange">Cognito</Badge>
+          <Badge variant="solid" colorPalette="orange">AppSync GraphQL</Badge>
+          <Badge variant="solid" colorPalette="orange">DynamoDB</Badge>
+          <Badge variant="solid" colorPalette="green">Zustand</Badge>
+          <Badge variant="outline">React Router v7</Badge>
+          <Badge variant="outline">Vite</Badge>
+        </HStack>
+
+        <Box mt={3} color="gray.700">
+          <Text>
+            Advisor tools used during development (for design review, refactors, and debugging guidance):
+          </Text>
+          <HStack gap={2} mt={2} flexWrap="wrap">
+            <Badge colorPalette="teal" variant="subtle">ChatGPT (advisor)</Badge>
+            <Badge colorPalette="teal" variant="subtle">GitHub Copilot (advisor)</Badge>
+          </HStack>
+        </Box>
+      </Box>
+
+      <Box>
+        <Heading size="md" mb={2}>
+          Spotlight: the creator
+        </Heading>
+
+        <HStack gap={6} align="start" flexWrap="wrap">
+          <Box
+            w="160px"
+            h="160px"
+            bg="gray.100"
+            borderWidth="1px"
+            borderColor="gray.200"
+            rounded="md"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Text color="gray.500" fontSize="sm" textAlign="center">
+              Photo
+              <br />
+              (coming soon)
+            </Text>
+          </Box>
+
+          <VStack align="start" gap={2} flex="1" minW="260px">
+            <Text>
+              <Text as="span" fontWeight="700">
+                Created by:
+              </Text>{" "}
+              Nick Hanson
+            </Text>
+
+            <Text>
+              <Text as="span" fontWeight="700">
+                Email:
+              </Text>{" "}
+              nick@nickhanson.me
+            </Text>
+
+            <Text>
+              <Text as="span" fontWeight="700">
+                GitHub:
+              </Text>{" "}
+              @ArchILLtect
+            </Text>
+
+            <HStack gap={2} pt={2} flexWrap="wrap">
+              <Button asChild variant="outline">
+                <a href="mailto:nick@nickhanson.me">Email me</a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href="https://github.com/ArchILLtect" target="_blank" rel="noreferrer">
+                  GitHub profile
+                </a>
+              </Button>
+              <Button asChild colorPalette="purple" variant="solid">
+                <a href="https://nickhanson.me" target="_blank" rel="noreferrer">
+                  Showcase site
+                </a>
+              </Button>
+            </HStack>
+          </VStack>
+        </HStack>
+      </Box>
+
+      <Box>
+        <Heading size="md" mb={2}>
+          What’s next
+        </Heading>
+        <Text color="gray.700">
+          Full “one-click demo mode” (no signup) is planned next: a public Try Demo button creates a temporary Cognito
+          user and signs in normally, so the existing bootstrap + seeding logic runs unchanged.
+        </Text>
+      </Box>
+    </VStack>
+  );
+}
