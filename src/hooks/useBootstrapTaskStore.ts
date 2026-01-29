@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import { isCacheFresh, useTaskActions, useTaskStore } from "../store/taskStore";
 
-export function useBootstrapTaskStore(opts?: { listLimit?: number }) {
+export function useBootstrapTaskStore(opts?: { listLimit?: number; enabled?: boolean }) {
   const { hydrateAndRefreshIfStale } = useTaskActions();
   const didRunRef = useRef(false);
 
   useEffect(() => {
+    if (opts?.enabled === false) return;
     if (didRunRef.current) return;
     didRunRef.current = true;
 
@@ -95,5 +96,5 @@ export function useBootstrapTaskStore(opts?: { listLimit?: number }) {
       unsubscribeRefreshComplete();
       if (typeof unsub === "function") unsub();
     };
-  }, [hydrateAndRefreshIfStale, opts?.listLimit]);
+  }, [hydrateAndRefreshIfStale, opts?.enabled, opts?.listLimit]);
 }
