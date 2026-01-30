@@ -58,7 +58,10 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
           {!signedIn ? (
             <Box pt={2} color="gray.600">
               <Text fontSize="sm">
-                Demo mode is the next planned feature: one click creates a temporary demo user and signs you in.
+                Demo mode: one click creates a temporary demo user, signs you in, and seeds data.
+              </Text>
+              <Text fontSize="sm">
+                No signup. No email. Takes ~5 seconds.
               </Text>
             </Box>
           ) : null}
