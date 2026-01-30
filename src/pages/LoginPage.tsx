@@ -31,7 +31,7 @@ export function LoginPage({ signedIn }: { signedIn: boolean }) {
   }, [navigate, redirectTarget, signedIn]);
 
   return (
-    <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+    <VStack align="start" gap={4} minH="100%" p={4} bg="white" justify={"center"} alignItems={"center"} rounded="md" boxShadow="sm">
       <Heading size="md">Login</Heading>
 
       {intent === "demo" ? (
