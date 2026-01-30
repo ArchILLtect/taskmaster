@@ -72,9 +72,25 @@ Last refreshed: Jan 28 2026
 
 ## Settings + onboarding blob strategy (light MVP)
 
+- [ ] TODO(P2) Build a persisted settings helper (JSON blob + migrations)
+  - Goal: a single place to read/write user settings (local-first now, UserProfile-backed later)
+  - Requirements:
+    - versioned settings schema + forward-only migrations
+    - runtime validation/normalization + safe defaults
+    - easy to add new settings without scattering localStorage keys everywhere
+  - Proposed shape (example):
+    - `UserProfile.settingsVersion`
+    - `UserProfile.settings` (JSON)
+
 - [ ] TODO(P2) Add runtime validators + normalizers for `settings` and `onboarding` blobs
   - Default-fill + version migrations (forward-only)
   - Validate shape aggressively before using any values in UI
+
+- [ ] TODO(P3) Add user-configurable default post-login landing route
+  - Behavior:
+    - If `?redirect=` is present (from RequireAuth), always respect it (after sanitization)
+    - Otherwise navigate to `settings.defaultLandingRoute` (sanitized), defaulting to `/today`
+  - Storage: add to the settings blob once the persisted settings helper exists
 
 - [ ] TODO(P2) Decide Pattern B → Pattern A timeline
   - During iteration: local-first + optional sync
