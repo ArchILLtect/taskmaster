@@ -26,7 +26,7 @@
         "createDemoUser": {
           "userPoolId": "us-east-2_2ZHxRv3hL",
           "deploymentBucketName": "amplify-taskmaster-dev-eadfe-deployment",
-          "s3Key": "amplify-builds/createDemoUser-72582b6764684c527830-build.zip"
+          "s3Key": "amplify-builds/createDemoUser-754e363850647464594c-build.zip"
         }
       },
       "api": {

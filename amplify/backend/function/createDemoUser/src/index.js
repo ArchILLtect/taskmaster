@@ -97,15 +97,19 @@ function demoEmail() {
   return `demo+${id}@${DEMO_EMAIL_DOMAIN}`;
 }
 
+
 function getClientIp(event) {
-  if (ip !== "unknown" && isRateLimited(ip)) {
-    return (
-      event?.requestContext?.identity?.sourceIp ||
-      event?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
-      event?.headers?.["X-Forwarded-For"]?.split(",")[0]?.trim() ||
-      "unknown"
-    );
-  }
+  const fromContext = event?.requestContext?.identity?.sourceIp;
+
+  const forwarded =
+    event?.headers?.["x-forwarded-for"] ||
+    event?.headers?.["X-Forwarded-For"] ||
+    event?.multiValueHeaders?.["x-forwarded-for"]?.[0] ||
+    event?.multiValueHeaders?.["X-Forwarded-For"]?.[0];
+
+  const fromForwarded = typeof forwarded === "string" ? forwarded.split(",")[0]?.trim() : null;
+
+  return fromContext || fromForwarded || "unknown";
 }
 
 /**
@@ -129,7 +133,7 @@ exports.handler = async (event) => {
   }
 
   const ip = getClientIp(event);
-  if (isRateLimited(ip)) {
+  if (ip !== "unknown" && isRateLimited(ip)) {
     console.warn("[demo] rate limit exceeded for IP:", ip);
     return json(
       429,
