@@ -8,6 +8,30 @@ const {
 
 const cognito = new CognitoIdentityProviderClient({});
 
+// ---- Simple in-memory rate limiter (best-effort) ----
+// NOTE: This is per-Lambda-instance, not global.
+// Good enough for demo / MVP; replace with WAF later.
+
+const RATE_LIMIT = {
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 5, // max demo creations per IP per window
+};
+
+const ipBuckets = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const bucket = ipBuckets.get(ip);
+
+  if (!bucket || now - bucket.start > RATE_LIMIT.windowMs) {
+    ipBuckets.set(ip, { start: now, count: 1 });
+    return false;
+  }
+
+  bucket.count += 1;
+  return bucket.count > RATE_LIMIT.max;
+}
+
 // ---- Config ----
 // Demo identities look like: demo+<uuid>@taskmaster.me
 const DEMO_EMAIL_DOMAIN = "taskmaster.me";
@@ -73,6 +97,17 @@ function demoEmail() {
   return `demo+${id}@${DEMO_EMAIL_DOMAIN}`;
 }
 
+function getClientIp(event) {
+  if (ip !== "unknown" && isRateLimited(ip)) {
+    return (
+      event?.requestContext?.identity?.sourceIp ||
+      event?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      event?.headers?.["X-Forwarded-For"]?.split(",")[0]?.trim() ||
+      "unknown"
+    );
+  }
+}
+
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
@@ -93,6 +128,16 @@ exports.handler = async (event) => {
     return json(405, { message: "Method not allowed" }, origin);
   }
 
+  const ip = getClientIp(event);
+  if (isRateLimited(ip)) {
+    console.warn("[demo] rate limit exceeded for IP:", ip);
+    return json(
+      429,
+      { message: "Too many demo requests. Please wait a few minutes and try again." },
+      origin
+    );
+  }
+
   const userPoolId = process.env.USER_POOL_ID;
 
   if (!userPoolId) {
@@ -103,12 +148,12 @@ exports.handler = async (event) => {
     );
   }
 
-  // Create a unique demo identity
-  const username = demoEmail();
-  const password = randomPassword();
-
   // Try once; if collision (unlikely), retry with a new uuid
   for (let attempt = 0; attempt < 2; attempt++) {
+    // Create a unique demo identity
+    const username = demoEmail();
+    const password = randomPassword();
+
     try {
       // 1) Create user without sending email
       await cognito.send(
