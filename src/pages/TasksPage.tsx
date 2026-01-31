@@ -61,7 +61,30 @@ export function TasksPage() {
     const completed = allTasks.filter((t) => t.status === TaskStatus.Done).length;
     const incomplete = total - completed;
     const showing = showCompletedTasks ? completed : incomplete;
-    return { total, completed, incomplete, showing };
+
+    const openTasks = allTasks.filter((t) => t.status !== TaskStatus.Done);
+    const scheduledOpenTasks = openTasks.filter((t) => Boolean(t.dueAt));
+
+    const toDueKey = (iso?: string | null) => (typeof iso === "string" && iso.length >= 10 ? iso.slice(0, 10) : null);
+    const dueToday = scheduledOpenTasks.filter((t) => toDueKey(t.dueAt) === todayDate).length;
+    const overdue = scheduledOpenTasks.filter((t) => {
+      const key = toDueKey(t.dueAt);
+      return key != null && key < todayDate;
+    }).length;
+
+    const somedayOpen = openTasks.filter((t) => !t.dueAt).length;
+    const scheduledOpen = scheduledOpenTasks.length;
+
+    return {
+      total,
+      completed,
+      incomplete,
+      showing,
+      overdue,
+      dueToday,
+      scheduledOpen,
+      somedayOpen,
+    };
   }, [allTasks, showCompletedTasks]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
@@ -186,6 +209,18 @@ export function TasksPage() {
               </Badge>
               <Badge variant="solid" colorPalette="purple">
                 Showing: {taskCounts.showing}
+              </Badge>
+              <Badge variant="outline" colorPalette="red">
+                Overdue: {taskCounts.overdue}
+              </Badge>
+              <Badge variant="outline" colorPalette="orange">
+                Due today: {taskCounts.dueToday}
+              </Badge>
+              <Badge variant="outline" colorPalette="teal">
+                Scheduled: {taskCounts.scheduledOpen}
+              </Badge>
+              <Badge variant="outline" colorPalette="gray">
+                Someday: {taskCounts.somedayOpen}
               </Badge>
             </HStack>
           </VStack>
