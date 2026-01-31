@@ -40,7 +40,7 @@ export const SubTaskRow = ({ task, to, onDelete, onToggleComplete }: SubTaskRowP
             </Box>
 
             <HStack align="center" gap={1}>
-              <HStack align="center" gap={1} w="75px">
+              <HStack align="center" gap={1}>
                 <Badge>{task.priority}</Badge>
                 <Badge variant="outline">{task.status}</Badge>
               </HStack>

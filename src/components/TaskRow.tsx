@@ -51,7 +51,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
           _hover={{ bg: "blue.100" }}
         >
           <HStack justify="space-between" align="start">
-            <Box>
+            <Box w={"40%"}>
               <Text fontWeight="700">{task.title}</Text>
               {task.description ? (
                 <Text color="gray.600" lineClamp={1}>
@@ -67,7 +67,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
             />
             <HStack align="center" gap={1}>
               {showLists ? (
-                <Box w="75px" textAlign="right">
+                <Box w="150px" textAlign="right" lineClamp={1}>
                   <Badge fontSize="sm" color="gray.500">
                     {list.name || "Unknown List"}
                   </Badge>
