@@ -28,6 +28,7 @@ export function TopBar({ user, userUI }: TopBarProps) {
   const role = safeUserUI?.role ?? user?.role;
   const signedIn = Boolean(username);
   const isAdmin = role === "Admin";
+  const isDemo = role === "Demo";
 
   const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
 
@@ -68,6 +69,12 @@ export function TopBar({ user, userUI }: TopBarProps) {
                   </Badge>
                 )}
               </RouterLink>
+            ) : null}
+
+            {isDemo ? (
+              <Badge rounded="md" bg="orange.100" color="orange.800">
+                Demo Mode
+              </Badge>
             ) : null}
           </>
         ) : (
