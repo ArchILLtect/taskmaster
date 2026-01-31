@@ -1,6 +1,17 @@
-import { Box, Heading, HStack, Text, VStack, Button, Badge } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  HStack,
+  Text,
+  VStack,
+  Button,
+  Badge,
+  Input,
+  Select,
+  useListCollection,
+} from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { TaskPriority, TaskStatus } from "../API";
 import { useTasksPageData } from "./useTasksPageData";
@@ -33,6 +44,23 @@ const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
 
+type Option<T extends string> = { label: string; value: T };
+
+type SortKey = "sortOrder" | "due" | "priority" | "title";
+
+const SORT_OPTIONS: Option<SortKey>[] = [
+  { label: "Manual (sort order)", value: "sortOrder" },
+  { label: "Due date", value: "due" },
+  { label: "Priority", value: "priority" },
+  { label: "Title", value: "title" },
+];
+
+const priorityToRank: Record<TaskPriority, number> = {
+  [TaskPriority.High]: 0,
+  [TaskPriority.Medium]: 1,
+  [TaskPriority.Low]: 2,
+};
+
 export function TasksPage() {
 
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
@@ -48,6 +76,10 @@ export function TasksPage() {
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [saving, setSaving] = useState(false);
+
+  const [taskSearch, setTaskSearch] = useState("");
+  const [selectedListFilter, setSelectedListFilter] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("sortOrder");
 
   const { allTasks, lists, loading, refreshData } = useTasksPageData();
   const navigate = useNavigate();
@@ -86,6 +118,93 @@ export function TasksPage() {
       somedayOpen,
     };
   }, [allTasks, showCompletedTasks]);
+
+  const listFilterItems = useMemo(() => {
+    const items: Option<string>[] = [{ label: "All lists", value: "all" }];
+    lists
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      .forEach((l) => {
+        items.push({ label: l.name || "(Untitled)", value: l.id });
+      });
+    return items;
+  }, [lists]);
+
+  const { collection: listFilterCollection, set: setListFilterCollection } = useListCollection<Option<string>>({
+    initialItems: listFilterItems,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
+
+  useEffect(() => {
+    setListFilterCollection(listFilterItems);
+
+    // If the selected list was deleted, reset to "All".
+    if (selectedListFilter !== "all" && !listFilterItems.some((i) => i.value === selectedListFilter)) {
+      setSelectedListFilter("all");
+    }
+  }, [listFilterItems, selectedListFilter, setListFilterCollection]);
+
+  const { collection: sortCollection } = useListCollection<Option<SortKey>>({
+    initialItems: SORT_OPTIONS,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
+
+  const listById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
+
+  const visibleTasks = useMemo(() => {
+    const q = taskSearch.trim().toLowerCase();
+
+    const matchesStatus = (t: TaskUI) =>
+      showCompletedTasks ? t.status === TaskStatus.Done : t.status !== TaskStatus.Done;
+
+    const matchesList = (t: TaskUI) =>
+      selectedListFilter === "all" ? true : t.listId === selectedListFilter;
+
+    const matchesSearch = (t: TaskUI) => {
+      if (!q) return true;
+      const hay = `${t.title ?? ""} ${(t.description ?? "").toString()}`.toLowerCase();
+      return hay.includes(q);
+    };
+
+    const filtered = allTasks.filter((t) => matchesStatus(t) && matchesList(t) && matchesSearch(t));
+
+    const toDueKey = (iso?: string | null) =>
+      typeof iso === "string" && iso.length >= 10 ? iso.slice(0, 10) : null;
+
+    const decorated = filtered.map((t, idx) => ({ t, idx }));
+
+    decorated.sort((a, b) => {
+      const ta = a.t;
+      const tb = b.t;
+
+      const stableTieBreak = () => a.idx - b.idx;
+
+      if (sortKey === "sortOrder") {
+        return (ta.sortOrder ?? 0) - (tb.sortOrder ?? 0) || stableTieBreak();
+      }
+
+      if (sortKey === "due") {
+        const ka = toDueKey(ta.dueAt) ?? "9999-12-31";
+        const kb = toDueKey(tb.dueAt) ?? "9999-12-31";
+        return ka.localeCompare(kb) || (ta.sortOrder ?? 0) - (tb.sortOrder ?? 0) || stableTieBreak();
+      }
+
+      if (sortKey === "priority") {
+        const pa = priorityToRank[ta.priority] ?? 999;
+        const pb = priorityToRank[tb.priority] ?? 999;
+        return pa - pb || (ta.sortOrder ?? 0) - (tb.sortOrder ?? 0) || stableTieBreak();
+      }
+
+      // sortKey === "title"
+      const la = String(ta.title ?? "").toLowerCase();
+      const lb = String(tb.title ?? "").toLowerCase();
+      return la.localeCompare(lb) || (ta.sortOrder ?? 0) - (tb.sortOrder ?? 0) || stableTieBreak();
+    });
+
+    return decorated.map((d) => d.t);
+  }, [allTasks, selectedListFilter, showCompletedTasks, sortKey, taskSearch]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
     if (!taskId || !nextStatus) return;
@@ -226,6 +345,91 @@ export function TasksPage() {
           </VStack>
           <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
         </HStack>
+
+        <HStack w="100%" gap={3} flexWrap="wrap" align="end" justify="space-between">
+          <HStack gap={3} flexWrap="wrap" align="end">
+            <Box>
+              <Text fontSize="sm" color="gray.600" mb={1}>
+                Search
+              </Text>
+              <Input
+                placeholder="Search title/description"
+                value={taskSearch}
+                onChange={(e) => setTaskSearch(e.target.value)}
+                maxW="320px"
+              />
+            </Box>
+
+            <Select.Root
+              collection={listFilterCollection}
+              value={[selectedListFilter]}
+              onValueChange={(e) => setSelectedListFilter(e.value[0] ?? "all")}
+            >
+              <Box>
+                <Select.Label fontSize="sm" color="gray.600" mb={1}>
+                  List
+                </Select.Label>
+                <Select.Control bg="white" minW="220px">
+                  <Select.Trigger>
+                    <Select.ValueText placeholder="All lists" />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                </Select.Control>
+                <Select.Positioner>
+                  <Select.Content>
+                    {listFilterCollection.items.map((item) => (
+                      <Select.Item item={item} key={item.value}>
+                        <Select.ItemText>{item.label}</Select.ItemText>
+                        <Select.ItemIndicator />
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Positioner>
+              </Box>
+            </Select.Root>
+
+            <Select.Root collection={sortCollection} value={[sortKey]} onValueChange={(e) => setSortKey((e.value[0] as SortKey) ?? "sortOrder")}>
+              <Box>
+                <Select.Label fontSize="sm" color="gray.600" mb={1}>
+                  Sort
+                </Select.Label>
+                <Select.Control bg="white" minW="220px">
+                  <Select.Trigger>
+                    <Select.ValueText placeholder="Manual (sort order)" />
+                    <Select.Indicator />
+                  </Select.Trigger>
+                </Select.Control>
+                <Select.Positioner>
+                  <Select.Content>
+                    {sortCollection.items.map((item) => (
+                      <Select.Item item={item} key={item.value}>
+                        <Select.ItemText>{item.label}</Select.ItemText>
+                        <Select.ItemIndicator />
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Positioner>
+              </Box>
+            </Select.Root>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setTaskSearch("");
+                setSelectedListFilter("all");
+                setSortKey("sortOrder");
+              }}
+            >
+              Clear
+            </Button>
+          </HStack>
+
+          <Text fontSize="sm" color="gray.600">
+            Results: {visibleTasks.length}
+          </Text>
+        </HStack>
+
         <Flex
           gap={4}
           alignItems={"center"}
@@ -243,92 +447,50 @@ export function TasksPage() {
           <Box width={"84.8125px"}></Box>
         </Flex>
       </VStack>
-      {!showCompletedTasks ? (
-        allTasks.length === 0 ? (
-          <Text>No tasks available.</Text>
-        ) : (
-          <VStack align="stretch" gap={2} w="100%">
-            
-            {allTasks.map((task) => {
-              const list = lists.find((l) => l.id === task.listId);
-              if (!list) return null;
-              if (task.status !== "Done") {
-                return (
-                <Flex
-                  key={task.id}
-                  gap={4}
-                  alignItems={"center"}
-                  width={"100%"}
-                >
-                  <Box flex="1">
-                    <TaskRow
-                      task={task}
-                      list={list}
-                      to={`/lists/${task.listId}/tasks/${task.id}`}
-                      showLists
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={() => handleDeleteTask(task.id)}
-                    />
-                  </Box>
-                  <Button
-                    size="2xl"
-                    bg="orange.200"
-                    variant="outline"
-                    height={"94px"}
-                    onClick={() => handleEditTask(task)}
-                    _hover={{ bg: "orange.300", borderColor: "orange.400", color: "orange.700", fontWeight: "500", boxShadow: "lg" }}
-                  >
-                    Edit
-                  </Button>
-                </Flex>
-                );
-              } else {
-                return null;
-              }
-            })}
-          </VStack>
-        )
+
+      {allTasks.length === 0 ? (
+        <Text>No tasks available.</Text>
+      ) : visibleTasks.length === 0 ? (
+        <Text>No tasks match your filters.</Text>
       ) : (
         <VStack align="stretch" gap={2} w="100%">
-          {allTasks.map((task) => {
-              const list = lists.find((l) => l.id === task.listId);
-              if (!list) return null;
-              if (task.status === "Done") {
-                return (
-              <Flex
-                  key={task.id}
-                  gap={4}
-                  alignItems={"center"}
-                  width={"100%"}
+          {visibleTasks.map((task) => {
+            const list = listById.get(task.listId);
+            if (!list) return null;
+
+            return (
+              <Flex key={task.id} gap={4} alignItems={"center"} width={"100%"}>
+                <Box flex="1">
+                  <TaskRow
+                    task={task}
+                    list={list}
+                    to={`/lists/${task.listId}/tasks/${task.id}`}
+                    showLists
+                    onToggleComplete={handleToggleComplete}
+                    onDelete={() => handleDeleteTask(task.id)}
+                  />
+                </Box>
+                <Button
+                  size="2xl"
+                  bg="orange.200"
+                  variant="outline"
+                  height={task.status === TaskStatus.Done ? "74px" : "94px"}
+                  onClick={() => handleEditTask(task)}
+                  _hover={{
+                    bg: "orange.300",
+                    borderColor: "orange.400",
+                    color: "orange.700",
+                    fontWeight: "500",
+                    boxShadow: "lg",
+                  }}
                 >
-                  <Box flex="1">
-                    <TaskRow
-                      task={task}
-                      list={list}
-                      to={`/lists/${task.listId}/tasks/${task.id}`}
-                      showLists
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={() => handleDeleteTask(task.id)}
-                    />
-                  </Box>
-                  <Button
-                    size="2xl"
-                    bg="orange.200"
-                    variant="outline"
-                    height={"74px"}
-                    onClick={() => handleEditTask(task)}
-                    _hover={{ bg: "orange.300", borderColor: "orange.400", color: "orange.700", fontWeight: "500", boxShadow: "lg" }}
-                  >
-                    Edit
-                  </Button>
-                </Flex>
-                );
-              } else {
-                return null;
-              }
-            })}
-      </VStack>
-    )}
+                  Edit
+                </Button>
+              </Flex>
+            );
+          })}
+        </VStack>
+      )}
     {!showAddTaskForm && (
       <Button
           bg="green.200"
