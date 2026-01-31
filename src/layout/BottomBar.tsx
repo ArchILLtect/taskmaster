@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button, CloseButton, Dialog, HStack, Portal, Spacer, Text, VStack } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
-import { isDemoSessionActive } from "../services/demoSession";
 import { resetDemoData } from "../services/resetDemoData";
 import { fireToast } from "../hooks/useFireToast";
-import { fetchAuthSession } from "aws-amplify/auth";
+import { useDemoMode } from "../hooks/useDemoMode";
 
 export function BottomBar({
   signedIn,
@@ -16,46 +15,12 @@ export function BottomBar({
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
-  const [isDemoIdentity, setIsDemoIdentity] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!signedIn) {
-      setIsDemoIdentity(false);
-      return;
-    }
-
-    void (async () => {
-      try {
-        const session = await fetchAuthSession();
-        const payload = session.tokens?.idToken?.payload as Record<string, unknown> | undefined;
-
-        const groupsRaw = payload?.["cognito:groups"];
-        const groups = Array.isArray(groupsRaw) ? groupsRaw.map(String) : [];
-
-        const roleRaw = payload?.["custom:role"];
-        const role = typeof roleRaw === "string" ? roleRaw : "";
-
-        const next = groups.includes("Demo") || role === "Demo";
-        if (!cancelled) setIsDemoIdentity(next);
-      } catch {
-        // Best-effort only.
-        if (!cancelled) setIsDemoIdentity(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [signedIn]);
+  const { isDemo } = useDemoMode(signedIn);
 
   const showReset = useMemo(() => {
     if (!signedIn) return false;
-    // Prefer durable identity markers when available, but keep the session flag
-    // for the "first token might miss groups" timing gotcha.
-    return isDemoIdentity || isDemoSessionActive();
-  }, [signedIn, isDemoIdentity]);
+    return isDemo;
+  }, [signedIn, isDemo]);
 
   return (
     <HStack px={4} py={2} borderTopWidth="1px" bg="white">
@@ -63,8 +28,6 @@ export function BottomBar({
         TaskMaster
       </Text>
       <Spacer />
-
-      <HStack gap={3}>
         {showReset ? (
           <Button
             size="sm"
@@ -79,7 +42,8 @@ export function BottomBar({
             Reset demo data
           </Button>
         ) : null}
-
+      <Spacer />
+      <HStack gap={3}>
         <Button asChild size="sm" variant="ghost">
           <a href="https://nickhanson.me" target="_blank" rel="noreferrer">
             Showcase Site

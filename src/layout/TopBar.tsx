@@ -5,6 +5,7 @@ import { IoSettingsSharp } from "react-icons/io5";
 import { useUserUI } from "../hooks/useUserUI";
 import { useTaskStoreView } from "../store/taskStore";
 import { formatUsernameForDisplay } from "../services/userDisplay";
+import { useDemoMode } from "../hooks/useDemoMode";
 
 type TopBarProps = {
   user?: AuthUserLike | null;
@@ -28,7 +29,7 @@ export function TopBar({ user, userUI }: TopBarProps) {
   const role = safeUserUI?.role ?? user?.role;
   const signedIn = Boolean(username);
   const isAdmin = role === "Admin";
-  const isDemo = role === "Demo";
+  const { isDemo } = useDemoMode(signedIn);
 
   const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
 
