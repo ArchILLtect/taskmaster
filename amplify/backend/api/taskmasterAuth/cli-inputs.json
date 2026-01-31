@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "paths": {
+    "/auth/demo": {
+      "name": "/auth/demo",
+      "lambdaFunction": "createDemoUser",
+      "permissions": {
+        "setting": "protected",
+        "auth": [
+          "create"
+        ],
+        "guest": [
+          "create"
+        ]
+      }
+    }
+  }
+}

@@ -13,7 +13,23 @@ const cognito = new CognitoIdentityProviderClient({});
 exports.handler = async (event) => {
     const adminEmails = ["nick@nickhanson.me"];
 
-    const email = event.request?.userAttributes?.email;
+    const email = event.request?.userAttributes?.email || "";
+    const username = event.userName || "";
+
+    // --- DENY: never assign Admin to demo identities ---
+    // Covers cases where username is email OR email attribute is present.
+    const isDemoIdentity =
+        email.toLowerCase().startsWith("demo+") ||
+        email.toLowerCase().endsWith("@taskmaster.me") ||
+        username.toLowerCase().startsWith("demo+") ||
+        username.toLowerCase().endsWith("@taskmaster.me");
+
+    if (isDemoIdentity) {
+        // Nothing to do; explicitly refuse Admin assignment.
+        return event;
+    }
+    // ---------------------------------------------------
+
     const isAdmin = adminEmails.includes(email);
 
     if (!isAdmin) {

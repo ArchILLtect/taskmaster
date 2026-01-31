@@ -1,0 +1,13 @@
+[
+  {
+    "Effect": "Allow",
+    "Action": [
+      "cognito-idp:AdminCreateUser",
+      "cognito-idp:AdminSetUserPassword",
+      "cognito-idp:AdminAddUserToGroup"
+    ],
+    "Resource": [
+      "arn:aws:cognito-idp:us-east-2:010928199012:userpool/us-east-2_2ZHxRv3hL"
+    ]
+  }
+]

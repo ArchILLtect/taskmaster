@@ -23,6 +23,20 @@
       },
       "providerPlugin": "awscloudformation",
       "service": "AppSync"
+    },
+    "taskmasterAuth": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "createDemoUser"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
     }
   },
   "auth": {
@@ -63,6 +77,11 @@
     }
   },
   "function": {
+    "createDemoUser": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "taskmaster776070ddPostConfirmation": {
       "build": true,
       "providerPlugin": "awscloudformation",
@@ -70,6 +89,30 @@
     }
   },
   "parameters": {
+    "AMPLIFY_function_createDemoUser_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "createDemoUser"
+        }
+      ]
+    },
+    "AMPLIFY_function_createDemoUser_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "createDemoUser"
+        }
+      ]
+    },
+    "AMPLIFY_function_createDemoUser_userPoolId": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "createDemoUser"
+        }
+      ]
+    },
     "AMPLIFY_function_taskmaster776070ddPostConfirmation_GROUP": {
       "usedBy": [
         {

@@ -3,6 +3,11 @@ export type AmplifyDependentResourcesAttributes = {
     "taskmaster": {
       "GraphQLAPIEndpointOutput": "string",
       "GraphQLAPIIdOutput": "string"
+    },
+    "taskmasterAuth": {
+      "ApiId": "string",
+      "ApiName": "string",
+      "RootUrl": "string"
     }
   },
   "auth": {
@@ -17,6 +22,13 @@ export type AmplifyDependentResourcesAttributes = {
     }
   },
   "function": {
+    "createDemoUser": {
+      "Arn": "string",
+      "LambdaExecutionRole": "string",
+      "LambdaExecutionRoleArn": "string",
+      "Name": "string",
+      "Region": "string"
+    },
     "taskmaster776070ddPostConfirmation": {
       "Arn": "string",
       "LambdaExecutionRole": "string",
