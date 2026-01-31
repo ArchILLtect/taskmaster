@@ -1,6 +1,6 @@
-import { Box, Heading, HStack, Text, VStack, Button } from "@chakra-ui/react";
+import { Box, Heading, HStack, Text, VStack, Button, Badge } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { TaskPriority, TaskStatus } from "../API";
 import { useTasksPageData } from "./useTasksPageData";
@@ -55,6 +55,14 @@ export function TasksPage() {
   const { updateTask, deleteTask } = useTaskActions();
 
   const isDialogOpen = !!selectedTask;
+
+  const taskCounts = useMemo(() => {
+    const total = allTasks.length;
+    const completed = allTasks.filter((t) => t.status === TaskStatus.Done).length;
+    const incomplete = total - completed;
+    const showing = showCompletedTasks ? completed : incomplete;
+    return { total, completed, incomplete, showing };
+  }, [allTasks, showCompletedTasks]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
     if (!taskId || !nextStatus) return;
@@ -168,6 +176,18 @@ export function TasksPage() {
             <Heading size="md">Tasks</Heading>
             {/* TODO: add icon here */}
             <Text>View, sort, and manage all your tasks in one place.</Text>
+            <HStack gap={2} flexWrap="wrap">
+              <Badge variant="outline">Total: {taskCounts.total}</Badge>
+              <Badge variant="outline" colorPalette="green">
+                Incomplete: {taskCounts.incomplete}
+              </Badge>
+              <Badge variant="outline" colorPalette="blue">
+                Completed: {taskCounts.completed}
+              </Badge>
+              <Badge variant="solid" colorPalette="purple">
+                Showing: {taskCounts.showing}
+              </Badge>
+            </HStack>
           </VStack>
           <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
         </HStack>
