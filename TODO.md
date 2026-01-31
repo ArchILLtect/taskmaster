@@ -61,12 +61,13 @@ Last refreshed: Jan 28 2026
   - [x] On sign in: bootstrap runs after auth restore and cache guards prevent cross-user flashes
 
 - [ ] TODO(P2) Add a Demo data section within SettingsPage that contains these features:
-   - [ ] A button to clear all demo data.
-   - [ ] A button to re-seed all demo data.
-   - [ ] A section for adding more demo data with:
-      - [ ] A button to add more tasks with multiplier. "Add [ x ] tasks."
-      - [ ] A button to add more lists with multiplier. "Add [ x ] lists."
-      - [ ] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
+  - [ ] A button to clear all demo data.
+  - [ ] A button to re-seed all demo data ('reset demo data').
+    - Note: Demo users already have a footer "Reset demo data" action. This Settings version is for non-demo accounts and must NOT remove non-demo data (implement later with stricter filtering/guardrails).
+  - [ ] A section for adding more demo data with:
+    - [ ] A button to add more tasks with multiplier. "Add [ x ] tasks."
+    - [ ] A button to add more lists with multiplier. "Add [ x ] lists."
+    - [ ] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
 
 ---
 
@@ -328,4 +329,10 @@ Last refreshed: Jan 28 2026
 
 - [ ] TODO(P3) Cleanup: remove stray debug logging
   - Remove `console.log(user)` in App.tsx once you’re done debugging auth flows.
+
+- [ ] TODO(stretch) Post-MVP: Add AWS WAF rate limiting for `POST /auth/demo`
+  - [ ] Create a Web ACL in `us-east-2` and attach it to the API Gateway stage for `taskmasterAuth`
+  - [ ] Add a rate-based rule keyed by source IP (start with 5 requests / 5 minutes)
+  - [ ] Validate behavior (normal demo works; burst requests get blocked)
+  - [ ] Remove the in-Lambda `ipBuckets` limiter (or keep as a fallback with a higher threshold, but don’t double-punish users)
 
