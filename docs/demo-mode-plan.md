@@ -421,49 +421,52 @@ Use this checklist while you implement. The Deliverables Checklist below remains
 - [x] Handle collisions/retries (very unlikely; retry once with a new uuid)
 - [x] Add minimal logging (success/failure counts, but do not log passwords)
 
-### ⛔ Step 6 — Verify backend endpoint FIRST (saves time) (UPDATE: I had to skip this due to restricted endpoint--"Missing Authentication Token" error--but it should be working)
-- [ ] Call `POST /auth/demo` directly (curl/Postman or browser dev test) and confirm:
-  - [ ] Returns `{ username, password }`
-  - [ ] No email is sent
-  - [ ] CORS works from localhost origin
+### ⛔ Step 6 — Verify backend endpoint FIRST (saves time)
 
-### ⬜ Step 7 — Wire “Try Demo” to the real endpoint (frontend integration)
+(UPDATE: I had to skip this due to restricted endpoint--"Missing Authentication Token" error--but it should be working)
+- ⛔ Call `POST /auth/demo` directly (curl/Postman or browser dev test) and confirm:
+  - ⛔ Returns `{ username, password }`
+  - ⛔ No email is sent
+  - ⛔ CORS works from localhost origin
+
+### ✅ Step 7 — Wire “Try Demo” to the real endpoint (frontend integration)
 - [x] Replace placeholder `/login?intent=demo` flow with a real call to `POST /auth/demo`
 - [x] Add loading UI (spinner / disabled button) while creating demo account
 - [x] Add friendly error UI for failed demo creation
 - [x] On success: client signs in via Amplify Auth (`signIn({ username, password })`)
 - [x] Redirect: respect `?redirect=` else go to `/today`
 
-### ⬜ Step 8 — Demo marker “timing” guardrail (important UX detail)
-- [ ] Do NOT assume the `Demo` group will be present in the first token.
-- [ ] If demo-only UI is needed immediately, set a local “demo-session” flag after `/auth/demo` succeeds.
-- [ ] (Optional) Still gate longer-term demo UX using `cognito:groups` once available.
+### ✅ Step 8 — Demo marker “timing” guardrail (important UX detail)
+- [x] Do NOT assume the `Demo` group will be present in the first token.
+- [x] If demo-only UI is needed immediately, set a local “demo-session” flag after `/auth/demo` succeeds.
+- [x] (Optional) Still gate longer-term demo UX using `cognito:groups` / role once available (best-effort).
 
-### ⬜ Step 9 — Ensure UI Seeding Runs Exactly Once (Per User)
-- [ ] Verify `seedVersion` lock path works for demo sign-in
-- [ ] Confirm refresh-on-sign-in/user-switch behavior still updates lists/tasks immediately
-- [ ] (Optional) Gate demo-only UX by `cognito:groups` containing `Demo` (best effort) OR local demo-session flag
+### ✅ Step 9 — Ensure UI Seeding Runs Exactly Once (Per User)
+- [x] Verify `seedVersion` lock path works for demo sign-in
+- [x] Confirm refresh-on-sign-in/user-switch behavior still updates lists/tasks immediately
+- [x] (Optional) Gate demo-only UX by `cognito:groups` containing `Demo` (best effort) OR local demo-session flag
 
-### ⬜ Step 10 — Add Abuse/Cost Guardrails (WAF preferred; don’t let friction block shipping)
-- [ ] Create/choose an AWS WAF Web ACL
-- [ ] Attach WAF Web ACL to the API Gateway stage
-- [ ] Add a rate-based rule keyed by source IP (~5 per 5 minutes)
-- [ ] Validate the rule blocks bursts and doesn’t break normal use
-- [ ] If WAF setup is too painful right now:
-  - [ ] Add a temporary in-Lambda IP throttle, and come back to WAF post-ship
+### ✅ Step 10 — Add Abuse/Cost Guardrails (WAF preferred; don’t let friction block shipping)
+- ⛔ Create/choose an AWS WAF Web ACL
+- ⛔ Attach WAF Web ACL to the API Gateway stage
+- ⛔ Add a rate-based rule keyed by source IP (~5 per 5 minutes)
+- ⛔ Validate the rule blocks bursts and doesn’t break normal use
+- [x] Add todo item for potential WAF implementation later.
+- [x] If WAF setup is too painful right now:
+  - [x] Add a temporary in-Lambda IP throttle, and come back to WAF post-ship
 
-### ⬜ Step 11 — Verify End-to-End
-- [ ] Click Try Demo → lands authenticated
-- [ ] No email is sent
-- [ ] AppSync/GraphQL calls succeed
-- [ ] Seeding runs and data appears
-- [ ] Reload: demo session persists
-- [ ] Normal login/signup still works
-- [ ] Demo identities cannot be assigned Admin
+### ✅ Step 11 — Verify End-to-End (✅ Run again after 8, 9, and 10 are complete)
+- [x] Click Try Demo → lands authenticated
+- [x] No email is sent
+- [x] AppSync/GraphQL calls succeed
+- [x] Seeding runs and data appears
+- [x] Reload: demo session persists
+- [x] Normal login/signup still works
+- [x] Demo identities cannot be assigned Admin
 
-### ⬜ Step 12 — Portfolio UX Copy
-- [ ] Homepage copy matches intent (“Try Demo (no signup)” primary)
-- [ ] In-app demo affordances are clear (badge/reset if you choose to include them)
+### ✅ Step 12 — Portfolio UX Copy
+- [x] Homepage copy matches intent (“Try Demo (no signup)” primary)
+- [x] In-app demo affordances are clear (badge/reset if you choose to include them)
 
 ---
 
@@ -475,34 +478,35 @@ This is the full “GTG” checklist for implementing one-click demo mode.
 - [x] Build Public Sidebar (Home / About / Login)
 
 Backend (Amplify + AWS)
-- [ ] REST API created via Amplify: `POST /auth/demo` routes to a Lambda
-- [ ] CORS configured for `/auth/demo` (`OPTIONS` + `POST` responses include required headers)
-- [ ] Demo Lambda has IAM permissions: `AdminCreateUser`, `AdminSetUserPassword`, `AdminAddUserToGroup`
-- [ ] Cognito User Pool has group `Demo`
-- [ ] Cognito App Client allows `USER_PASSWORD_AUTH`
-- [ ] Demo Lambda adds user to `Demo` group before returning creds
-- [ ] WAF Web ACL attached to API Gateway stage
-- [ ] WAF rate-based rule enabled (source IP, ~5/5min) and validated
+- [x] REST API created via Amplify: `POST /auth/demo` routes to a Lambda
+- [x] CORS configured for `/auth/demo` (`OPTIONS` + `POST` responses include required headers)
+- [x] Demo Lambda has IAM permissions: `AdminCreateUser`, `AdminSetUserPassword`, `AdminAddUserToGroup`
+- [x] Cognito User Pool has group `Demo`
+- [x] Cognito App Client allows `USER_PASSWORD_AUTH`
+- [x] Demo Lambda adds user to `Demo` group before returning creds
+- [x] Rate limiting guardrail implemented (in-Lambda IP throttle; MVP-safe)
+- ⛔ (Optional) WAF Web ACL attached to API Gateway stage
+- ⛔ (Optional) WAF rate-based rule enabled (source IP, ~5/5min) and validated
 
 Frontend (app)
-- [ ] Home page “Try Demo” CTA calls `/auth/demo` and shows loading + error states
-- [ ] On success: client signs in via Amplify Auth (`signIn({ username, password })`)
-- [ ] On success: set a local “demo session” flag (do not depend on `cognito:groups` being present on the first token)
-- [ ] Redirect behavior: respect `?redirect=` else go to `/today`
+- [x] Home page “Try Demo” CTA calls `/auth/demo` and shows loading + error states
+- [x] On success: client signs in via Amplify Auth (`signIn({ username, password })`)
+- [x] On success: set a local “demo session” flag (do not depend on `cognito:groups` being present on the first token)
+- [x] Redirect behavior: respect `?redirect=` else go to `/today`
 
 Seeding / UX
-- [ ] Demo user sign-in triggers existing bootstrap+seed flow exactly once per user (via `seedVersion`)
-- [ ] Demo-only UX hooks are gated by `cognito:groups` containing `Demo` (optional for MVP)
+- [x] Demo user sign-in triggers existing bootstrap+seed flow exactly once per user (via `seedVersion`)
+- [x] Demo-only UX hooks are gated by `cognito:groups` containing `Demo` (best-effort) OR local demo-session flag
 
 Safety
-- [ ] Demo Lambda never assigns Admin group
-- [ ] Admin assignment Lambda denies Admin for demo identity patterns (recommended)
+- [x] Demo Lambda never assigns Admin group
+- [x] Admin assignment Lambda denies Admin for demo identity patterns (recommended)
 
 Verification
-- [ ] Manual test: click Try Demo → authenticated → seed data appears
-- [ ] Manual test: repeated clicks create distinct accounts
-- [ ] Manual test: CORS works in both local dev and prod origin
-- [ ] Manual test: rate limiting blocks bursts as expected
+- [x] Manual test: click Try Demo → authenticated → seed data appears
+- [x] Manual test: repeated clicks create distinct accounts
+- [x] Manual test: CORS works in both local dev and prod origin
+- [x] Manual test: rate limiting blocks bursts as expected
 
 ---
 
