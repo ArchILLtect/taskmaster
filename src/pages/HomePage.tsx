@@ -1,8 +1,58 @@
 import { Badge, Box, Button, Heading, HStack, Text, VStack } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { signIn } from "aws-amplify/auth";
+import { createDemoCredentials } from "../services/demoAuthService";
+import { clearDemoSessionActive, setDemoSessionActive } from "../services/demoSession";
+
+function sanitizeRedirect(raw: string | null): string {
+  if (!raw) return "/today";
+  if (!raw.startsWith("/")) return "/today";
+  if (raw.startsWith("//")) return "/today";
+  if (raw.includes("://")) return "/today";
+  return raw;
+}
 
 export function HomePage({ signedIn }: { signedIn: boolean }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTarget = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return sanitizeRedirect(params.get("redirect"));
+  }, [location.search]);
+
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
+
+  const onTryDemo = async () => {
+    if (demoLoading) return;
+
+    setDemoLoading(true);
+    setDemoError(null);
+
+    try {
+      const creds = await createDemoCredentials();
+
+      // Gotcha guardrail: do not rely on `cognito:groups` being present on the first token.
+      // Treat this session as demo based on the fact it was created through `/auth/demo`.
+      setDemoSessionActive();
+
+      await signIn({ username: creds.username, password: creds.password });
+
+      navigate(redirectTarget || "/today", { replace: true });
+    } catch (err) {
+      // If something failed after we marked the session as demo, clear it to avoid confusing UX.
+      clearDemoSessionActive();
+      const message =
+        typeof err === "object" && err !== null && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Failed to create demo account.";
+      setDemoError(message);
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   return (
     <VStack align="stretch" gap={6} minH="100%" p={4}>
@@ -34,9 +84,11 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
               <Button
                 size="lg"
                 colorPalette="purple"
-                onClick={() => navigate("/login?intent=demo")}
+                onClick={onTryDemo}
+                loading={demoLoading}
+                disabled={demoLoading}
               >
-                Try Demo (No Signup)
+                {demoLoading ? "Creating demo account…" : "Try Demo (No Signup)"}
               </Button>
             ) : null}
 
@@ -57,6 +109,17 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
 
           {!signedIn ? (
             <Box pt={2} color="gray.600">
+              {demoError ? (
+                <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" mb={3}>
+                  <Text fontWeight="600" color="red.800">
+                    Demo sign-in failed
+                  </Text>
+                  <Text fontSize="sm" color="red.700">
+                    {demoError}
+                  </Text>
+                </Box>
+              ) : null}
+
               <Text fontSize="sm">
                 Demo mode: one click creates a temporary demo user, signs you in, and seeds data.
               </Text>

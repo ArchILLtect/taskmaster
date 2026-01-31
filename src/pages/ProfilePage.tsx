@@ -1,6 +1,7 @@
 import { Heading, Text, VStack } from "@chakra-ui/react";
 import { useProfilePageData } from "./useProfilePageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { formatUsernameForDisplay } from "../services/userDisplay";
 
 type ProfilePageProps = {
   user?: { username?: string; userId?: string } | null;
@@ -27,7 +28,7 @@ export function ProfilePage({ user }: ProfilePageProps) {
     return (
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
-        <Text>Username: {username ?? "(unknown)"}</Text>
+        <Text>Username: {formatUsernameForDisplay(username ?? null)}</Text>
         {email ? <Text>Email: {email}</Text> : null}
         {role ? <Text>Role: {role}</Text> : null}
         {error ? <Text color="orange.600">{error}</Text> : null}

@@ -14,7 +14,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { ListDetailsPage } from "./pages/ListDetailsPage";
 import { AdminPage } from "./pages/AdminPage";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useLayoutEffect } from "react";
 import { BasicSpinner } from "./components/ui/BasicSpinner";
 import { Hub } from "aws-amplify/utils";
 import { clearAllUserCaches } from "./store/clearUserCaches";
@@ -98,7 +98,10 @@ export default function App() {
   const { user, signedIn, signOutWithCleanup } = useAuthUser();
 
   // Only relevant once we have a signed-in identity.
-  maybeClearCachesBeforeFirstAuthedRender(user);
+  // Important: don't call this during render (it can trigger store updates and React warnings).
+  useLayoutEffect(() => {
+    maybeClearCachesBeforeFirstAuthedRender(user);
+  }, [user]);
 
   return (
     <Routes>

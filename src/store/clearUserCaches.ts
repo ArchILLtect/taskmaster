@@ -5,6 +5,7 @@ import { clearUserUICache } from "../services/authService";
 import {
   USER_UI_STORAGE_KEY,
 } from "../services/userUICacheStore";
+import { DEMO_SESSION_STORAGE_KEY } from "../services/demoSession";
 
 const TASK_STORE_KEY = "taskmaster:taskStore";
 const INBOX_STORE_KEY = "taskmaster:inbox";
@@ -51,6 +52,7 @@ export function clearAllUserCaches(): void {
   safeRemoveLocalStorageKey(INBOX_STORE_KEY);
   safeRemoveLocalStorageKey(UPDATES_STORE_KEY);
   safeRemoveLocalStorageKey(USER_UI_STORAGE_KEY);
+  safeRemoveLocalStorageKey(DEMO_SESSION_STORAGE_KEY);
 
   if (import.meta.env.DEV) {
     console.debug("[auth] cleared user-scoped caches", [
@@ -58,6 +60,7 @@ export function clearAllUserCaches(): void {
       INBOX_STORE_KEY,
       UPDATES_STORE_KEY,
       USER_UI_STORAGE_KEY,
+      DEMO_SESSION_STORAGE_KEY,
     ]);
   }
 

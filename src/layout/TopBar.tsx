@@ -4,6 +4,7 @@ import type { AuthUserLike, UserUI } from "../types";
 import { IoSettingsSharp } from "react-icons/io5";
 import { useUserUI } from "../hooks/useUserUI";
 import { useTaskStoreView } from "../store/taskStore";
+import { formatUsernameForDisplay } from "../services/userDisplay";
 
 type TopBarProps = {
   user?: AuthUserLike | null;
@@ -27,6 +28,8 @@ export function TopBar({ user, userUI }: TopBarProps) {
   const role = safeUserUI?.role ?? user?.role;
   const signedIn = Boolean(username);
   const isAdmin = role === "Admin";
+
+  const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
 
   return (
     <HStack px={4} py={3} borderBottomWidth="1px" bg="white" position={"sticky"} minW="400px">
@@ -52,7 +55,7 @@ export function TopBar({ user, userUI }: TopBarProps) {
                     bg={isActive ? "blackAlpha.100" : "transparent"}
                     _hover={{ bg: "blackAlpha.100" }}
                 >
-                    {username}
+                    {displayUsername}
                 </Box>
             )}
             </RouterLink>
