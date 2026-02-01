@@ -59,6 +59,12 @@ Last refreshed: Jan 31 2026
 
 ---
 
+## UI / Frontend
+
+- [ ] TODO(P3) AdminPage: refactor filter controls to use shared UI patterns (tooltip labels + FormSelect) and remove raw HTML selects
+
+---
+
 ## Data & Services
 
 - [ ] TODO(stretch) Make Updates logging “perfect” by comparing before/after task status
