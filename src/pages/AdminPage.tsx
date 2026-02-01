@@ -1,6 +1,8 @@
 import { Box, Heading, HStack, Spinner, Text, VStack, Badge, Separator, Button, Input, Checkbox } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { FiInfo } from "react-icons/fi";
 import { isCurrentUserAdmin } from "../services/authIdentity";
+import { Tooltip } from "../components/ui/Tooltip";
 import {
   backfillMissingUserProfileEmails,
   listUserProfilesByEmailAdminPage,
@@ -979,7 +981,25 @@ export function AdminPage() {
                 </Heading>
                 <Separator mb={2} />
                 <HStack gap={3} flexWrap="wrap">
-                  <Input placeholder="Search title" size="sm" value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} maxW="260px" />
+                  <Box>
+                    <HStack gap={1} mb={1} align="center">
+                      <Text fontSize="sm" color="gray.600" fontWeight={500}>
+                        Search
+                      </Text>
+                      <Tooltip content="Search tasks by title." showArrow>
+                        <Box as="span" color="gray.500" cursor="help" lineHeight="0">
+                          <FiInfo />
+                        </Box>
+                      </Tooltip>
+                    </HStack>
+                    <Input
+                      placeholder="Search title"
+                      size="sm"
+                      value={taskSearch}
+                      onChange={(e) => setTaskSearch(e.target.value)}
+                      maxW="260px"
+                    />
+                  </Box>
                   <Box borderWidth="1px" rounded="md" px={2} py={1}>
                     <select
                       value={taskStatusFilter}
