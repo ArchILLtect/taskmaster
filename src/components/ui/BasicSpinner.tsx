@@ -1,13 +1,17 @@
-import { Center, Spinner } from "@chakra-ui/react"
-import { useTaskmasterData } from "../../hooks/useTaskmasterData";
+import { Center, Spinner, type SpinnerProps } from "@chakra-ui/react";
 
-export function BasicSpinner () {
-  const { loading } = useTaskmasterData();
-  if (loading) {
-    return (
-      <Center width={"100%"} height={"75vh"}>
-        <Spinner size={"xl"} />
-      </Center>
-    );
-  }
+export function BasicSpinner({
+  height = "75vh",
+  width = "100%",
+  size = "xl",
+}: {
+  height?: string | number;
+  width?: string | number;
+  size?: SpinnerProps["size"];
+}) {
+  return (
+    <Center width={width} height={height}>
+      <Spinner size={size} />
+    </Center>
+  );
 }

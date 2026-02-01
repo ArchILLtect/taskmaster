@@ -8,6 +8,7 @@ import { useBootstrapTaskStore } from "../hooks/useBootstrapTaskStore";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { BottomBar } from "./BottomBar";
 import { PublicSidebar } from "./PublicSidebar.tsx";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 const TOPBAR_H = "64px";
 const BOTTOMBAR_H = "52px";
@@ -16,10 +17,12 @@ export function AppShell({
   user,
   onSignOut,
   signedIn,
+  authLoading,
 }: {
   user?: AuthUserLike | null;
   onSignOut?: () => void;
   signedIn: boolean;
+  authLoading: boolean;
 }) {
 
   useBootstrapUserProfile(user);
@@ -42,12 +45,15 @@ export function AppShell({
           overflowY="auto"
           borderRightWidth="1px"
         >
-          {user ? (
+          {authLoading ? (
+            <Box w={"25vh"} h="100%">
+              <BasicSpinner height="100%" width="100%" size="md" />
+            </Box>
+          ) : signedIn ? (
             <Sidebar />
           ) : (
             <PublicSidebar />
-          )
-        }
+          )}
         </Box>
 
         {/* Main area is the primary scroll container */}

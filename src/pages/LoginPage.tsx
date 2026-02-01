@@ -2,6 +2,7 @@ import { Authenticator } from "@aws-amplify/ui-react";
 import { Box, Button, Heading, Text, VStack } from "@chakra-ui/react";
 import { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/today";
@@ -11,7 +12,7 @@ function sanitizeRedirect(raw: string | null): string {
   return raw;
 }
 
-export function LoginPage({ signedIn }: { signedIn: boolean }) {
+export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLoading: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,6 +30,8 @@ export function LoginPage({ signedIn }: { signedIn: boolean }) {
     if (!signedIn) return;
     navigate(redirectTarget, { replace: true });
   }, [navigate, redirectTarget, signedIn]);
+
+  if (authLoading) return <BasicSpinner />;
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" justify={"center"} alignItems={"center"} rounded="md" boxShadow="sm">

@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { BasicSpinner } from "../components/ui/BasicSpinner";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/today";
@@ -9,8 +10,11 @@ function sanitizeRedirect(raw: string | null): string {
   return raw;
 }
 
-export function RequireAuth({ signedIn }: { signedIn: boolean }) {
+export function RequireAuth({ signedIn, loading }: { signedIn: boolean; loading: boolean }) {
   const location = useLocation();
+
+  // Avoid a redirect flash during the initial auth bootstrap on reload.
+  if (loading) return <BasicSpinner />;
 
   if (signedIn) return <Outlet />;
 
