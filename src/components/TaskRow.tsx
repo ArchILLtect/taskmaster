@@ -77,20 +77,22 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
 
               <Box border="none" padding="0">
                 {task.status === TaskStatus.Done ? (
-                  <Tooltip content="Revive task">
-                    <Button
-                      bg="blue.100"
-                      h="32px"
-                      w="33px"
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      onClick={onComplete}
-                      variant="outline"
-                    >
-                      <IoRefreshCircleOutline color="blue" />
-                    </Button>
-                  </Tooltip>
+                  <Box width="84px" height="68px" justifyItems="center" alignContent="center">
+                    <Tooltip content="Revive task">
+                      <Button
+                        bg="blue.100"
+                        h="32px"
+                        w="33px"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        onClick={onComplete}
+                        variant="outline"
+                      >
+                        <IoRefreshCircleOutline color="blue" />
+                      </Button>
+                    </Tooltip>
+                  </Box>
                 ) : (
                   <Grid gap={1} templateColumns='repeat(2, 1fr)'>
                     <Tooltip content="Mark as complete">
