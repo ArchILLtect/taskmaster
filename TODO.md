@@ -300,6 +300,20 @@ Last refreshed: Jan 31 2026
   - Today: Inbox is a dedicated triage view; the system Inbox list is not directly reachable like normal lists.
   - Decide: should system Inbox be a normal list route (read-only/edit-disabled) or remain hidden behind the Inbox triage?
 
+- [ ] TODO(postmvp) Task move: allow "move under another task" (reparent)
+  - Add an optional "Parent task" field to the task edit flow (alongside "List")
+  - Behavior: user selects a target list, then optionally selects a parent task within that list
+  - Save payload should support: `listId`, `parentTaskId` (nullable), and a reasonable `sortOrder` among new siblings
+  - Guardrails:
+    - Prevent cycles: disallow selecting self or any descendant as parent
+    - Ensure the selected parent is in the same target list (or auto-fix/clear parent if list changes)
+    - Decide: allow parenting under subtasks (deep nesting) vs only under top-level tasks
+
+- [ ] TODO(postmvp) Task move: improve ordering when moving/reparenting
+  - Today: moving lists resets `sortOrder` to `0` (good enough for MVP, but crude)
+  - Better: compute next `sortOrder` for end-of-list among siblings (same list + same parentTaskId)
+  - Optional UX polish: "Move to top" vs "Move to bottom" vs "Keep relative order"
+
 ## Performance / Bundling
 
 - [ ] TODO(P4) Investigate production bundle size & route-level code splitting
