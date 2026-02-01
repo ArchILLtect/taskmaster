@@ -152,6 +152,7 @@ Last refreshed: Jan 28 2026
 ## GraphQL & Data Modeling (Future Hardening / Improvements)
 
 - [ ] TODO(postmvp) Audit & remove legacy non-null violations (starting with `isDemo`)
+  - See: [docs/LEGACY_DATA_CLEANUP.md](docs/LEGACY_DATA_CLEANUP.md)
   - Why: current UI reads prefer selecting `isDemo`, but fall back to omitting it when the backend throws `Cannot return null for non-nullable type ... isDemo`.
   - How to detect:
     - In-app: use Admin diagnostics (lists/tasks “isDemo mode” indicators) and look for the safe-fallback warning states.
@@ -163,6 +164,7 @@ Last refreshed: Jan 28 2026
   - Also check: any other known legacy required fields (e.g. admin service already has safe fallbacks for `UserProfile.email`), and remove those fallbacks once fully backfilled.
 
 - [ ] TODO(postmvp) Decide “reset/purge” strategy to eliminate legacy data before launch
+  - See: [docs/LEGACY_DATA_CLEANUP.md](docs/LEGACY_DATA_CLEANUP.md)
   - Option A (clean): backfill legacy records (preferred if you want continuity for existing testers).
   - Option B (nuke): purge all existing accounts + GraphQL records, then recreate Admin + testers.
     - Pros: guarantees no legacy records remain; simplest way to ensure required fields are present everywhere.
