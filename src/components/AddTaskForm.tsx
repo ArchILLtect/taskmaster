@@ -1,12 +1,4 @@
-import {
-  Box,
-  Heading,
-  VStack,
-  CloseButton,
-  Input,
-  Button,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { TaskStatus, TaskPriority } from "../API";

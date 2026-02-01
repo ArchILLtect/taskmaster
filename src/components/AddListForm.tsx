@@ -1,12 +1,4 @@
-import {
-  Box,
-  Heading,
-  VStack,
-  CloseButton,
-  Input,
-  Button,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { AddListFormProps } from "../types/list";
 
@@ -31,7 +23,7 @@ export const AddListForm = ({
         />
       </Flex>
 
-      <div style={{height: "1px", width: "100%", backgroundColor: "gray"}} />
+      <Box height="1px" width="100%" bg="gray.400" />
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
@@ -48,7 +40,7 @@ export const AddListForm = ({
         </Flex>
       </FormControl>
       <FormControl w="100%">
-        <Flex display="flex" justify="space-between" align="center" width="100%">
+        <Flex justify="space-between" align="center" width="100%">
           <FormLabel fontSize="small" fontWeight="bold" htmlFor="list-description">Description</FormLabel>
           <Input
             minW="150px"

@@ -1,12 +1,4 @@
-import {
-  Box,
-  Heading,
-  VStack,
-  CloseButton,
-  Input,
-  Button,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditTaskFormProps } from "../types/task";
 import { useMemo } from "react";
@@ -90,7 +82,7 @@ export const EditTaskForm = ({
               size="xs"
             />
           </Flex>
-          <Box height="1px" width="100%" bg="gray.400" />
+          <Box height="1px" width="100%" bg="gray.400" mt={2} mb={4} />
         </>
       ) : null}
 

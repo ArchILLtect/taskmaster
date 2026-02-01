@@ -1,13 +1,5 @@
 import { useEffect } from "react";
-import {
-  Box,
-  Heading,
-  VStack,
-  CloseButton,
-  Input,
-  Button,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditListFormProps } from "../types/list";
 
@@ -39,7 +31,7 @@ export const EditListForm = ({
         />
       </Flex>
 
-      <div style={{height: "1px", width: "100%", backgroundColor: "gray"}} />
+      <Box height="1px" width="100%" bg="gray.400" mt={2} mb={4} />
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
