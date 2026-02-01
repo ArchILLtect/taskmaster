@@ -1,7 +1,21 @@
-import { Box, Flex, VStack, HStack, Heading, Text, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  VStack,
+  HStack,
+  Heading,
+  Text,
+  Button,
+  Badge,
+  Input,
+  Select,
+  Collapsible,
+  useListCollection,
+} from "@chakra-ui/react";
+import { FiChevronDown } from "react-icons/fi";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EditListForm } from "../components/EditListForm";
 import { AddListForm } from "../components/AddListForm";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
@@ -18,6 +32,23 @@ function nextSortOrder(lists: ListUI[]) {
   return max + 1;
 }
 
+type Option<T extends string> = { label: string; value: T };
+
+type ListFilterKey = "all" | "favorites";
+type ListSortKey = "sortOrder" | "name" | "favorite" | "updated";
+
+const LIST_FILTER_OPTIONS: Option<ListFilterKey>[] = [
+  { label: "All lists", value: "all" },
+  { label: "Favorites", value: "favorites" },
+];
+
+const LIST_SORT_OPTIONS: Option<ListSortKey>[] = [
+  { label: "Manual (sort order)", value: "sortOrder" },
+  { label: "Name", value: "name" },
+  { label: "Favorite (first)", value: "favorite" },
+  { label: "Recently updated", value: "updated" },
+];
+
 export const ListsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedList, setSelectedList] = useState<string | null>(null);
@@ -28,10 +59,84 @@ export const ListsPage = () => {
   const [draftListDescription, setDraftListDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [listSearch, setListSearch] = useState("");
+  const [listFilter, setListFilter] = useState<ListFilterKey>("all");
+  const [listSort, setListSort] = useState<ListSortKey>("sortOrder");
+
   const { visibleLists, loading, err, refresh } = useListsPageData();
   const { createTaskList, updateTaskList, deleteTaskListSafeById } = useTaskActions();
   const selected = visibleLists.find((l) => l.id === selectedList);
   const inboxListId = getInboxListId();
+
+  const { collection: filterCollection } = useListCollection<Option<ListFilterKey>>({
+    initialItems: LIST_FILTER_OPTIONS,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
+
+  const { collection: sortCollection } = useListCollection<Option<ListSortKey>>({
+    initialItems: LIST_SORT_OPTIONS,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  });
+
+  const visibleListItems = useMemo(() => {
+    const q = listSearch.trim().toLowerCase();
+
+    const matchesFilter = (l: ListUI) => (listFilter === "favorites" ? l.isFavorite : true);
+
+    const matchesSearch = (l: ListUI) => {
+      if (!q) return true;
+      const hay = `${l.name ?? ""} ${(l.description ?? "").toString()}`.toLowerCase();
+      return hay.includes(q);
+    };
+
+    const filtered = visibleLists.filter((l) => matchesFilter(l) && matchesSearch(l));
+    const decorated = filtered.map((l, idx) => ({ l, idx }));
+
+    decorated.sort((a, b) => {
+      const la = a.l;
+      const lb = b.l;
+
+      const stableTieBreak = () => a.idx - b.idx;
+
+      if (listSort === "sortOrder") {
+        return (la.sortOrder ?? 0) - (lb.sortOrder ?? 0) || stableTieBreak();
+      }
+
+      if (listSort === "name") {
+        const na = String(la.name ?? "").toLowerCase();
+        const nb = String(lb.name ?? "").toLowerCase();
+        return na.localeCompare(nb) || (la.sortOrder ?? 0) - (lb.sortOrder ?? 0) || stableTieBreak();
+      }
+
+      if (listSort === "favorite") {
+        const fa = la.isFavorite ? 0 : 1;
+        const fb = lb.isFavorite ? 0 : 1;
+        return fa - fb || (la.sortOrder ?? 0) - (lb.sortOrder ?? 0) || stableTieBreak();
+      }
+
+      // listSort === "updated" (newest first)
+      return String(lb.updatedAt ?? "").localeCompare(String(la.updatedAt ?? "")) || (la.sortOrder ?? 0) - (lb.sortOrder ?? 0) || stableTieBreak();
+    });
+
+    return decorated.map((d) => d.l);
+  }, [listFilter, listSearch, listSort, visibleLists]);
+
+  const listCounts = useMemo(() => {
+    const total = visibleLists.length;
+    const favorites = visibleLists.filter((l) => l.isFavorite).length;
+    const showing = visibleListItems.length;
+
+    return { total, favorites, showing };
+  }, [visibleListItems, visibleLists]);
+
+  useEffect(() => {
+    // If the selected list is filtered away, hide the editor.
+    if (!selectedList) return;
+    if (visibleListItems.some((l) => l.id === selectedList)) return;
+    setIsEditing(false);
+  }, [selectedList, visibleListItems]);
 
   const handleCreate = async () => {
 
@@ -175,17 +280,132 @@ export const ListsPage = () => {
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <Toaster />
-      <Box w="100%" mb={4}>
-        <HStack justify="space-between" width="100%">
-          <VStack align="start">
-            <Heading size="lg">Lists</Heading>
-            <Text>Select a list to view its tasks.</Text>
-          </VStack>
-        </HStack>
-      </Box>
       <Flex gap={4} w="100%">
         <Box w="50%">
           <Box w="100%" mb={4}>
+            <Box w="100%" mb={4}>
+              <HStack justify="space-between" width="100%">
+                <VStack align="start">
+                  <Heading size="lg">Lists</Heading>
+                  <Text>Search, filter, sort, and manage your lists.</Text>
+                  <HStack gap={2} flexWrap="wrap">
+                    <Badge variant="outline">Total: {listCounts.total}</Badge>
+                    <Badge variant="outline" colorPalette="yellow">
+                      Favorites: {listCounts.favorites}
+                    </Badge>
+                    <Badge variant="solid" colorPalette="purple">
+                      Showing: {listCounts.showing}
+                    </Badge>
+                  </HStack>
+                </VStack>
+              </HStack>
+            </Box>
+
+            <Collapsible.Root defaultOpen={false} w={"100%"} mb={"5"}>
+              <Collapsible.Trigger asChild>
+                <HStack
+                  paddingRight={2}
+                  cursor="pointer"
+                  userSelect="none"
+                  justify="space-between"
+                  rounded="md"
+                  _hover={{ bg: "blackAlpha.50" }}
+                >
+                  <Text fontSize="lg" fontWeight="600">Filters & Sorting</Text>
+    
+        
+                  {/* rotate chevron when open */}
+                  <Collapsible.Indicator asChild>
+                    <Box transition="transform 150ms" _open={{ transform: "rotate(180deg)" }}>
+                      <FiChevronDown />
+                    </Box>
+                  </Collapsible.Indicator>
+                </HStack>
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+
+              <HStack w="100%" gap={3} flexWrap="wrap" align="end" justify="space-between">
+                <HStack gap={3} flexWrap="wrap" align="end">
+                  <Box>
+                    <Text fontSize="sm" color="gray.600" mb={1}>
+                      Search
+                    </Text>
+                    <Input
+                      placeholder="Search name/description"
+                      value={listSearch}
+                      onChange={(e) => setListSearch(e.target.value)}
+                      maxW="320px"
+                    />
+                  </Box>
+
+                  <Select.Root collection={filterCollection} value={[listFilter]} onValueChange={(e) => setListFilter((e.value[0] as ListFilterKey) ?? "all")}>
+                    <Box>
+                      <Select.Label fontSize="sm" color="gray.600" mb={1}>
+                        Filter
+                      </Select.Label>
+                      <Select.Control bg="white" minW="220px">
+                        <Select.Trigger>
+                          <Select.ValueText placeholder="All lists" />
+                          <Select.Indicator />
+                        </Select.Trigger>
+                      </Select.Control>
+                      <Select.Positioner>
+                        <Select.Content>
+                          {filterCollection.items.map((item) => (
+                            <Select.Item item={item} key={item.value}>
+                              <Select.ItemText>{item.label}</Select.ItemText>
+                              <Select.ItemIndicator />
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Positioner>
+                    </Box>
+                  </Select.Root>
+
+                  <Select.Root collection={sortCollection} value={[listSort]} onValueChange={(e) => setListSort((e.value[0] as ListSortKey) ?? "sortOrder")}>
+                    <Box>
+                      <Select.Label fontSize="sm" color="gray.600" mb={1}>
+                        Sort
+                      </Select.Label>
+                      <Select.Control bg="white" minW="220px">
+                        <Select.Trigger>
+                          <Select.ValueText placeholder="Manual (sort order)" />
+                          <Select.Indicator />
+                        </Select.Trigger>
+                      </Select.Control>
+                      <Select.Positioner>
+                        <Select.Content>
+                          {sortCollection.items.map((item) => (
+                            <Select.Item item={item} key={item.value}>
+                              <Select.ItemText>{item.label}</Select.ItemText>
+                              <Select.ItemIndicator />
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Positioner>
+                    </Box>
+                  </Select.Root>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setListSearch("");
+                      setListFilter("all");
+                      setListSort("sortOrder");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </HStack>
+
+                <Text fontSize="sm" color="gray.600">
+                  Results: {visibleListItems.length}
+                </Text>
+              </HStack>
+
+              </Collapsible.Content>
+            </Collapsible.Root>
 
             {loading ? <Text>Loading…</Text> : null}
             {err ? <Text>Failed to load lists.</Text> : null}
@@ -194,7 +414,7 @@ export const ListsPage = () => {
               visibleLists.length > 0 ? (
 
                 <VStack align="stretch" gap={2} width={"100%"}>
-                  {visibleLists.map((l) => {
+                  {visibleListItems.map((l) => {
                   const system = isInboxList(l, inboxListId);
 
                   return (

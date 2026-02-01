@@ -8,8 +8,10 @@ import {
   Badge,
   Input,
   Select,
+  Collapsible,
   useListCollection,
 } from "@chakra-ui/react";
+import { FiChevronDown } from "react-icons/fi";
 import { TaskRow } from "../components/TaskRow";
 import { useEffect, useMemo, useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
@@ -316,119 +318,143 @@ export function TasksPage() {
         <HStack justify="space-between" w="100%">
           <VStack align="start" gap={2}>
             <Heading size="md">Tasks</Heading>
-            {/* TODO: add icon here */}
-            <Text>View, sort, and manage all your tasks in one place.</Text>
-            <HStack gap={2} flexWrap="wrap">
-              <Badge variant="outline">Total: {taskCounts.total}</Badge>
-              <Badge variant="outline" colorPalette="green">
-                Incomplete: {taskCounts.incomplete}
-              </Badge>
-              <Badge variant="outline" colorPalette="blue">
-                Completed: {taskCounts.completed}
-              </Badge>
-              <Badge variant="solid" colorPalette="purple">
-                Showing: {taskCounts.showing}
-              </Badge>
-              <Badge variant="outline" colorPalette="red">
-                Overdue: {taskCounts.overdue}
-              </Badge>
-              <Badge variant="outline" colorPalette="orange">
-                Due today: {taskCounts.dueToday}
-              </Badge>
-              <Badge variant="outline" colorPalette="teal">
-                Scheduled: {taskCounts.scheduledOpen}
-              </Badge>
-              <Badge variant="outline" colorPalette="gray">
-                Someday: {taskCounts.somedayOpen}
-              </Badge>
-            </HStack>
+            <Text>View, search, filter, sort, and manage all your tasks in one place.</Text>
           </VStack>
           <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
         </HStack>
 
-        <HStack w="100%" gap={3} flexWrap="wrap" align="end" justify="space-between">
-          <HStack gap={3} flexWrap="wrap" align="end">
-            <Box>
-              <Text fontSize="sm" color="gray.600" mb={1}>
-                Search
-              </Text>
-              <Input
-                placeholder="Search title/description"
-                value={taskSearch}
-                onChange={(e) => setTaskSearch(e.target.value)}
-                maxW="320px"
-              />
-            </Box>
-
-            <Select.Root
-              collection={listFilterCollection}
-              value={[selectedListFilter]}
-              onValueChange={(e) => setSelectedListFilter(e.value[0] ?? "all")}
-            >
-              <Box>
-                <Select.Label fontSize="sm" color="gray.600" mb={1}>
-                  List
-                </Select.Label>
-                <Select.Control bg="white" minW="220px">
-                  <Select.Trigger>
-                    <Select.ValueText placeholder="All lists" />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                </Select.Control>
-                <Select.Positioner>
-                  <Select.Content>
-                    {listFilterCollection.items.map((item) => (
-                      <Select.Item item={item} key={item.value}>
-                        <Select.ItemText>{item.label}</Select.ItemText>
-                        <Select.ItemIndicator />
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select.Positioner>
-              </Box>
-            </Select.Root>
-
-            <Select.Root collection={sortCollection} value={[sortKey]} onValueChange={(e) => setSortKey((e.value[0] as SortKey) ?? "sortOrder")}>
-              <Box>
-                <Select.Label fontSize="sm" color="gray.600" mb={1}>
-                  Sort
-                </Select.Label>
-                <Select.Control bg="white" minW="220px">
-                  <Select.Trigger>
-                    <Select.ValueText placeholder="Manual (sort order)" />
-                    <Select.Indicator />
-                  </Select.Trigger>
-                </Select.Control>
-                <Select.Positioner>
-                  <Select.Content>
-                    {sortCollection.items.map((item) => (
-                      <Select.Item item={item} key={item.value}>
-                        <Select.ItemText>{item.label}</Select.ItemText>
-                        <Select.ItemIndicator />
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select.Positioner>
-              </Box>
-            </Select.Root>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setTaskSearch("");
-                setSelectedListFilter("all");
-                setSortKey("sortOrder");
-              }}
-            >
-              Clear
-            </Button>
-          </HStack>
-
-          <Text fontSize="sm" color="gray.600">
-            Results: {visibleTasks.length}
-          </Text>
+        <HStack gap={2} flexWrap="wrap" justifyContent={"center"} w={"100%"}>
+          <Badge variant="outline">Total: {taskCounts.total}</Badge>
+          <Badge variant="outline" colorPalette="green">
+            Incomplete: {taskCounts.incomplete}
+          </Badge>
+          <Badge variant="outline" colorPalette="blue">
+            Completed: {taskCounts.completed}
+          </Badge>
+          <Badge variant="solid" colorPalette="purple">
+            Showing: {taskCounts.showing}
+          </Badge>
+          <Badge variant="outline" colorPalette="red">
+            Overdue: {taskCounts.overdue}
+          </Badge>
+          <Badge variant="outline" colorPalette="orange">
+            Due today: {taskCounts.dueToday}
+          </Badge>
+          <Badge variant="outline" colorPalette="teal">
+            Scheduled: {taskCounts.scheduledOpen}
+          </Badge>
+          <Badge variant="outline" colorPalette="gray">
+            Someday: {taskCounts.somedayOpen}
+          </Badge>
         </HStack>
+
+        <Collapsible.Root defaultOpen={false} w={"50%"}>
+          <Collapsible.Trigger asChild>
+            <HStack
+              paddingRight={2}
+              cursor="pointer"
+              userSelect="none"
+              justify="space-between"
+              rounded="md"
+              _hover={{ bg: "blackAlpha.50" }}
+            >
+              <Text fontSize="lg" fontWeight="600">Filters & Sorting</Text>
+
+    
+              {/* rotate chevron when open */}
+              <Collapsible.Indicator asChild>
+                <Box transition="transform 150ms" _open={{ transform: "rotate(180deg)" }}>
+                  <FiChevronDown />
+                </Box>
+              </Collapsible.Indicator>
+            </HStack>
+          </Collapsible.Trigger>
+          <Collapsible.Content>
+            <HStack w="100%" gap={3} flexWrap="wrap" align="end" justify="space-between">
+              <HStack gap={3} flexWrap="wrap" align="end">
+                <Box>
+                  <Text fontSize="sm" color="gray.600" fontWeight={"500"} mb={1}>
+                    Search
+                  </Text>
+                  <Input
+                    placeholder="Search title/description"
+                    value={taskSearch}
+                    onChange={(e) => setTaskSearch(e.target.value)}
+                    maxW="320px"
+                  />
+                </Box>
+
+                <Select.Root
+                  collection={listFilterCollection}
+                  value={[selectedListFilter]}
+                  onValueChange={(e) => setSelectedListFilter(e.value[0] ?? "all")}
+                >
+                  <Box>
+                    <Select.Label fontSize="sm" color="gray.600" mb={1}>
+                      List
+                    </Select.Label>
+                    <Select.Control bg="white" minW="220px">
+                      <Select.Trigger>
+                        <Select.ValueText placeholder="All lists" />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                    </Select.Control>
+                    <Select.Positioner>
+                      <Select.Content>
+                        {listFilterCollection.items.map((item) => (
+                          <Select.Item item={item} key={item.value}>
+                            <Select.ItemText>{item.label}</Select.ItemText>
+                            <Select.ItemIndicator />
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Positioner>
+                  </Box>
+                </Select.Root>
+
+                <Select.Root collection={sortCollection} value={[sortKey]} onValueChange={(e) => setSortKey((e.value[0] as SortKey) ?? "sortOrder")}>
+                  <Box>
+                    <Select.Label fontSize="sm" color="gray.600" mb={1}>
+                      Sort
+                    </Select.Label>
+                    <Select.Control bg="white" minW="220px">
+                      <Select.Trigger>
+                        <Select.ValueText placeholder="Manual (sort order)" />
+                        <Select.Indicator />
+                      </Select.Trigger>
+                    </Select.Control>
+                    <Select.Positioner>
+                      <Select.Content>
+                        {sortCollection.items.map((item) => (
+                          <Select.Item item={item} key={item.value}>
+                            <Select.ItemText>{item.label}</Select.ItemText>
+                            <Select.ItemIndicator />
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Positioner>
+                  </Box>
+                </Select.Root>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setTaskSearch("");
+                    setSelectedListFilter("all");
+                    setSortKey("sortOrder");
+                  }}
+                >
+                  Clear
+                </Button>
+              </HStack>
+
+              <Text fontSize="sm" color="gray.600">
+                Results: {visibleTasks.length}
+              </Text>
+            </HStack>
+          </Collapsible.Content>
+        </Collapsible.Root>
 
         <Flex
           gap={4}
