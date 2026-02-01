@@ -2,10 +2,39 @@
 
 # TO-DO (as time permits)
 
+## `TODO` TAGGING RULES
+
 This file is a running backlog of ideas, cleanups, and future improvements.
-Actionable TODOs should appear as `TODO(...)` or `TODO` followed by whitespace; documentation references should be wrapped in ^...^ if `` is unavailable.
-Wrap `TODO` tags in ^ to prevent matching inside other words, e.g., ^METHODTODOLOGY^
-Priorities use ^TODO(P1–P5)^, ^TODO(stretch)^, and ^TODO(postmvp)^ and are surfaced via the todo-tree extension.
+
+Actionable TODOs must use one of the following forms (do not include backticks):
+- `TODO` + `(P1)` through `TODO` + `(P5)`   — prioritized work
+- `TODO` + `(stretch)`                      — optional / stretch work
+- `TODO` + `(postmvp)`                      — post-MVP work
+- `TODO`␠                                  — unprioritized work (`TODO` followed by whitespace)
+- `TODO` + `?`                              — questionable work / decision needed
+
+These tags are surfaced automatically via the Todo Tree VS Code extension
+using the project’s workspace settings.
+
+When referring to `TODO` tags in documentation or prose, wrap them in backticks
+to prevent them from being treated as actionable items (does not work with priorities):
+- `TODO`
+- `NOTE`
+- `BUG`
+
+The following keywords are only treated as actionable when followed by whitespace:
+- NOTE
+- FIXME
+- BUG
+- HACK
+- REVIEW
+
+Examples:
+- `NOTE` something important     → actionable
+- NOTE: something important   → not actionable
+
+Filenames and identifiers such as TODO.md are not treated as `TODO` items.
+
 
 Last refreshed: Jan 31 2026
 
