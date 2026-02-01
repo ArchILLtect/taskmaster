@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Button, CloseButton, Dialog, HStack, Portal, Spacer, Text, VStack } from "@chakra-ui/react";
+import { Button, HStack, Spacer, Text, VStack } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
 import { resetDemoData } from "../services/resetDemoData";
 import { fireToast } from "../hooks/useFireToast";
 import { useDemoMode } from "../hooks/useDemoMode";
+import { DialogModal } from "../components/ui/DialogModal";
 
 export function BottomBar({
   signedIn,
@@ -65,82 +66,57 @@ export function BottomBar({
         )}
       </HStack>
 
-      {/* TODO(P2) : Reset Demo Data Dialog -- Replace hard-coded Dialog with src/components/ui/DialogModal */}
-      <Dialog.Root lazyMount open={isResetOpen} onOpenChange={(e) => setIsResetOpen(e.open)}>
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header paddingX={4} paddingTop={4} paddingBottom={2}>
-                <Dialog.Title>Reset demo data?</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body paddingX={4} paddingY={2}>
-                <VStack align="start" gap={2}>
-                  <Text>
-                    This will delete your demo tasks and lists and restore the original seeded demo dataset.
-                  </Text>
-                  <Text color="gray.600" fontSize="sm">
-                    The system inbox list is preserved, but its tasks will be cleared. Local Inbox + Updates state is
-                    also cleared.
-                  </Text>
-                  {resetError ? (
-                    <Text color="red.600" fontSize="sm">
-                      {resetError}
-                    </Text>
-                  ) : null}
-                </VStack>
-              </Dialog.Body>
-              <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (resetting) return;
-                      setIsResetOpen(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </Dialog.ActionTrigger>
-                <Button
-                  colorPalette="red"
-                  loading={resetting}
-                  onClick={async () => {
-                    if (resetting) return;
-                    setResetting(true);
-                    setResetError(null);
-                    try {
-                      await resetDemoData();
-                      setIsResetOpen(false);
-                      void fireToast("success", "Demo reset", "Demo lists and tasks were restored.");
-                    } catch (err) {
-                      const msg =
-                        typeof err === "object" && err !== null && "message" in err
-                          ? String((err as { message: unknown }).message)
-                          : "Failed to reset demo data.";
-                      setResetError(msg);
-                      void fireToast("error", "Reset failed", msg);
-                    } finally {
-                      setResetting(false);
-                    }
-                  }}
-                >
-                  Reset
-                </Button>
-              </Dialog.Footer>
-              <Dialog.CloseTrigger asChild>
-                <CloseButton
-                  aria-label="Close"
-                  onClick={() => {
-                    if (resetting) return;
-                    setIsResetOpen(false);
-                  }}
-                />
-              </Dialog.CloseTrigger>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
+      <DialogModal
+        title="Reset demo data?"
+        body={
+          <VStack align="start" gap={2}>
+            <Text>
+              This will delete your demo tasks and lists and restore the original seeded demo dataset.
+            </Text>
+            <Text color="gray.600" fontSize="sm">
+              The system inbox list is preserved, but its tasks will be cleared. Local Inbox + Updates state is also
+              cleared.
+            </Text>
+            {resetError ? (
+              <Text color="red.600" fontSize="sm">
+                {resetError}
+              </Text>
+            ) : null}
+          </VStack>
+        }
+        open={isResetOpen}
+        setOpen={setIsResetOpen}
+        onCancel={() => {
+          setResetError(null);
+          setIsResetOpen(false);
+        }}
+        onAccept={async () => {
+          {/* TODO? Extract this value into a helper constant */}
+          if (resetting) return;
+          setResetting(true);
+          setResetError(null);
+          try {
+            await resetDemoData();
+            void fireToast("success", "Demo reset", "Demo lists and tasks were restored.");
+          } catch (err) {
+            const msg =
+              typeof err === "object" && err !== null && "message" in err
+                ? String((err as { message: unknown }).message)
+                : "Failed to reset demo data.";
+            setResetError(msg);
+            void fireToast("error", "Reset failed", msg);
+            throw err;
+          } finally {
+            setResetting(false);
+          }
+        }}
+        acceptLabel="Reset"
+        cancelLabel="Cancel"
+        acceptColorPalette="red"
+        acceptVariant="solid"
+        loading={resetting}
+        disableClose={resetting}
+      />
     </HStack>
   );
 }
