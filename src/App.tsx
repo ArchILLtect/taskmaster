@@ -95,7 +95,7 @@ function maybeClearCachesBeforeFirstAuthedRender(user?: { username?: string; use
 }
 
 export default function App() {
-  const { user, signedIn, signOutWithCleanup } = useAuthUser();
+  const { user, signedIn, loading: authLoading, signOutWithCleanup } = useAuthUser();
 
   // Only relevant once we have a signed-in identity.
   // Important: don't call this during render (it can trigger store updates and React warnings).
@@ -105,14 +105,14 @@ export default function App() {
 
   return (
     <Routes>
-      <Route element={<AppShell user={user} onSignOut={signOutWithCleanup} signedIn={signedIn} />}>
+      <Route element={<AppShell user={user} onSignOut={signOutWithCleanup} signedIn={signedIn} authLoading={authLoading} />}>
         {/* Public routes */}
         <Route path="/" element={<HomePage signedIn={signedIn} />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/login" element={<LoginPage signedIn={signedIn} />} />
+        <Route path="/login" element={<LoginPage signedIn={signedIn} authLoading={authLoading} />} />
 
         {/* Protected routes */}
-        <Route element={<RequireAuth signedIn={signedIn} />}>
+        <Route element={<RequireAuth signedIn={signedIn} loading={authLoading} />}>
           <Route path="/inbox" element={<InboxPage />} />
           <Route path="/today" element={<TodayPage />} />
           <Route path="/week" element={<WeekPage />} />
