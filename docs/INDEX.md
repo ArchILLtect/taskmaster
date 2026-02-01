@@ -83,8 +83,7 @@ If a feature feels “missing,” check here before assuming it was forgotten.
 - Risk register: [RISK_REGISTER.md](RISK_REGISTER.md)
 
 ### Checklists
-- Things to do: [TODO.md](../TODO.md)
-- Changelog: [CHANGELOG.md](../CHANGELOG.md)
+- [LEGACY_DATA_CLEANUP](./LEGACY_DATA_CLEANUP.md)
+
 - Security & legal: [SECURITY_CHECKLIST.md](SECURITY_CHECKLIST.md)
-- Deployment: [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
 
