@@ -3,7 +3,9 @@
 # TO-DO (as time permits)
 
 This file is a running backlog of ideas, cleanups, and future improvements.
-Priorities use TODO(P1–P5) and TODO(stretch) and are surfaced via the todo-tree extension.
+Actionable TODOs should appear as `TODO(...)` or `TODO` followed by whitespace; documentation references should be wrapped in ^...^ if `` is unavailable.
+Wrap `TODO` tags in ^ to prevent matching inside other words, e.g., ^METHODTODOLOGY^
+Priorities use ^TODO(P1–P5)^, ^TODO(stretch)^, and ^TODO(postmvp)^ and are surfaced via the todo-tree extension.
 
 Last refreshed: Jan 28 2026
 
@@ -148,6 +150,26 @@ Last refreshed: Jan 28 2026
 ---
 
 ## GraphQL & Data Modeling (Future Hardening / Improvements)
+
+- [ ] TODO(postmvp) Audit & remove legacy non-null violations (starting with `isDemo`)
+  - Why: current UI reads prefer selecting `isDemo`, but fall back to omitting it when the backend throws `Cannot return null for non-nullable type ... isDemo`.
+  - How to detect:
+    - In-app: use Admin diagnostics (lists/tasks “isDemo mode” indicators) and look for the safe-fallback warning states.
+    - Backend: run an admin-only scan/query for any `Task` / `TaskList` records missing `isDemo` (or returning null) and count them.
+    - Logs: watch for GraphQL errors containing `Cannot return null for non-nullable type` + the field name.
+  - What to do once confirmed:
+    - Backfill: write a one-off admin script/mutation pass to set `isDemo=false` on any legacy records that are missing it.
+    - Then: remove the safe-fallback query paths and always select `isDemo` in normal UI queries.
+  - Also check: any other known legacy required fields (e.g. admin service already has safe fallbacks for `UserProfile.email`), and remove those fallbacks once fully backfilled.
+
+- [ ] TODO(postmvp) Decide “reset/purge” strategy to eliminate legacy data before launch
+  - Option A (clean): backfill legacy records (preferred if you want continuity for existing testers).
+  - Option B (nuke): purge all existing accounts + GraphQL records, then recreate Admin + testers.
+    - Pros: guarantees no legacy records remain; simplest way to ensure required fields are present everywhere.
+    - Cons: deletes all historical testing data; requires careful coordination and confirming you’re in the right environment.
+  - If choosing Option B:
+    - Document exact steps (Cognito user deletion + DynamoDB/AppSync model table purge) and verify they’re run against the correct Amplify env.
+    - After reset: disable safe-fallbacks and keep `isDemo` selected everywhere.
 
 - [ ] TODO(P3) Review GraphQL mutation selection sets for minimal ops
   - Some minimal mutations are typed using full Amplify-generated output types
