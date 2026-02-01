@@ -1,4 +1,4 @@
-import { Button } from "@chakra-ui/react";
+import { Button, Text } from "@chakra-ui/react";
 import { RouterLink } from "./RouterLink";
 
 export const SidebarItem = ({ to, label, main }: { to: string; label: string ; main?: boolean }) => {
@@ -16,7 +16,9 @@ export const SidebarItem = ({ to, label, main }: { to: string; label: string ; m
           bg={isActive ? "blackAlpha.100" : "transparent"}
           _hover={{ bg: "blackAlpha.100" }}
         >
-          {label}
+          <Text truncate>
+            {label}
+          </Text>
         </Button>
       )}
     </RouterLink>

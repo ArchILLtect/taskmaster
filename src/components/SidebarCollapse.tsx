@@ -22,7 +22,7 @@ export const SidebarCollapse = ({ to, label, items, defaultOpen }: SidebarCollap
           rounded="md"
           _hover={{ bg: "blackAlpha.50" }}
         >
-      <SidebarItem to={to} label={label} main={true} />
+          <SidebarItem to={to} label={label} main={true} />
 
           {/* rotate chevron when open */}
           <Collapsible.Indicator asChild>
@@ -40,5 +40,5 @@ export const SidebarCollapse = ({ to, label, items, defaultOpen }: SidebarCollap
         </VStack>
       </Collapsible.Content>
     </Collapsible.Root>
-    );
+  );
 }
