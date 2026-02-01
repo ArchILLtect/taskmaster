@@ -9,6 +9,7 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useTaskActions } from "../store/taskStore";
 import { useUpdatesActions, useUpdatesView } from "../store/updatesStore";
+import { getInboxListId } from "../config/inboxSettings";
 
 export function UpdatesPage() {
 
@@ -18,7 +19,7 @@ export function UpdatesPage() {
 
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
 
-  const { updateTask, deleteTask } = useTaskActions();
+  const { updateTask, deleteTask, sendTaskToInbox } = useTaskActions();
 
   const taskById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
   const listById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
@@ -57,6 +58,19 @@ export function UpdatesPage() {
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
+    }
+  };
+
+  const handleSendToInbox = async (task: { id: string; listId: string }) => {
+    const inboxId = getInboxListId();
+    if (inboxId && task.listId === inboxId) return;
+
+    try {
+      await sendTaskToInbox(task.id);
+      fireToast("success", "Task sent to Inbox", "The task has been successfully sent to your Inbox.");
+    } catch (error) {
+      console.error("Error sending task to inbox:", error);
+      fireToast("error", "Failed to send to Inbox", "An error occurred while sending the task to the Inbox.");
     }
   };
 
@@ -130,6 +144,7 @@ export function UpdatesPage() {
                       list={list}
                       to={linkToTask(task.listId, task.id)}
                       showLists
+                      onMove={handleSendToInbox}
                       onToggleComplete={handleToggleComplete}
                       onDelete={handleDeleteTask}
                     />

@@ -416,7 +416,38 @@ export const useTaskStore = create<TaskStoreState>()(
       },
 
       sendTaskToInbox: async (taskId) => {
-        await taskmasterApi.sendTaskToInbox(taskId);
+        let inboxId = getInboxListId();
+
+        // If the inbox id hasn't been initialized yet (fresh localStorage / cache clear),
+        // try to recover it from the currently loaded lists by name.
+        if (!inboxId) {
+          const byNameId = findInboxListIdByName(get().lists);
+          if (byNameId) {
+            setInboxListId(byNameId);
+            inboxId = byNameId;
+          }
+        }
+
+        // Last resort: create the system inbox list, then move the task.
+        if (!inboxId) {
+          const maxSortOrder = get().lists.reduce((acc, l) => Math.max(acc, l?.sortOrder ?? 0), 0);
+          const created = await taskmasterApi.createTaskList({
+            name: SYSTEM_INBOX_NAME,
+            sortOrder: maxSortOrder + 1,
+            isFavorite: false,
+            isDemo: false,
+          });
+
+          const createdId = String((created as { id?: unknown } | null | undefined)?.id ?? "");
+          if (createdId) {
+            setInboxListId(createdId);
+            inboxId = createdId;
+          }
+        }
+
+        if (!inboxId) return;
+
+        await taskmasterApi.moveTaskToList(taskId, inboxId);
         await get().refreshAll(undefined, { reason: "mutation" });
       },
 

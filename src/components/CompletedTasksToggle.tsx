@@ -4,7 +4,7 @@ export const CompletedTasksToggle = ({ showCompletedTasks, setShowCompletedTasks
 
 return (
   <HStack gap={2} align="center">
-    <Text>Show Completed Tasks</Text>
+    <Text fontSize={"md"}>Show Completed Tasks</Text>
     <Switch.Root checked={showCompletedTasks} onCheckedChange={() => setShowCompletedTasks(!showCompletedTasks)}>
       <Switch.HiddenInput />
       <Switch.Control>

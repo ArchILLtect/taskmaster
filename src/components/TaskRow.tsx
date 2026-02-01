@@ -6,11 +6,10 @@ import { SendTaskToInboxButton } from "./buttons/SendTaskToInboxButton"
 import type { TaskUI, TaskRowProps } from "../types";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
-import { useMemo } from "react";
 
 export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, onDelete }: TaskRowProps) => {
 
-  const inboxListId = useMemo(() => getInboxListId(), []);
+  const inboxListId = getInboxListId();
 
   const isOffLimits = task.listId === (inboxListId ?? "");
 

@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, VStack, HStack, Badge, Center, Button, Spinner } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, VStack, HStack, Center, Button, Spinner } from "@chakra-ui/react";
 import { Toaster } from "../components/ui/Toaster";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
@@ -144,8 +144,9 @@ export function ListDetailsPage() {
 
   const handleSendToInbox = async (task: TaskUI) => {
     const inboxId = getInboxListId();
-    if (!inboxId) return;
-    if (task.listId === inboxId) return;
+    // If inbox id isn't initialized yet (fresh session / cache cleared), still attempt the move.
+    // The store action will resolve/create the inbox list if needed.
+    if (inboxId && task.listId === inboxId) return;
 
     try {
       await sendTaskToInbox(task.id);
@@ -238,21 +239,27 @@ export function ListDetailsPage() {
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
       <Toaster />
       {/* Left: task list */}
-      <Box width="40vw">
-        <VStack align="start" gap={2}>
-          <Flex justify="space-between" align="center" width="100%" mb={8}>
-            <HStack align="start" gap={30}>
-              <Heading size="lg">List:</Heading>
-              <Badge variant="outline" size={"lg"}>{listName}</Badge>
-            </HStack>
-            
-            <Tooltip content={isOffLimits ? "Editing is disabled for the system Inbox list." : "Edit list details for list " + listName}>
-            <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)} disabled={isOffLimits}>
-              {isEditing ? "Hide Edit" : "Edit"}
-            </Button>
-            </Tooltip>
-
-            <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={toggleShowCompletedTasks} />
+        <VStack align="start" gap={2} w={"40vw"}>
+          <Flex flexDir={"column"} w={"100%"} mb={4} gap={2}>
+            <Flex justify="space-between" align="center">
+              <HStack align="center" gap={3} maxW={"60%"}>
+                <Heading size="lg">List:</Heading>
+                <Flex gap={2} alignItems={"center"} maxW={"100%"}>
+                  <Text fontSize={"md"} truncate>
+                    {listName}
+                  </Text>
+                </Flex>
+              </HStack>
+              
+              <Tooltip content={isOffLimits ? "Editing is disabled for the system Inbox list." : "Edit list details for list " + listName}>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)} disabled={isOffLimits}>
+                  {isEditing ? "Hide Edit" : "Edit"}
+                </Button>
+              </Tooltip>
+            </Flex>
+            <Flex justifyContent={"right"} w={"100%"}>
+              <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={toggleShowCompletedTasks} />
+            </Flex>
           </Flex>
 
           {isEditing && currentList &&
@@ -349,11 +356,10 @@ export function ListDetailsPage() {
             </Box>
           )}
         </VStack>
-      </Box>
 
       {/* Right: stacked panes */}
       {stack.length === 0 && (
-        <Box h="89.5vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
+        <Box h="84vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
           <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
         </Box>
       )}

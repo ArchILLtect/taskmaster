@@ -27,6 +27,7 @@ import { EditTaskForm } from "../components/EditTaskForm";
 import type { TaskUI } from "../types/task";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
+import { getInboxListId } from "../config/inboxSettings";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -86,7 +87,7 @@ export function TasksPage() {
   const { allTasks, lists, loading, refreshData } = useTasksPageData();
   const navigate = useNavigate();
 
-  const { updateTask, deleteTask } = useTaskActions();
+  const { updateTask, deleteTask, sendTaskToInbox } = useTaskActions();
 
   const isDialogOpen = !!selectedTask;
 
@@ -245,6 +246,19 @@ export function TasksPage() {
     } catch (error) {
       console.error("Failed to delete task:", error);
       fireToast("error", "Failed to delete task", "An error occurred while deleting the task.");
+    }
+  };
+
+  const handleSendToInbox = async (task: TaskUI) => {
+    const inboxId = getInboxListId();
+    if (inboxId && task.listId === inboxId) return;
+
+    try {
+      await sendTaskToInbox(task.id);
+      fireToast("success", "Task sent to Inbox", "The task has been successfully sent to your Inbox.");
+    } catch (error) {
+      console.error("Error sending task to inbox:", error);
+      fireToast("error", "Failed to send to Inbox", "An error occurred while sending the task to the Inbox.");
     }
   };
 
@@ -492,6 +506,7 @@ export function TasksPage() {
                     list={list}
                     to={`/lists/${task.listId}/tasks/${task.id}`}
                     showLists
+                    onMove={handleSendToInbox}
                     onToggleComplete={handleToggleComplete}
                     onDelete={() => handleDeleteTask(task.id)}
                   />
