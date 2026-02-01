@@ -112,6 +112,8 @@ export type EditTaskFormProps = {
     setDraftTaskTitle: (title: string) => void;
     draftTaskDescription: string;
     setDraftTaskDescription: (description: string) => void;
+    draftTaskListId: string;
+    setDraftTaskListId: (listId: string) => void;
     draftTaskPriority: TaskPriority;
     setDraftTaskPriority: (priority: TaskPriority) => void;
     draftTaskStatus: TaskStatus;

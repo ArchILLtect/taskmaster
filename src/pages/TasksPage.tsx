@@ -75,6 +75,7 @@ export function TasksPage() {
   const [newTaskPriority, setNewTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskTitle, setDraftTaskTitle] = useState("");
   const [draftTaskDescription, setDraftTaskDescription] = useState("");
+  const [draftTaskListId, setDraftTaskListId] = useState("");
   const [draftTaskDueDate, setDraftTaskDueDate] = useState("");
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
@@ -229,6 +230,7 @@ export function TasksPage() {
   const handleEditTask = async (task: TaskUI) => {
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
+    setDraftTaskListId(task.listId ?? "");
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
     setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
     setDraftTaskStatus(task.status ?? TaskStatus.Open);
@@ -265,6 +267,9 @@ export function TasksPage() {
   const handleSave = async (selectedTask: TaskUI | null) => {
     if (!selectedTask) return;
 
+    const nextListId = draftTaskListId || selectedTask.listId;
+    const didMoveLists = nextListId !== selectedTask.listId;
+
     try {
       setSaving(true);
       await updateTask({
@@ -277,6 +282,8 @@ export function TasksPage() {
         dueAt: dateInputToIso(draftTaskDueDate),
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
+        listId: nextListId,
+        ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
       });
       fireToast("success", "Task saved", "The task has been successfully updated.");
     } catch (error) {
@@ -317,6 +324,7 @@ export function TasksPage() {
   const resetFormAndClose = () => {
     setDraftTaskTitle("");
     setDraftTaskDescription("");
+    setDraftTaskListId("");
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
@@ -568,6 +576,8 @@ export function TasksPage() {
             setDraftTaskTitle={setDraftTaskTitle}
             draftTaskDescription={draftTaskDescription}
             setDraftTaskDescription={setDraftTaskDescription}
+            draftTaskListId={draftTaskListId}
+            setDraftTaskListId={setDraftTaskListId}
             draftTaskPriority={draftTaskPriority}
             setDraftTaskPriority={setDraftTaskPriority}
             draftTaskStatus={draftTaskStatus}

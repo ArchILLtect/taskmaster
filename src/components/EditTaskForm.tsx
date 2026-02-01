@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditTaskFormProps } from "../types/task";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { TaskPriority, TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
@@ -47,6 +47,8 @@ export const EditTaskForm = ({
   setDraftTaskTitle,
   draftTaskDescription,
   setDraftTaskDescription,
+  draftTaskListId,
+  setDraftTaskListId,
   draftTaskDueDate,
   setDraftTaskDueDate,
   draftTaskPriority,
@@ -60,7 +62,6 @@ export const EditTaskForm = ({
 }: EditTaskFormProps) => {
 
   const inboxListId = getInboxListId();
-  const [selectedListId, setSelectedListId] = useState<string>(task.listId ? task.listId : inboxListId || "");
 
   const { visibleLists: allLists } = useTaskmasterData();
   const hideButtons = skipModal !== true;
@@ -143,8 +144,10 @@ export const EditTaskForm = ({
       </FormControl>
       <Select.Root
         collection={listCollection}
-        value={[selectedListId]}
-        onValueChange={(e) => {setSelectedListId(e.value[0]);}}
+        value={[draftTaskListId]}
+        onValueChange={(e) => {
+          setDraftTaskListId(e.value[0] ?? inboxListId ?? "");
+        }}
       >
         <Flex justify="space-between" align="center" width="100%">
           <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-list">List</Select.Label>

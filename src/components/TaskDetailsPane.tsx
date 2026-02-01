@@ -72,6 +72,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
   const [draftTaskTitle, setDraftTaskTitle] = useState("");
   const [draftTaskDescription, setDraftTaskDescription] = useState("");
+  const [draftTaskListId, setDraftTaskListId] = useState("");
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [draftTaskDueDate, setDraftTaskDueDate] = useState(""); // YYYY-MM-DD
@@ -124,11 +125,20 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const handleSave = async (selectedTask: TaskUI) => {
     if (!selectedTask) return;
 
+    const nextListId = draftTaskListId || selectedTask.listId;
+    const didMoveLists = nextListId !== selectedTask.listId;
+    const didMoveSubtask = didMoveLists ? selectedTask.parentTaskId != null : false;
+    const didMoveLastTopLevelTask = didMoveLists
+      ? tasksInList.some((t) => t.parentTaskId == null && t.id === selectedTask.id) &&
+        tasksInList.every((t) => t.id === selectedTask.id || t.parentTaskId != null)
+      : false;
+
     try {
       setSaving(true);
       await updateTask({
         id: selectedTask.id,
-        listId: selectedTask.listId,
+        listId: nextListId,
+        ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
         title: draftTaskTitle.trim() || "Untitled Task",
         description: draftTaskDescription,
         // Cast to generated enums (type-level only) so TS stops screaming.
@@ -138,6 +148,12 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
       });
+
+      // If this move emptied the current list (from the user's POV), follow the task.
+      // Also follow moved subtasks: staying on this stack would otherwise lead to a "task not found" pane.
+      if (didMoveLastTopLevelTask || didMoveSubtask) {
+        navigate(buildTaskStackPath(nextListId, [selectedTask.id]));
+      }
     } catch (error) {
       console.error("Error saving task:", error);
       fireToast("error", "Error saving task", "There was an issue saving the task.");
@@ -151,6 +167,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const resetFormAndClose = () => {
     setDraftTaskTitle("");
     setDraftTaskDescription("");
+    setDraftTaskListId("");
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
@@ -209,6 +226,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                     if (selected && !isEditing) {
                       setDraftTaskTitle(selected.title ?? "");
                       setDraftTaskDescription(selected.description ?? "");
+                      setDraftTaskListId(selected.listId ?? "");
                       setDraftTaskPriority((selected.priority as TaskPriority) ?? TaskPriority.Medium);
                       setDraftTaskStatus((selected.status as TaskStatus) ?? TaskStatus.Open);
                       setDraftTaskDueDate(isoToDateInput(selected.dueAt));
@@ -228,6 +246,8 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 setDraftTaskTitle={setDraftTaskTitle}
                 draftTaskDescription={draftTaskDescription}
                 setDraftTaskDescription={setDraftTaskDescription}
+                draftTaskListId={draftTaskListId}
+                setDraftTaskListId={setDraftTaskListId}
                 draftTaskPriority={draftTaskPriority}
                 setDraftTaskPriority={setDraftTaskPriority}
                 draftTaskStatus={draftTaskStatus}

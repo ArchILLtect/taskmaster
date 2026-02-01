@@ -60,6 +60,7 @@ export function InboxPage() {
   const [newTaskPriority, setNewTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskTitle, setDraftTaskTitle] = useState("");
   const [draftTaskDescription, setDraftTaskDescription] = useState("");
+  const [draftTaskListId, setDraftTaskListId] = useState("");
   const [draftTaskDueDate, setDraftTaskDueDate] = useState("");
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
@@ -96,6 +97,7 @@ export function InboxPage() {
   const handleEditTask = async (task: TaskUI) => {
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
+    setDraftTaskListId(task.listId ?? "");
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
     setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
     setDraftTaskStatus(task.status ?? TaskStatus.Open);
@@ -119,10 +121,15 @@ export function InboxPage() {
   const handleSave = async (selectedTask: TaskUI | null) => {
     if (!selectedTask) return;
 
+    const nextListId = draftTaskListId || selectedTask.listId;
+    const didMoveLists = nextListId !== selectedTask.listId;
+
     try {
       setSaving(true);
       await updateTask({
         id: selectedTask.id,
+        listId: nextListId,
+        ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
         title: draftTaskTitle.trim() || "Untitled Task",
         description: draftTaskDescription,
         // Cast to generated enums (type-level only) so TS stops screaming.
@@ -171,6 +178,7 @@ export function InboxPage() {
   const resetFormAndClose = () => {
     setDraftTaskTitle("");
     setDraftTaskDescription("");
+    setDraftTaskListId("");
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
@@ -386,6 +394,8 @@ export function InboxPage() {
             setDraftTaskTitle={setDraftTaskTitle}
             draftTaskDescription={draftTaskDescription}
             setDraftTaskDescription={setDraftTaskDescription}
+            draftTaskListId={draftTaskListId}
+            setDraftTaskListId={setDraftTaskListId}
             draftTaskPriority={draftTaskPriority}
             setDraftTaskPriority={setDraftTaskPriority}
             draftTaskStatus={draftTaskStatus}
