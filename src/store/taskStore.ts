@@ -202,6 +202,8 @@ async function ensureInboxListExists(rawLists: ListUI[]) {
     isDemo: false,
   });
 
+  if (!created) return { lists: rawLists };
+
   if (created?.id) setInboxListId(created.id);
 
   return { lists: [...rawLists, toListUI(created)] };
