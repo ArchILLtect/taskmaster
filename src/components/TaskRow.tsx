@@ -67,14 +67,17 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
             />
             <HStack align="center" gap={1}>
               {showLists ? (
-                <Box w="150px" textAlign="right" lineClamp={1}>
+                <Box w="150px" textAlign="right" truncate>
                   <Badge fontSize="sm" color="gray.500">
-                    {list.name || "Unknown List"}
+                    <Text>
+                      {list.name || "Unknown List"}
+                    </Text>
                   </Badge>
                 </Box>
               ) : null}
 
               <VStack align="end" gap={1} w="75px">
+                {task.isDemo ? <Badge colorScheme="purple">Demo</Badge> : null}
                 <Badge>{task.priority}</Badge>
                 <Badge variant="outline">{task.status}</Badge>
               </VStack>
