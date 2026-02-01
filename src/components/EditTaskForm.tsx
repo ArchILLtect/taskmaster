@@ -6,8 +6,6 @@ import {
   Input,
   Button,
   Flex,
-  Select,
-  useListCollection,
 } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditTaskFormProps } from "../types/task";
@@ -15,6 +13,7 @@ import { useMemo } from "react";
 import { TaskPriority, TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
+import { FormSelect } from "./FormSelect";
 
 type Option<T extends string> = { label: string; value: T };
 
@@ -66,35 +65,16 @@ export const EditTaskForm = ({
   const { visibleLists: allLists } = useTaskmasterData();
   const hideButtons = skipModal !== true;
 
-  // ✅ Chakra v3 pattern: destructure `{ collection }`
-  const { collection: priorityCollection } = useListCollection<Option<TaskPriority>>({
-    initialItems: PRIORITY_OPTIONS,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
-
-  const { collection: statusCollection } = useListCollection<Option<TaskStatus>>({
-    initialItems: STATUS_OPTIONS,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
-
   const listItems = useMemo(() => {
     const items: Option<string>[] = [];
     if (inboxListId) {
       items.push({ label: "Inbox", value: inboxListId });
     }
     allLists.forEach((list) => {
-      items.push({ label: list.name, value: list.id });
+      items.push({ label: list.name || "(Untitled)", value: list.id });
     });
     return items;
   }, [allLists, inboxListId]);
-
-  const { collection: listCollection } = useListCollection<Option<string>>({
-    initialItems: listItems,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
 
   return (
   <Box w="100%" p={4} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
@@ -142,39 +122,17 @@ export const EditTaskForm = ({
           />
         </Flex>
       </FormControl>
-      <Select.Root
-        collection={listCollection}
-        value={[draftTaskListId]}
-        onValueChange={(e) => {
-          setDraftTaskListId(e.value[0] ?? inboxListId ?? "");
-        }}
-      >
-        <Flex justify="space-between" align="center" width="100%">
-          <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-list">List</Select.Label>
 
-          <Select.Control bg="white" minW="200px" maxW="200px" id="task-list">
-            <Select.Trigger>
-              <Select.ValueText placeholder="Select a list" />
-              <Select.Indicator />
-            </Select.Trigger>
-          </Select.Control>
-
-          <Select.Positioner>
-            <Select.Content>
-              {/* Renders all items in the collection */}
-              {listCollection.items.map((item) => (
-                <Select.Item
-                  item={item}
-                  key={item.value}
-                >
-                  <Select.ItemText>{item.label}</Select.ItemText>
-                  <Select.ItemIndicator />
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Positioner>
-        </Flex>
-      </Select.Root>
+      <FormSelect
+        title="List"
+        items={listItems}
+        value={draftTaskListId}
+        onChange={(v) => setDraftTaskListId(v || inboxListId || "")}
+        placeholder="Select a list"
+        layout="row"
+        minW="200px"
+        maxW="200px"
+      />
       <FormControl w="100%">
         <Flex justify="space-between" align="center" width="100%">
           <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor="task-due-date">Due Date</FormLabel>
@@ -191,75 +149,29 @@ export const EditTaskForm = ({
           />
         </Flex>
       </FormControl>
-      <Select.Root
-        collection={priorityCollection}
-        value={[draftTaskPriority]}
-        onValueChange={(e) => {
-          const raw = e.value[0];
-          setDraftTaskPriority(raw && isTaskPriority(raw) ? raw : TaskPriority.Medium);
-        }}
-      >
-        <Flex justify="space-between" align="center" width="100%">
-          <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-priority">Priority</Select.Label>
 
-          <Select.Control bg="white" minW="200px" maxW="200px" id="task-priority">
-            <Select.Trigger>
-              <Select.ValueText placeholder="Select a priority" />
-              <Select.Indicator />
-            </Select.Trigger>
-          </Select.Control>
+      <FormSelect
+        title="Priority"
+        items={PRIORITY_OPTIONS}
+        value={draftTaskPriority}
+        onChange={(v) => setDraftTaskPriority(v && isTaskPriority(v) ? v : TaskPriority.Medium)}
+        placeholder="Select a priority"
+        layout="row"
+        minW="200px"
+        maxW="200px"
+      />
 
-          <Select.Positioner>
-            <Select.Content>
-              {/* Renders all items in the collection */}
-              {priorityCollection.items.map((item) => (
-                <Select.Item
-                    item={item}
-                    key={item.value}
-                  >
-                    <Select.ItemText>{item.label}</Select.ItemText>
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Positioner>
-        </Flex>
-      </Select.Root>
 
-      <Select.Root
-        collection={statusCollection}
-        value={[draftTaskStatus]}
-        onValueChange={(e) => {
-          const raw = e.value[0];
-          setDraftTaskStatus(raw && isTaskStatus(raw) ? raw : TaskStatus.Open);
-        }}
-      >
-        <Flex justify="space-between" align="center" width="100%">
-          <Select.Label fontSize="small" fontWeight="bold" htmlFor="task-status">Status</Select.Label>
-
-          <Select.Control bg="white" minW="200px" maxW="200px" id="task-status">
-            <Select.Trigger>
-              <Select.ValueText placeholder="Select a status" />
-              <Select.Indicator />
-            </Select.Trigger>
-          </Select.Control>
-
-          <Select.Positioner>
-            <Select.Content>
-              {/* Renders all items in the collection */}
-              {statusCollection.items.map((item) => (
-                <Select.Item
-                  item={item}
-                  key={item.value}
-                >
-                  <Select.ItemText>{item.label}</Select.ItemText>
-                  <Select.ItemIndicator />
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Positioner>
-        </Flex>
-      </Select.Root>
+      <FormSelect
+        title="Status"
+        items={STATUS_OPTIONS}
+        value={draftTaskStatus}
+        onChange={(v) => setDraftTaskStatus(v && isTaskStatus(v) ? v : TaskStatus.Open)}
+        placeholder="Select a status"
+        layout="row"
+        minW="200px"
+        maxW="200px"
+      />
 
       {!hideButtons ? (
         <Flex justify="space-between" align="center" width="100%">
