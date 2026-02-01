@@ -35,7 +35,7 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" justify={"center"} alignItems={"center"} rounded="md" boxShadow="sm">
-      <Heading size="md">Login</Heading>
+      <Heading size="2xl">Login</Heading>
 
       {intent === "demo" ? (
         <Box p={3} bg="purple.50" borderWidth="1px" borderColor="purple.200" rounded="md" w="100%">

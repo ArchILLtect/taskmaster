@@ -78,7 +78,7 @@ export function FavoritesPage() {
       <Box w="100%" mb={4}>
         <HStack justify="space-between" width="100%">
           <VStack align="start">
-            <Heading size="md">Favorites</Heading>
+            <Heading size="2xl">Favorites</Heading>
             {/* TODO: add icon here */}
             <Text>Manage your favorite items for quick access and organization.</Text>
           </VStack>

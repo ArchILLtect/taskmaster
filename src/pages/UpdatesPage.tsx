@@ -82,7 +82,7 @@ export function UpdatesPage() {
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <HStack>
-            <Heading size="md">Updates</Heading>
+            <Heading size="2xl">Updates</Heading>
             {vm.unreadCount > 0 ? <Badge rounded="md">{vm.unreadCount} unread</Badge> : null}
           </HStack>
           <Text color="gray.600">Informational activity log (persisted event feed).</Text>

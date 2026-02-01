@@ -27,7 +27,7 @@ export function ProfilePage({ user }: ProfilePageProps) {
   } else {
     return (
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-        <Heading size="md">Profile</Heading>
+        <Heading size="2xl">Profile</Heading>
         <Text>Username: {formatUsernameForDisplay(username ?? null)}</Text>
         {email ? <Text>Email: {email}</Text> : null}
         {role ? <Text>Role: {role}</Text> : null}

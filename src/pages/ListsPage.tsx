@@ -286,7 +286,7 @@ export const ListsPage = () => {
             <Box w="100%" mb={4}>
               <HStack justify="space-between" width="100%">
                 <VStack align="start">
-                  <Heading size="lg">Lists</Heading>
+                  <Heading size="2xl">Lists</Heading>
                   <Text>Search, filter, sort, and manage your lists.</Text>
                   <HStack gap={2} flexWrap="wrap">
                     <Badge variant="outline">Total: {listCounts.total}</Badge>

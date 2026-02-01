@@ -21,7 +21,7 @@ export function DevPage() {
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <Toaster />
-      <Heading size="md">Dev</Heading>
+      <Heading size="2xl">Dev</Heading>
       <Text>This page is for development and testing purposes.</Text>
 
       <VStack align="start" gap={2} w="100%" p={3} bg="gray.50" rounded="md" borderWidth="1px">

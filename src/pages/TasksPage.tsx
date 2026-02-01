@@ -339,7 +339,7 @@ export function TasksPage() {
       <VStack w="100%" gap={4} align="start">
         <HStack justify="space-between" w="100%">
           <VStack align="start" gap={2}>
-            <Heading size="md">Tasks</Heading>
+            <Heading size="2xl">Tasks</Heading>
             <Text>View, search, filter, sort, and manage all your tasks in one place.</Text>
           </VStack>
           <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />

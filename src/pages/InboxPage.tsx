@@ -200,7 +200,7 @@ export function InboxPage() {
       <Toaster />
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
-          <Heading size="md">Inbox</Heading>
+          <Heading size="2xl">Inbox</Heading>
           <Text color="gray.600">Actionable triage: new tasks + due soon. Dismiss stuff to shrink the pile.</Text>
         </VStack>
 

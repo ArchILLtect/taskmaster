@@ -243,7 +243,7 @@ export function ListDetailsPage() {
           <Flex flexDir={"column"} w={"100%"} mb={4} gap={2}>
             <Flex justify="space-between" align="center">
               <HStack align="center" gap={3} maxW={"60%"}>
-                <Heading size="lg">List:</Heading>
+                <Heading size="2xl">List:</Heading>
                 <Flex gap={2} alignItems={"center"} maxW={"100%"}>
                   <Text fontSize={"md"} truncate>
                     {listName}

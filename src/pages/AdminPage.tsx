@@ -469,7 +469,7 @@ export function AdminPage() {
   if (!isAdmin) {
     return (
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-        <Heading size="md">Admin</Heading>
+        <Heading size="2xl">Admin</Heading>
         <Text color="gray.600">Not authorized.</Text>
       </VStack>
     );

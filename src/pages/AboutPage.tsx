@@ -4,7 +4,7 @@ export function AboutPage() {
   return (
     <VStack align="stretch" gap={6} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <VStack align="start" gap={2}>
-        <Heading size="lg">About TaskMaster</Heading>
+        <Heading size="2xl">About TaskMaster</Heading>
         <Text color="gray.600">
           TaskMaster is a showcase-friendly task app prototype focused on predictable data flow, clean UI patterns,
           and a clear path to an offline-capable architecture.
@@ -12,7 +12,7 @@ export function AboutPage() {
       </VStack>
 
       <Box>
-        <Heading size="md" mb={2}>
+        <Heading size="xl" mb={2}>
           Mission
         </Heading>
         <Text color="gray.700">
@@ -22,7 +22,7 @@ export function AboutPage() {
       </Box>
 
       <Box>
-        <Heading size="md" mb={3}>
+        <Heading size="xl" mb={3}>
           Tech stack
         </Heading>
         <HStack gap={2} flexWrap="wrap">
@@ -50,7 +50,7 @@ export function AboutPage() {
       </Box>
 
       <Box>
-        <Heading size="md" mb={2}>
+        <Heading size="xl" mb={2}>
           Spotlight: the creator
         </Heading>
 
@@ -137,7 +137,7 @@ export function AboutPage() {
       </Box>
 
       <Box>
-        <Heading size="md" mb={2}>
+        <Heading size="xl" mb={2}>
           What’s next
         </Heading>
         <Text color="gray.700">

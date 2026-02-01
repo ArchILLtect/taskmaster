@@ -73,7 +73,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
             <Badge variant="outline">Zustand</Badge>
           </HStack>
 
-          <Heading size="xl">TaskMaster</Heading>
+          <Heading size="2xl">TaskMaster</Heading>
           <Text color="gray.600" fontSize="lg" maxW="2xl">
             A fast, store-driven task app prototype with deep-linkable task navigation, local cache + TTL refresh,
             and a guided Admin console for cross-user inspection.
