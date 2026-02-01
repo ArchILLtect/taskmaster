@@ -6,12 +6,7 @@ import {
   VStack,
   Button,
   Badge,
-  Input,
-  Select,
-  Collapsible,
-  useListCollection,
 } from "@chakra-ui/react";
-import { FiChevronDown } from "react-icons/fi";
 import { TaskRow } from "../components/TaskRow";
 import { useEffect, useMemo, useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
@@ -28,6 +23,8 @@ import type { TaskUI } from "../types/task";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { getInboxListId } from "../config/inboxSettings";
+import { AppCollapsible } from "../components/AppCollapsible";
+import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -57,6 +54,11 @@ const SORT_OPTIONS: Option<SortKey>[] = [
   { label: "Priority", value: "priority" },
   { label: "Title", value: "title" },
 ];
+
+// TODO? : This is needed for new component still I think!
+function isSortKey(v: string): v is SortKey {
+  return SORT_OPTIONS.some((o) => o.value === v);
+}
 
 const priorityToRank: Record<TaskPriority, number> = {
   [TaskPriority.High]: 0,
@@ -134,26 +136,12 @@ export function TasksPage() {
     return items;
   }, [lists]);
 
-  const { collection: listFilterCollection, set: setListFilterCollection } = useListCollection<Option<string>>({
-    initialItems: listFilterItems,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
-
   useEffect(() => {
-    setListFilterCollection(listFilterItems);
-
     // If the selected list was deleted, reset to "All".
     if (selectedListFilter !== "all" && !listFilterItems.some((i) => i.value === selectedListFilter)) {
       setSelectedListFilter("all");
     }
-  }, [listFilterItems, selectedListFilter, setListFilterCollection]);
-
-  const { collection: sortCollection } = useListCollection<Option<SortKey>>({
-    initialItems: SORT_OPTIONS,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
+  }, [listFilterItems, selectedListFilter]);
 
   const listById = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
 
@@ -370,113 +358,36 @@ export function TasksPage() {
           </Badge>
         </HStack>
 
-        <Collapsible.Root defaultOpen={false} w={"50%"}>
-          <Collapsible.Trigger asChild>
-            <HStack
-              paddingRight={2}
-              cursor="pointer"
-              userSelect="none"
-              justify="space-between"
-              rounded="md"
-              _hover={{ bg: "blackAlpha.50" }}
-            >
-              <Text fontSize="lg" fontWeight="600">Filters & Sorting</Text>
-
-    
-              {/* rotate chevron when open */}
-              <Collapsible.Indicator asChild>
-                <Box transition="transform 150ms" _open={{ transform: "rotate(180deg)" }}>
-                  <FiChevronDown />
-                </Box>
-              </Collapsible.Indicator>
-            </HStack>
-          </Collapsible.Trigger>
-          <Collapsible.Content>
-            <HStack w="100%" gap={3} flexWrap="wrap" align="end" justify="space-between">
-              <HStack gap={3} flexWrap="wrap" align="end">
-                <Box>
-                  <Text fontSize="sm" color="gray.600" fontWeight={"500"} mb={1}>
-                    Search
-                  </Text>
-                  <Input
-                    placeholder="Search title/description"
-                    value={taskSearch}
-                    onChange={(e) => setTaskSearch(e.target.value)}
-                    maxW="320px"
-                  />
-                </Box>
-
-                <Select.Root
-                  collection={listFilterCollection}
-                  value={[selectedListFilter]}
-                  onValueChange={(e) => setSelectedListFilter(e.value[0] ?? "all")}
-                >
-                  <Box>
-                    <Select.Label fontSize="sm" color="gray.600" mb={1}>
-                      List
-                    </Select.Label>
-                    <Select.Control bg="white" minW="220px">
-                      <Select.Trigger>
-                        <Select.ValueText placeholder="All lists" />
-                        <Select.Indicator />
-                      </Select.Trigger>
-                    </Select.Control>
-                    <Select.Positioner>
-                      <Select.Content>
-                        {listFilterCollection.items.map((item) => (
-                          <Select.Item item={item} key={item.value}>
-                            <Select.ItemText>{item.label}</Select.ItemText>
-                            <Select.ItemIndicator />
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Positioner>
-                  </Box>
-                </Select.Root>
-
-                <Select.Root collection={sortCollection} value={[sortKey]} onValueChange={(e) => setSortKey((e.value[0] as SortKey) ?? "sortOrder")}>
-                  <Box>
-                    <Select.Label fontSize="sm" color="gray.600" mb={1}>
-                      Sort
-                    </Select.Label>
-                    <Select.Control bg="white" minW="220px">
-                      <Select.Trigger>
-                        <Select.ValueText placeholder="Manual (sort order)" />
-                        <Select.Indicator />
-                      </Select.Trigger>
-                    </Select.Control>
-                    <Select.Positioner>
-                      <Select.Content>
-                        {sortCollection.items.map((item) => (
-                          <Select.Item item={item} key={item.value}>
-                            <Select.ItemText>{item.label}</Select.ItemText>
-                            <Select.ItemIndicator />
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Positioner>
-                  </Box>
-                </Select.Root>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setTaskSearch("");
-                    setSelectedListFilter("all");
-                    setSortKey("sortOrder");
-                  }}
-                >
-                  Clear
-                </Button>
-              </HStack>
-
-              <Text fontSize="sm" color="gray.600">
-                Results: {visibleTasks.length}
-              </Text>
-            </HStack>
-          </Collapsible.Content>
-        </Collapsible.Root>
+        <AppCollapsible title="Filters & Sorting" width="50%">
+          <SearchFilterSortBar
+            search={taskSearch}
+            setSearch={setTaskSearch}
+            searchPlaceholder="Search title/description"
+            searchHelperText="Search tasks by title or description."
+            filter={{
+              title: "List",
+              items: listFilterItems,
+              value: selectedListFilter,
+              onChange: (v) => setSelectedListFilter(v || "all"),
+              placeholder: "All lists",
+              helperText: "Filter tasks by list",
+            }}
+            sort={{
+              title: "Sort",
+              items: SORT_OPTIONS,
+              value: sortKey,
+              onChange: (v) => setSortKey(v && isSortKey(v) ? v : "sortOrder"),
+              placeholder: "Manual (sort order)",
+              helperText: "Choose how tasks are ordered",
+            }}
+            onClear={() => {
+              setTaskSearch("");
+              setSelectedListFilter("all");
+              setSortKey("sortOrder");
+            }}
+            resultsCount={visibleTasks.length}
+          />
+        </AppCollapsible>
 
         <Flex
           gap={4}

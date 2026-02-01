@@ -7,12 +7,7 @@ import {
   Text,
   Button,
   Badge,
-  Input,
-  Select,
-  Collapsible,
-  useListCollection,
 } from "@chakra-ui/react";
-import { FiChevronDown } from "react-icons/fi";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { useEffect, useMemo, useState } from "react";
@@ -25,6 +20,8 @@ import type { ListUI } from "../types";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
+import { AppCollapsible } from "../components/AppCollapsible";
+import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -32,10 +29,10 @@ function nextSortOrder(lists: ListUI[]) {
   return max + 1;
 }
 
-type Option<T extends string> = { label: string; value: T };
-
 type ListFilterKey = "all" | "favorites";
 type ListSortKey = "sortOrder" | "name" | "favorite" | "updated";
+
+type Option<T extends string> = { label: string; value: T };
 
 const LIST_FILTER_OPTIONS: Option<ListFilterKey>[] = [
   { label: "All lists", value: "all" },
@@ -67,18 +64,6 @@ export const ListsPage = () => {
   const { createTaskList, updateTaskList, deleteTaskListSafeById } = useTaskActions();
   const selected = visibleLists.find((l) => l.id === selectedList);
   const inboxListId = getInboxListId();
-
-  const { collection: filterCollection } = useListCollection<Option<ListFilterKey>>({
-    initialItems: LIST_FILTER_OPTIONS,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
-
-  const { collection: sortCollection } = useListCollection<Option<ListSortKey>>({
-    initialItems: LIST_SORT_OPTIONS,
-    itemToValue: (item) => item.value,
-    itemToString: (item) => item.label,
-  });
 
   const visibleListItems = useMemo(() => {
     const q = listSearch.trim().toLowerCase();
@@ -301,111 +286,38 @@ export const ListsPage = () => {
               </HStack>
             </Box>
 
-            <Collapsible.Root defaultOpen={false} w={"100%"} mb={"5"}>
-              <Collapsible.Trigger asChild>
-                <HStack
-                  paddingRight={2}
-                  cursor="pointer"
-                  userSelect="none"
-                  justify="space-between"
-                  rounded="md"
-                  _hover={{ bg: "blackAlpha.50" }}
-                >
-                  <Text fontSize="lg" fontWeight="600">Filters & Sorting</Text>
-    
-        
-                  {/* rotate chevron when open */}
-                  <Collapsible.Indicator asChild>
-                    <Box transition="transform 150ms" _open={{ transform: "rotate(180deg)" }}>
-                      <FiChevronDown />
-                    </Box>
-                  </Collapsible.Indicator>
-                </HStack>
-              </Collapsible.Trigger>
-              <Collapsible.Content>
-
-              <HStack w="100%" gap={3} flexWrap="wrap" align="end" justify="space-between">
-                <HStack gap={3} flexWrap="wrap" align="end">
-                  <Box>
-                    <Text fontSize="sm" color="gray.600" mb={1}>
-                      Search
-                    </Text>
-                    <Input
-                      placeholder="Search name/description"
-                      value={listSearch}
-                      onChange={(e) => setListSearch(e.target.value)}
-                      maxW="320px"
-                    />
-                  </Box>
-
-                  <Select.Root collection={filterCollection} value={[listFilter]} onValueChange={(e) => setListFilter((e.value[0] as ListFilterKey) ?? "all")}>
-                    <Box>
-                      <Select.Label fontSize="sm" color="gray.600" mb={1}>
-                        Filter
-                      </Select.Label>
-                      <Select.Control bg="white" minW="220px">
-                        <Select.Trigger>
-                          <Select.ValueText placeholder="All lists" />
-                          <Select.Indicator />
-                        </Select.Trigger>
-                      </Select.Control>
-                      <Select.Positioner>
-                        <Select.Content>
-                          {filterCollection.items.map((item) => (
-                            <Select.Item item={item} key={item.value}>
-                              <Select.ItemText>{item.label}</Select.ItemText>
-                              <Select.ItemIndicator />
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Positioner>
-                    </Box>
-                  </Select.Root>
-
-                  <Select.Root collection={sortCollection} value={[listSort]} onValueChange={(e) => setListSort((e.value[0] as ListSortKey) ?? "sortOrder")}>
-                    <Box>
-                      <Select.Label fontSize="sm" color="gray.600" mb={1}>
-                        Sort
-                      </Select.Label>
-                      <Select.Control bg="white" minW="220px">
-                        <Select.Trigger>
-                          <Select.ValueText placeholder="Manual (sort order)" />
-                          <Select.Indicator />
-                        </Select.Trigger>
-                      </Select.Control>
-                      <Select.Positioner>
-                        <Select.Content>
-                          {sortCollection.items.map((item) => (
-                            <Select.Item item={item} key={item.value}>
-                              <Select.ItemText>{item.label}</Select.ItemText>
-                              <Select.ItemIndicator />
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Positioner>
-                    </Box>
-                  </Select.Root>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setListSearch("");
-                      setListFilter("all");
-                      setListSort("sortOrder");
-                    }}
-                  >
-                    Clear
-                  </Button>
-                </HStack>
-
-                <Text fontSize="sm" color="gray.600">
-                  Results: {visibleListItems.length}
-                </Text>
-              </HStack>
-
-              </Collapsible.Content>
-            </Collapsible.Root>
+            {/* Collapsible for search, filter, sort options */}
+            {/* TODO? : Create a search/filter component instead of AppCollapsible? */}
+            <AppCollapsible title="Search, Filter, and Sort Options">
+              <SearchFilterSortBar
+                search={listSearch}
+                setSearch={setListSearch}
+                searchPlaceholder="Search name/description"
+                searchHelperText="Search lists by name or description."
+                filter={{
+                  title: "Filter",
+                  items: LIST_FILTER_OPTIONS,
+                  value: listFilter,
+                  onChange: (v) => setListFilter((v as ListFilterKey) || "all"),
+                  placeholder: "All lists",
+                  helperText: "Filter the visible lists",
+                }}
+                sort={{
+                  title: "Sort",
+                  items: LIST_SORT_OPTIONS,
+                  value: listSort,
+                  onChange: (v) => setListSort((v as ListSortKey) || "sortOrder"),
+                  placeholder: "Manual (sort order)",
+                  helperText: "Choose how lists are ordered",
+                }}
+                onClear={() => {
+                  setListSearch("");
+                  setListFilter("all");
+                  setListSort("sortOrder");
+                }}
+                resultsCount={visibleListItems.length}
+              />
+            </AppCollapsible>
 
             {loading ? <Text>Loading…</Text> : null}
             {err ? <Text>Failed to load lists.</Text> : null}
@@ -421,7 +333,7 @@ export const ListsPage = () => {
                     <ListRow
                       key={l.id}
                       list={l}
-                      setSelectedList={handleListSelect()} 
+                      setSelectedList={handleListSelect()}
                       to={`/lists/${l.id}`}
                       isActive={false}
                       isEditing={isEditing}
