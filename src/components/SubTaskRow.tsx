@@ -31,12 +31,12 @@ export const SubTaskRow = ({ task, to, onDelete, onToggleComplete }: SubTaskRowP
           p={3}
           bg={isActive ? "blue.50" : "white"}
           borderLeft={isActive ? "4px solid" : undefined}
-          borderColor="blue.400"                    
+          borderColor="blue.400"
           _hover={{ bg: "blue.100" }}
         >
           <HStack justify="space-between" align="center">
-            <Box>
-              <Text fontWeight="700">{task.title}</Text>
+            <Box minW={"0"} w={"40%"}>
+              <Text fontWeight="700" truncate>{task.title}</Text>
             </Box>
 
             <HStack align="center" gap={1}>

@@ -50,8 +50,8 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
           _hover={{ bg: "blue.100" }}
         >
           <HStack justify="space-between" align="start">
-            <Box w={"40%"}>
-              <Text fontWeight="700">{task.title}</Text>
+            <Box minW={"0"} w={"40%"}>
+              <Text fontWeight="700" truncate>{task.title}</Text>
               {task.description ? (
                 <Text color="gray.600" lineClamp={1}>
                   {task.description}

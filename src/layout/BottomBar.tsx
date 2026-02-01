@@ -28,20 +28,20 @@ export function BottomBar({
         TaskMaster
       </Text>
       <Spacer />
-        {showReset ? (
-          <Button
-            size="sm"
-            variant="outline"
-            colorPalette="red"
-            onClick={() => {
-              setResetError(null);
-              setIsResetOpen(true);
-            }}
-            disabled={resetting}
-          >
-            Reset demo data
-          </Button>
-        ) : null}
+      {showReset ? (
+        <Button
+          size="sm"
+          variant="outline"
+          colorPalette="red"
+          onClick={() => {
+            setResetError(null);
+            setIsResetOpen(true);
+          }}
+          disabled={resetting}
+        >
+          Reset demo data
+        </Button>
+      ) : null}
       <Spacer />
       <HStack gap={3}>
         <Button asChild size="sm" variant="ghost">
@@ -65,6 +65,7 @@ export function BottomBar({
         )}
       </HStack>
 
+      {/* TODO(P2) : Reset Demo Data Dialog -- Replace hard-coded Dialog with src/components/ui/DialogModal */}
       <Dialog.Root lazyMount open={isResetOpen} onOpenChange={(e) => setIsResetOpen(e.open)}>
         <Portal>
           <Dialog.Backdrop />
