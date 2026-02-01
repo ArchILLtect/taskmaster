@@ -39,6 +39,31 @@ import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useUpdatesStore } from "../store/updatesStore";
 
+function errorToMessage(err: unknown): string {
+  if (typeof err === "string") return err;
+  if (typeof err === "object" && err !== null) {
+    if ("errors" in err && Array.isArray((err as { errors?: unknown }).errors)) {
+      const errors = (err as { errors: Array<{ message?: unknown; errorType?: unknown }> }).errors;
+      const messages = errors
+        .map((e) => {
+          const msg = typeof e?.message === "string" ? e.message : "Unknown GraphQL error";
+          const type = typeof e?.errorType === "string" ? e.errorType : "";
+          return type ? `${msg} (${type})` : msg;
+        })
+        .filter(Boolean);
+      if (messages.length) return messages.join("; ");
+    }
+
+    if ("message" in err) return String((err as { message: unknown }).message);
+  }
+  return "Unknown error";
+}
+
+function shouldFallbackMissingIsDemo(err: unknown): boolean {
+  const msg = errorToMessage(err);
+  return msg.includes("Cannot return null for non-nullable type") && msg.includes("isDemo");
+}
+
 type TaskListItem = NonNullable<NonNullable<ListTaskListsQuery["listTaskLists"]>["items"]>[number];
 type UserProfileItem = NonNullable<NonNullable<ListUserProfilesQuery["listUserProfiles"]>["items"]>[number];
 type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"]>[number];
@@ -192,14 +217,29 @@ export const taskmasterApi = {
     nextToken?: string | null;
     sortDirection?: ModelSortDirection | null;
   }): Promise<Page<TaskListItem>> {
+    // Prefer including `isDemo` so the normal UI can accurately mark demo data.
+    // If legacy records are missing the now-required `isDemo`, fall back to a safe query
+    // that omits it (otherwise the whole query can hard-fail).
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    const data = await runQuery(listTaskListsMinimal as any, {
-      id: opts?.id ?? null,
-      filter: opts?.filter ?? null,
-      sortDirection: opts?.sortDirection ?? null,
-      limit: opts?.limit ?? 50,
-      nextToken: opts?.nextToken ?? null,
-    });
+    let data: unknown;
+    try {
+      data = await runQuery(listTaskListsAdminMinimal as any, {
+        id: opts?.id ?? null,
+        filter: opts?.filter ?? null,
+        sortDirection: opts?.sortDirection ?? null,
+        limit: opts?.limit ?? 50,
+        nextToken: opts?.nextToken ?? null,
+      });
+    } catch (err) {
+      if (!shouldFallbackMissingIsDemo(err)) throw err;
+      data = await runQuery(listTaskListsMinimal as any, {
+        id: opts?.id ?? null,
+        filter: opts?.filter ?? null,
+        sortDirection: opts?.sortDirection ?? null,
+        limit: opts?.limit ?? 50,
+        nextToken: opts?.nextToken ?? null,
+      });
+    }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const conn = (data as any).listTaskLists as ListTaskListsQuery["listTaskLists"];
@@ -295,14 +335,29 @@ export const taskmasterApi = {
     limit?: number;
     nextToken?: string | null;
   }): Promise<Page<TaskItem>> {
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-    const data = await runQuery(tasksByListMinimal as any, {
-      listId: opts.listId,
-      sortOrder: opts.sortOrder ?? { ge: 0 },
-      sortDirection: opts.sortDirection,
-      limit: opts.limit ?? 200,
-      nextToken: opts.nextToken ?? null,
-    });
+    // Prefer including `isDemo` so the normal UI can accurately mark demo tasks.
+    // If legacy records are missing the now-required `isDemo`, fall back to a safe query
+    // that omits it (otherwise the whole query can hard-fail).
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    let data: unknown;
+    try {
+      data = await runQuery(tasksByListAdminMinimal as any, {
+        listId: opts.listId,
+        sortOrder: opts.sortOrder ?? { ge: 0 },
+        sortDirection: opts.sortDirection,
+        limit: opts.limit ?? 200,
+        nextToken: opts.nextToken ?? null,
+      });
+    } catch (err) {
+      if (!shouldFallbackMissingIsDemo(err)) throw err;
+      data = await runQuery(tasksByListMinimal as any, {
+        listId: opts.listId,
+        sortOrder: opts.sortOrder ?? { ge: 0 },
+        sortDirection: opts.sortDirection,
+        limit: opts.limit ?? 200,
+        nextToken: opts.nextToken ?? null,
+      });
+    }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const conn = (data as any).tasksByList as TasksByListQuery["tasksByList"];
