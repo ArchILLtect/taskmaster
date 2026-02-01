@@ -8,6 +8,14 @@ export function Sidebar() {
 
   const { visibleFavorites } = useListsPageData();
 
+  // TODO : Add/move this as an option in settings--potentially later with a mouse controlled variable (sliding) functionality:
+  const SIDEBAR_WIDTH = {
+    "small": "200px",
+    "medium": "250px",
+    "large": "300px",
+  };
+  const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH.small;
+
   const favoriteLinks = visibleFavorites
     .filter((l) => l.isFavorite)
     .slice()
@@ -15,7 +23,7 @@ export function Sidebar() {
     .map((l) => ({ to: `/lists/${l.id}`, label: l.name }));
 
   return (
-    <Flex flexDirection={"column"} justifyContent={"space-between"} minW="18vw" borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
+    <Flex flexDirection={"column"} justifyContent={"space-between"} w={CURRENT_SIDEBAR_WIDTH} borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
       <Box>
         <SidebarItem to="/inbox" label="Inbox" main />
         <Separator my={3} />
