@@ -1,4 +1,4 @@
-import { Box, HStack, VStack, Text, Badge, Button, Flex } from "@chakra-ui/react";
+import { Box, HStack, VStack, Text, Badge, Button, Grid } from "@chakra-ui/react";
 import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react-icons/io5";
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./ui/Tooltip";
@@ -58,12 +58,6 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                 </Text>
               ) : null}
             </Box>
-            <SendTaskToInboxButton
-              task={task}
-              isActive={isActive}
-              onSend={handleSendToInbox}
-              disabled={isOffLimits}
-            />
             <HStack align="center" gap={1}>
               {showLists ? (
                 <Box w="150px" textAlign="right" truncate>
@@ -94,11 +88,11 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                       onClick={onComplete}
                       variant="outline"
                     >
-                      <IoRefreshCircleOutline size="24px" color="blue" />
+                      <IoRefreshCircleOutline color="blue" />
                     </Button>
                   </Tooltip>
                 ) : (
-                  <Flex gap={1} w="50px" flexDirection="column" alignItems="end">
+                  <Grid gap={1} templateColumns='repeat(2, 1fr)'>
                     <Tooltip content="Mark as complete">
                       <Button
                         bg="green.100"
@@ -110,7 +104,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                         onClick={onComplete}
                         variant="ghost"
                       >
-                        <IoCheckmarkCircleOutline size="30px" color="green" />
+                        <IoCheckmarkCircleOutline color="green" />
                       </Button>
                     </Tooltip>
 
@@ -125,10 +119,16 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                         onClick={onDeleteClick}
                         variant="ghost"
                       >
-                        <IoTrash size="24px" color="red" />
+                        <IoTrash color="red" />
                       </Button>
                     </Tooltip>
-                  </Flex>
+                    <SendTaskToInboxButton
+                      task={task}
+                      isActive={isActive}
+                      onSend={handleSendToInbox}
+                      disabled={isOffLimits}
+                    />
+                  </Grid>
                 )}
               </Box>
             </HStack>

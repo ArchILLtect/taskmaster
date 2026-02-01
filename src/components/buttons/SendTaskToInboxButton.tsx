@@ -1,4 +1,5 @@
-import { Button, Center } from "@chakra-ui/react";
+import { Button, Center, Icon } from "@chakra-ui/react";
+import { HiOutlineInboxIn } from "react-icons/hi";
 import type { TaskUI } from "../../types";
 import { Tooltip } from "../ui/Tooltip";
 // TODO: Remove toaster import and fireToast later--only used for debugging right now, but they cannot
@@ -27,20 +28,18 @@ export const SendTaskToInboxButton = ({task, isActive, onSend, disabled }: SendT
     {/* <Toaster /> */}
     <Tooltip content={disabled ? "This task is already in the Inbox" : "Send task to Inbox"}>
       <Button
-        borderRadius={"4xl"}
-        paddingX={"3"}
-        paddingY={"2"}
+        paddingX={"2"}
         size="2xs"
         fontSize={"sm"}
         fontWeight={"semibold"}
         variant="ghost"
-        height={"7"}
+        height={"32px"}
         bg={isActive ? "blue.50" : "white"}
         _hover={{ bg: "blue.500" }}
         onClick={handleSendToInbox}
         disabled={disabled}
       >
-          Send to Inbox
+        <Icon as={HiOutlineInboxIn} boxSize={5} />
       </Button>
     </Tooltip>
   </Center>
