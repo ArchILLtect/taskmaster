@@ -1,15 +1,27 @@
 import { generateClient } from "aws-amplify/api";
 
-type AmplifyGraphQLClient = {
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  graphql: (args: any) => Promise<any>;
+export type GraphQLErrorLike = {
+  message?: string;
+  errorType?: string;
 };
 
-let _client: AmplifyGraphQLClient | null = null;
+export type GraphQLResultLike<TData> = {
+  data?: TData;
+  errors?: GraphQLErrorLike[];
+};
+
+export type AmplifyGraphQLClient = {
+  graphql: <TData = unknown, TVariables = unknown>(args: {
+    query: string;
+    variables?: TVariables;
+  }) => Promise<GraphQLResultLike<TData>>;
+};
+
+let _client: unknown | null = null;
 
 export function getClient(): AmplifyGraphQLClient {
   if (!_client) {
-    _client = generateClient() as unknown as AmplifyGraphQLClient;
+    _client = generateClient();
   }
-  return _client;
+  return _client as AmplifyGraphQLClient;
 }

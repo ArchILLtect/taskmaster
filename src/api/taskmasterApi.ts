@@ -71,26 +71,21 @@ type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"
 type CreateTaskListInputClient = Omit<CreateTaskListInput, "owner"> & { owner?: string };
 type CreateTaskInputClient = Omit<CreateTaskInput, "owner"> & { owner?: string };
 
-/**
- * Single shared Amplify GraphQL client for the app.
- * (Amplify.configure is done in main.tsx)
- */
+// The operation documents in `operationsMinimal.ts` are typed as branded strings.
+// Use those brands to infer variable + result types without any casts.
 type GenQuery<I, O> = string & { __generatedQueryInput: I; __generatedQueryOutput: O };
 type GenMutation<I, O> = string & { __generatedMutationInput: I; __generatedMutationOutput: O };
 
-/**
- * Typed GraphQL caller for our minimal GraphQL document strings.
- * Returns the `.data` object (the operation result wrapper), not the whole GraphQL response.
- */
 async function runQuery<I, O>(query: GenQuery<I, O>, variables: I): Promise<O> {
   const client = getClient();
-  const res = await client.graphql({ query, variables });
-  return (res as { data: O }).data;
+  const res = await client.graphql<O, I>({ query, variables });
+  return res.data as O;
 }
+
 async function runMutation<I, O>(query: GenMutation<I, O>, variables: I): Promise<O> {
   const client = getClient();
-  const res = await client.graphql({ query, variables });
-  return (res as { data: O }).data;
+  const res = await client.graphql<O, I>({ query, variables });
+  return res.data as O;
 }
 
 let ownerSubInFlight: Promise<string> | null = null;
@@ -132,37 +127,29 @@ function toPage<T>(conn: { items?: (T | null)[] | null; nextToken?: string | nul
 /**
  * API surface: keep it boring and predictable.
  * Pages should call these methods instead of client.graphql directly.
- * 
- * TODO Tighten the typing
- * Later once the first page conversion is done (priority: ship > perfection).
- * For now, 'any' is used in a few places to get things working.
  */
 export const taskmasterApi = {
   // -----------------------------
   // UserProfile
   // -----------------------------
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async getUserProfile(id: string) {
-    const data = await runQuery(getUserProfileMinimal as any, { id });
-    return (data as any).getUserProfile ?? null;
+    const data = await runQuery(getUserProfileMinimal, { id });
+    return data.getUserProfile ?? null;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async getUserProfileEmailProbe(id: string) {
-    const data = await runQuery(getUserProfileEmailProbeMinimal as any, { id });
-    return (data as any).getUserProfile ?? null;
+    const data = await runQuery(getUserProfileEmailProbeMinimal, { id });
+    return data.getUserProfile ?? null;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async createUserProfile(input: CreateUserProfileInput) {
-    const data = await runMutation(createUserProfileMinimal as any, { input });
-    return (data as any).createUserProfile;
+    const data = await runMutation(createUserProfileMinimal, { input });
+    return data.createUserProfile;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async updateUserProfile(input: UpdateUserProfileInput, condition?: ModelUserProfileConditionInput | null) {
-    const data = await runMutation(updateUserProfileMinimal as any, { input, condition: condition ?? null });
-    return (data as any).updateUserProfile;
+    const data = await runMutation(updateUserProfileMinimal, { input, condition: condition ?? null });
+    return data.updateUserProfile;
   },
 
   async listUserProfiles(opts?: {
@@ -172,8 +159,7 @@ export const taskmasterApi = {
     nextToken?: string | null;
     sortDirection?: import("../API").ModelSortDirection | null;
   }): Promise<Page<UserProfileItem>> {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const data = await runQuery(listUserProfilesMinimal as any, {
+    const data = await runQuery(listUserProfilesMinimal, {
       id: opts?.id ?? null,
       filter: opts?.filter ?? null,
       sortDirection: opts?.sortDirection ?? null,
@@ -181,8 +167,7 @@ export const taskmasterApi = {
       nextToken: opts?.nextToken ?? null,
     });
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const conn = (data as any).listUserProfiles as ListUserProfilesQuery["listUserProfiles"];
+    const conn = data.listUserProfiles;
     return toPage<UserProfileItem>(conn);
   },
 
@@ -193,8 +178,7 @@ export const taskmasterApi = {
     nextToken?: string | null;
     sortDirection?: import("../API").ModelSortDirection | null;
   }): Promise<Page<UserProfileItem>> {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const data = await runQuery(listUserProfilesSafeMinimal as any, {
+    const data = await runQuery(listUserProfilesSafeMinimal, {
       id: opts?.id ?? null,
       filter: opts?.filter ?? null,
       sortDirection: opts?.sortDirection ?? null,
@@ -202,8 +186,7 @@ export const taskmasterApi = {
       nextToken: opts?.nextToken ?? null,
     });
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const conn = (data as any).listUserProfiles as ListUserProfilesQuery["listUserProfiles"];
+    const conn = data.listUserProfiles;
     return toPage<UserProfileItem>(conn);
   },
 
@@ -220,10 +203,9 @@ export const taskmasterApi = {
     // Prefer including `isDemo` so the normal UI can accurately mark demo data.
     // If legacy records are missing the now-required `isDemo`, fall back to a safe query
     // that omits it (otherwise the whole query can hard-fail).
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     let data: unknown;
     try {
-      data = await runQuery(listTaskListsAdminMinimal as any, {
+      data = await runQuery(listTaskListsAdminMinimal, {
         id: opts?.id ?? null,
         filter: opts?.filter ?? null,
         sortDirection: opts?.sortDirection ?? null,
@@ -232,7 +214,7 @@ export const taskmasterApi = {
       });
     } catch (err) {
       if (!shouldFallbackMissingIsDemo(err)) throw err;
-      data = await runQuery(listTaskListsMinimal as any, {
+      data = await runQuery(listTaskListsMinimal, {
         id: opts?.id ?? null,
         filter: opts?.filter ?? null,
         sortDirection: opts?.sortDirection ?? null,
@@ -241,8 +223,7 @@ export const taskmasterApi = {
       });
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const conn = (data as any).listTaskLists as ListTaskListsQuery["listTaskLists"];
+    const conn = (data as ListTaskListsQuery).listTaskLists;
     return toPage<TaskListItem>(conn);
   },
 
@@ -254,8 +235,7 @@ export const taskmasterApi = {
     nextToken?: string | null;
     sortDirection?: ModelSortDirection | null;
   }): Promise<Page<TaskListItem>> {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const data = await runQuery(listTaskListsAdminMinimal as any, {
+    const data = await runQuery(listTaskListsAdminMinimal, {
       id: opts?.id ?? null,
       filter: opts?.filter ?? null,
       sortDirection: opts?.sortDirection ?? null,
@@ -263,8 +243,7 @@ export const taskmasterApi = {
       nextToken: opts?.nextToken ?? null,
     });
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const conn = (data as any).listTaskLists as ListTaskListsQuery["listTaskLists"];
+    const conn = data.listTaskLists;
     return toPage<TaskListItem>(conn);
   },
 
@@ -294,29 +273,25 @@ export const taskmasterApi = {
     });
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async getTaskList(id: string) {
-    const data = await runQuery(getTaskListMinimal as any, { id });
-    return (data as any).getTaskList ?? null;
+    const data = await runQuery(getTaskListMinimal, { id });
+    return data.getTaskList ?? null;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async createTaskList(input: CreateTaskListInputClient) {
     const owner = input.owner ?? (await getOwnerSub());
-    const data = await runMutation(createTaskListMinimal as any, { input: { ...input, owner } });
-    return (data as any).createTaskList;
+    const data = await runMutation(createTaskListMinimal, { input: { ...input, owner } });
+    return data.createTaskList;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async updateTaskList(input: UpdateTaskListInput) {
-    const data = await runMutation(updateTaskListMinimal as any, { input });
-    return (data as any).updateTaskList;
+    const data = await runMutation(updateTaskListMinimal, { input });
+    return data.updateTaskList;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async deleteTaskList(input: DeleteTaskListInput) {
-    const data = await runMutation(deleteTaskListMinimal as any, { input });
-    return (data as any).deleteTaskList;
+    const data = await runMutation(deleteTaskListMinimal, { input });
+    return data.deleteTaskList;
   },
 
   async deleteTaskListSafeById(listId: string) {
@@ -338,10 +313,9 @@ export const taskmasterApi = {
     // Prefer including `isDemo` so the normal UI can accurately mark demo tasks.
     // If legacy records are missing the now-required `isDemo`, fall back to a safe query
     // that omits it (otherwise the whole query can hard-fail).
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     let data: unknown;
     try {
-      data = await runQuery(tasksByListAdminMinimal as any, {
+      data = await runQuery(tasksByListAdminMinimal, {
         listId: opts.listId,
         sortOrder: opts.sortOrder ?? { ge: 0 },
         sortDirection: opts.sortDirection,
@@ -350,7 +324,7 @@ export const taskmasterApi = {
       });
     } catch (err) {
       if (!shouldFallbackMissingIsDemo(err)) throw err;
-      data = await runQuery(tasksByListMinimal as any, {
+      data = await runQuery(tasksByListMinimal, {
         listId: opts.listId,
         sortOrder: opts.sortOrder ?? { ge: 0 },
         sortDirection: opts.sortDirection,
@@ -359,8 +333,7 @@ export const taskmasterApi = {
       });
     }
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const conn = (data as any).tasksByList as TasksByListQuery["tasksByList"];
+    const conn = (data as TasksByListQuery).tasksByList;
     return toPage<TaskItem>(conn);
   },
 
@@ -372,8 +345,7 @@ export const taskmasterApi = {
     limit?: number;
     nextToken?: string | null;
   }): Promise<Page<TaskItem>> {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const data = await runQuery(tasksByListAdminMinimal as any, {
+    const data = await runQuery(tasksByListAdminMinimal, {
       listId: opts.listId,
       sortOrder: opts.sortOrder ?? { ge: 0 },
       sortDirection: opts.sortDirection,
@@ -381,16 +353,14 @@ export const taskmasterApi = {
       nextToken: opts.nextToken ?? null,
     });
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const conn = (data as any).tasksByList as TasksByListQuery["tasksByList"];
+    const conn = data.tasksByList;
     return toPage<TaskItem>(conn);
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async createTask(input: CreateTaskInputClient) {
     const owner = input.owner ?? (await getOwnerSub());
-    const data = await runMutation(createTaskMinimal as any, { input: { ...input, owner } });
-    const created = (data as any).createTask;
+    const data = await runMutation(createTaskMinimal, { input: { ...input, owner } });
+    const created = data.createTask;
 
     if (created?.id && created?.listId) {
       useUpdatesStore.getState().addEvent({
@@ -405,10 +375,9 @@ export const taskmasterApi = {
     return created;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async updateTask(input: UpdateTaskInput) {
-    const data = await runMutation(updateTaskMinimal as any, { input });
-    const updated = (data as any).updateTask;
+    const data = await runMutation(updateTaskMinimal, { input });
+    const updated = data.updateTask;
 
     if (updated?.id && updated?.listId) {
       const hasOwn = (k: keyof UpdateTaskInput) => Object.prototype.hasOwnProperty.call(input, k);
@@ -454,10 +423,9 @@ export const taskmasterApi = {
     return updated;
   },
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   async deleteTask(input: DeleteTaskInput) {
-    const data = await runMutation(deleteTaskMinimal as any, { input });
-    const deleted = (data as any).deleteTask;
+    const data = await runMutation(deleteTaskMinimal, { input });
+    const deleted = data.deleteTask;
 
     // Note: delete mutation selection set must include listId/title for this to be informative.
     if (deleted?.id && deleted?.listId) {
