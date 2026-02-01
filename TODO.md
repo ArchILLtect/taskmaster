@@ -7,7 +7,7 @@ Actionable TODOs should appear as `TODO(...)` or `TODO` followed by whitespace; 
 Wrap `TODO` tags in ^ to prevent matching inside other words, e.g., ^METHODTODOLOGY^
 Priorities use ^TODO(P1–P5)^, ^TODO(stretch)^, and ^TODO(postmvp)^ and are surfaced via the todo-tree extension.
 
-Last refreshed: Jan 28 2026
+Last refreshed: Jan 31 2026
 
 ---
 
@@ -18,6 +18,8 @@ Last refreshed: Jan 28 2026
 - [x] TODO(P2) Docs overhaul: bring docs/README in sync with current architecture and remove any references to deleted local dev-only data/files.
 - [x] TODO(P1) Demo seeding: UserProfile bootstrap + versioned, idempotent demo seed (multi-tab safe).
 - [x] TODO(P1) MVP decision: seed demo data for all accounts by default (opt-out supported).
+- [x] TODO(P1) Demo marking: ensure `isDemo` is available in normal UI queries (with safe fallback for legacy records).
+- [x] TODO(P1) Task actions: restore “Send to Inbox” wiring across ListDetails/Tasks/Updates views.
 
 ---
 
@@ -58,7 +60,7 @@ Last refreshed: Jan 28 2026
   - MVP behavior: always seed for all accounts by default.
   - Temporary opt-out supported (e.g. `?demo=0` or `localStorage.taskmaster:seedDemo = "0"`).
 
-- [ ] TODO(P1) Account-switch cleanup for user-scoped caches + bootstrap
+- [x] TODO(P1) Account-switch cleanup for user-scoped caches + bootstrap
   - [x] On sign out: clear `taskStore` persisted cache + user UI cache (and other user-scoped caches)
   - [x] On sign in: bootstrap runs after auth restore and cache guards prevent cross-user flashes
 
@@ -347,8 +349,9 @@ Last refreshed: Jan 28 2026
 - [ ] TODO(P4) ESLint guardrail: if we introduce additional Amplify enums used by UI (beyond TaskStatus/TaskPriority), expand the allowlist in `eslint.config.js` (`no-restricted-imports` → allowImportNames) so UI can import those enums from `../API` without importing generated models.
 - [ ] Consider tightening architecture: optionally forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`, forcing all API access through store/hooks (commented-out rule block exists in eslint.config.js).
 - [ ] Consider replacing `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type for better editor help and safer mapping.
-- [ ] TODO(P2) The details SubtaskRow are not truncating and need to be because it breaks the UI by pushing the badges behind the action buttons.
+- [x] TODO(P2) The details SubtaskRow are not truncating and need to be because it breaks the UI by pushing the badges behind the action buttons.
 
+**Copilot: Ignore this task for now**
 - [ ] TODO(P1) Right now Inbox has the ability to "dismiss" tasks. Should it? Without using a URL"hack," it is not possible to get to the system inbox list--and this list is technically just a staging area for tasks with no list.
 
 - [ ] TODO(P3) Cleanup: remove stray debug logging
