@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentUser, signOut as amplifySignOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 
 import type { AuthUserLike } from "../types";
-import { clearAllUserCaches } from "../store/clearUserCaches";
+import { resetUserSessionState } from "../store/clearUserCaches";
+import { setUserStorageScopeKey } from "../services/userScopedStorage";
+import { useTaskStore } from "../store/taskStore";
+import { useInboxStore } from "../store/inboxStore";
+import { useUpdatesStore } from "../store/updatesStore";
+import { useUserUICacheStore } from "../services/userUICacheStore";
 
 function isNotSignedInError(err: unknown): boolean {
   const name = typeof err === "object" && err !== null && "name" in err ? String((err as { name: unknown }).name) : "";
@@ -24,19 +29,52 @@ export function useAuthUser(): {
 } {
   const [user, setUser] = useState<AuthUserLike | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastAppliedScopeKeyRef = useRef<string | null>(null);
 
   const signedIn = useMemo(() => Boolean(user?.userId || user?.username), [user?.userId, user?.username]);
+
+  const applyScope = useCallback((authKey: string | null) => {
+    // Persist the last known signed-in identity so user-scoped storage reads are correct
+    // even before auth resolves on the next page load.
+    setUserStorageScopeKey(authKey);
+
+    // Ensure we don't flash cross-user in-memory state when switching accounts.
+    resetUserSessionState();
+
+    lastAppliedScopeKeyRef.current = authKey;
+
+    // Rehydrate persisted stores against the *current* scope.
+    try {
+      void useTaskStore.persist.rehydrate();
+      void useInboxStore.persist.rehydrate();
+      void useUpdatesStore.persist.rehydrate();
+      void useUserUICacheStore.persist.rehydrate();
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const current = await getCurrentUser();
-      setUser({ username: current.username, userId: current.userId });
+      const nextUser = { username: current.username, userId: current.userId };
+
+      const nextKey = nextUser.userId || nextUser.username || null;
+      const prevKey = lastAppliedScopeKeyRef.current;
+      if (nextKey !== prevKey) {
+        applyScope(nextKey);
+      }
+
+      setUser(nextUser);
     } catch (err) {
       if (isNotSignedInError(err)) {
+        // Ensure signed-out sessions do not keep using a previous user's scope.
+        applyScope(null);
         setUser(null);
       } else {
         // Non-auth errors shouldn't brick the app; treat as signed out but log in DEV.
+        applyScope(null);
         setUser(null);
         if (import.meta.env.DEV) {
           console.warn("[auth] failed to resolve current user", err);
@@ -45,16 +83,17 @@ export function useAuthUser(): {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [applyScope]);
 
   const signOutWithCleanup = useCallback(async () => {
     try {
       await amplifySignOut();
     } finally {
-      clearAllUserCaches();
+      // Reset current session state but keep per-user persisted caches intact.
+      applyScope(null);
       setUser(null);
     }
-  }, []);
+  }, [applyScope]);
 
   useEffect(() => {
     void refresh();
@@ -66,6 +105,7 @@ export function useAuthUser(): {
       }
       if (evt === "signOut" || evt === "signedOut") {
         // Cache cleanup is handled by signOutWithCleanup or the global listener.
+        applyScope(null);
         setUser(null);
       }
     });
@@ -73,7 +113,7 @@ export function useAuthUser(): {
     return () => {
       cancel();
     };
-  }, [refresh]);
+  }, [applyScope, refresh]);
 
   return { user, loading, signedIn, signOutWithCleanup, refresh };
 }

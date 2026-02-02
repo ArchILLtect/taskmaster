@@ -7,17 +7,6 @@ import { useInboxStore } from "../store/inboxStore";
 import { useUpdatesStore } from "../store/updatesStore";
 import { findInboxListIdByName, getInboxListId, setInboxListId } from "../config/inboxSettings";
 
-const INBOX_STORE_KEY = "taskmaster:inbox";
-const UPDATES_STORE_KEY = "taskmaster:updates";
-
-function safeRemoveLocalStorageKey(key: string) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
-}
-
 function errorToMessage(err: unknown): string {
   if (typeof err === "string") return err;
   if (typeof err === "object" && err !== null && "message" in err) {
@@ -80,8 +69,15 @@ export async function resetDemoData(): Promise<void> {
   useInboxStore.getState().resetAll?.();
   useUpdatesStore.getState().resetAll?.();
 
-  safeRemoveLocalStorageKey(INBOX_STORE_KEY);
-  safeRemoveLocalStorageKey(UPDATES_STORE_KEY);
+  // Clear persisted UX state for the current user scope.
+  try {
+    await Promise.all([
+      useInboxStore.persist.clearStorage(),
+      useUpdatesStore.persist.clearStorage(),
+    ]);
+  } catch {
+    // ignore
+  }
 
   // 1) Load all lists (owned by current user)
   const lists = await listAllTaskListsOwned();
@@ -128,7 +124,11 @@ export async function resetDemoData(): Promise<void> {
 
   // 6) Clear updates again so seed events don't flood the feed
   useUpdatesStore.getState().resetAll?.();
-  safeRemoveLocalStorageKey(UPDATES_STORE_KEY);
+  try {
+    await useUpdatesStore.persist.clearStorage();
+  } catch {
+    // ignore
+  }
 
   // 7) Refresh task store (also re-ensures inbox list exists and caches are updated)
   await getTaskStoreState().refreshAll(undefined, { reason: "mutation" });

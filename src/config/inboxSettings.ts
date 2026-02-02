@@ -1,8 +1,22 @@
-const KEY = "taskmaster.inboxListId";
+import { getUserStorageScopeKey, userScopedGetItem, userScopedRemoveItem, userScopedSetItem } from "../services/userScopedStorage";
+
+const LEGACY_KEY = "taskmaster.inboxListId";
+const SCOPED_BASE_KEY = "inboxListId";
 
 export function getInboxListId(): string | null {
   try {
-    return localStorage.getItem(KEY);
+    const scoped = userScopedGetItem(SCOPED_BASE_KEY);
+    if (scoped) return scoped;
+
+    // Legacy migration: only migrate if we have an explicit auth scope.
+    if (!getUserStorageScopeKey()) return null;
+
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (!legacy) return null;
+
+    userScopedSetItem(SCOPED_BASE_KEY, legacy);
+    localStorage.removeItem(LEGACY_KEY);
+    return legacy;
   } catch {
     return null;
   }
@@ -10,7 +24,7 @@ export function getInboxListId(): string | null {
 
 export function setInboxListId(id: string) {
   try {
-    localStorage.setItem(KEY, id);
+    userScopedSetItem(SCOPED_BASE_KEY, id);
   } catch {
     // ignore for MVP
   }
@@ -18,7 +32,7 @@ export function setInboxListId(id: string) {
 
 export function clearInboxListId() {
   try {
-    localStorage.removeItem(KEY);
+    userScopedRemoveItem(SCOPED_BASE_KEY);
   } catch {
     // ignore
   }

@@ -1,5 +1,6 @@
 import type { PersistStorage, StorageValue } from "zustand/middleware";
-import { USER_UI_STORAGE_KEY } from "./userUICacheStore";
+
+export const AUTH_SCOPE_STORAGE_KEY = "taskmaster:authScope" as const;
 
 function safeJsonParse(raw: string): unknown {
   try {
@@ -9,29 +10,38 @@ function safeJsonParse(raw: string): unknown {
   }
 }
 
-function readPersistedAuthKeyFromUserUI(): string | null {
-  // userUICacheStore persists a small envelope with { state: { userUI } }
-  // where userUI.username is set to `currentUser.username || currentUser.userId`.
-  // This is stable enough as a per-user local storage scope key.
+function readPersistedAuthScopeKey(): string | null {
   try {
-    const raw = localStorage.getItem(USER_UI_STORAGE_KEY);
+    const raw = localStorage.getItem(AUTH_SCOPE_STORAGE_KEY);
     if (!raw) return null;
-
-    const parsed = safeJsonParse(raw) as unknown;
-    if (typeof parsed !== "object" || parsed === null) return null;
-
-    const envelope = parsed as { state?: unknown };
-    const state = envelope.state as { userUI?: unknown } | undefined;
-    const userUI = state?.userUI as { username?: unknown } | undefined;
-
-    return typeof userUI?.username === "string" && userUI.username ? userUI.username : null;
+    const v = raw.trim();
+    return v ? v : null;
   } catch {
     return null;
   }
 }
 
 export function getUserStorageScopeKey(): string | null {
-  return readPersistedAuthKeyFromUserUI();
+  return readPersistedAuthScopeKey();
+}
+
+export function setUserStorageScopeKey(scope: string | null): void {
+  try {
+    if (!scope) {
+      localStorage.removeItem(AUTH_SCOPE_STORAGE_KEY);
+      return;
+    }
+
+    const trimmed = scope.trim();
+    if (!trimmed) {
+      localStorage.removeItem(AUTH_SCOPE_STORAGE_KEY);
+      return;
+    }
+
+    localStorage.setItem(AUTH_SCOPE_STORAGE_KEY, trimmed);
+  } catch {
+    // ignore
+  }
 }
 
 export function makeUserScopedKey(baseKey: string, scopeOverride?: string | null): string {

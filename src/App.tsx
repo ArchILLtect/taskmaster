@@ -17,13 +17,14 @@ import { AdminPage } from "./pages/AdminPage";
 import { lazy, Suspense, useLayoutEffect } from "react";
 import { BasicSpinner } from "./components/ui/BasicSpinner";
 import { Hub } from "aws-amplify/utils";
-import { clearAllUserCaches } from "./store/clearUserCaches";
+import { resetUserSessionState } from "./store/clearUserCaches";
 import { USER_UI_STORAGE_KEY } from "./services/userUICacheStore";
 import { useAuthUser } from "./hooks/useAuthUser";
 import { RequireAuth } from "./routes/RequireAuth";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { AboutPage } from "./pages/AboutPage";
+import { setUserStorageScopeKey } from "./services/userScopedStorage";
 
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
@@ -38,7 +39,8 @@ function ensureAuthLifecycleCacheGuards() {
 
     // Belt + suspenders: clear caches if sign-out happens outside our TopBar flow.
     if (evt === "signOut" || evt === "signedOut") {
-      clearAllUserCaches();
+      setUserStorageScopeKey(null);
+      resetUserSessionState();
       return;
     }
   });
@@ -46,7 +48,7 @@ function ensureAuthLifecycleCacheGuards() {
 
 ensureAuthLifecycleCacheGuards();
 
-function readPersistedUsername(): string | null {
+function readLegacyPersistedUsername(): string | null {
   try {
     const raw = localStorage.getItem(USER_UI_STORAGE_KEY);
     if (!raw) return null;
@@ -60,7 +62,7 @@ function readPersistedUsername(): string | null {
   }
 }
 
-function hasAnyUserScopedCacheKeys(): boolean {
+function hasAnyLegacyUnscopedCacheKeys(): boolean {
   try {
     return Boolean(
       localStorage.getItem("taskmaster:taskStore") ||
@@ -70,6 +72,17 @@ function hasAnyUserScopedCacheKeys(): boolean {
     );
   } catch {
     return false;
+  }
+}
+
+function clearLegacyUnscopedCaches(): void {
+  try {
+    localStorage.removeItem("taskmaster:taskStore");
+    localStorage.removeItem("taskmaster:inbox");
+    localStorage.removeItem("taskmaster:updates");
+    localStorage.removeItem(USER_UI_STORAGE_KEY);
+  } catch {
+    // ignore
   }
 }
 
@@ -84,14 +97,16 @@ function maybeClearCachesBeforeFirstAuthedRender(user?: { username?: string; use
   if (lastAuthedUserKey === authKey) return;
   lastAuthedUserKey = authKey;
 
-  if (!hasAnyUserScopedCacheKeys()) return;
+  // Only legacy (pre-user-scoped) caches can cause cross-user flashes.
+  if (!hasAnyLegacyUnscopedCacheKeys()) return;
 
-  const persistedUsername = readPersistedUsername();
+  const persistedUsername = readLegacyPersistedUsername();
   if (persistedUsername && persistedUsername === authKey) return;
 
-  // If we have caches but no matching persisted user identity, clear before rendering
-  // any authenticated routes to prevent cross-user cache flashes.
-  clearAllUserCaches();
+  // If we have legacy unscoped caches but no matching persisted user identity,
+  // clear ONLY those legacy keys to prevent accidental migration/leakage.
+  clearLegacyUnscopedCaches();
+  resetUserSessionState();
 }
 
 export default function App() {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type { AuthUserLike } from "../types";
 import { bootstrapUser } from "../services/userBootstrapService";
 import { useTaskActions } from "../store/taskStore";
+import { userScopedGetItem } from "../services/userScopedStorage";
 
 function shouldSeedDemoFromLocation(): boolean {
   try {
@@ -14,7 +15,7 @@ function shouldSeedDemoFromLocation(): boolean {
 
 function shouldSeedDemoFromStorage(): boolean {
   try {
-    return localStorage.getItem("taskmaster:seedDemo") === "1";
+    return userScopedGetItem("seedDemo") === "1";
   } catch {
     return false;
   }
@@ -31,7 +32,7 @@ function shouldDisableDemoFromLocation(): boolean {
 
 function shouldDisableDemoFromStorage(): boolean {
   try {
-    return localStorage.getItem("taskmaster:seedDemo") === "0";
+    return userScopedGetItem("seedDemo") === "0";
   } catch {
     return false;
   }
@@ -57,7 +58,8 @@ export function useBootstrapUserProfile(user?: AuthUserLike | null) {
     didRunForUserKey.current = userKey;
 
     // MVP decision: seed demo data for all accounts by default.
-    // You can temporarily disable with `?demo=0` or `localStorage.taskmaster:seedDemo="0"`.
+    // You can temporarily disable with `?demo=0` or the per-user localStorage key
+    // `taskmaster:u:<scope>:seedDemo="0"` (where `<scope>` is the value in `taskmaster:authScope`).
     const disabled = shouldDisableDemoFromLocation() || shouldDisableDemoFromStorage();
     const explicitlyEnabled = shouldSeedDemoFromLocation() || shouldSeedDemoFromStorage();
 

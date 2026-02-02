@@ -5,7 +5,7 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { Toaster } from "../components/ui/Toaster";
 import { fireToast } from "../hooks/useFireToast";
 import { isCacheFresh, useTaskStoreView, useTaskActions } from "../store/taskStore";
-import { clearAllUserCaches } from "../store/clearUserCaches";
+import { clearCurrentUserPersistedCaches } from "../store/clearUserCaches";
 import { getUserUIResult } from "../services/authService";
 import { Tip } from "../components/ui/Tip";
 
@@ -42,7 +42,7 @@ export function DevPage() {
             colorPalette="red"
             variant="outline"
             onClick={async () => {
-              clearAllUserCaches();
+              await clearCurrentUserPersistedCaches();
 
               // Repopulate current session state so the UI updates immediately.
               // (Otherwise you often need a manual browser reload to see user metadata and tasks.)
@@ -51,7 +51,7 @@ export function DevPage() {
               fireToast(
                 "success",
                 "Cleared user caches",
-                "Removed taskStore/inbox/updates/user caches, refreshed tasks, and re-fetched user metadata."
+                "Cleared taskStore/inbox/updates persisted caches for the current signed-in user, refreshed tasks, and re-fetched user metadata."
               );
             }}
           >

@@ -11,6 +11,12 @@ import {
   SYSTEM_INBOX_NAME,
 } from "../config/inboxSettings";
 import type { ListUI, TaskUI } from "../types";
+import {
+  getUserStorageScopeKey,
+  userScopedGetItem,
+  userScopedRemoveItem,
+  userScopedSetItem,
+} from "../services/userScopedStorage";
 
 const EMPTY_TASKS: TaskUI[] = [];
 
@@ -108,6 +114,35 @@ let didWarnTaskStoreBadShape = false;
 // This prevents a bad localStorage entry from breaking app startup.
 const taskStoreStorage: PersistStorage<unknown, unknown> = {
   getItem: (name: string) => {
+    const scopedRaw = userScopedGetItem(`zustand:${name}`);
+    if (scopedRaw != null) {
+      try {
+        const parsed = JSON.parse(scopedRaw) as unknown;
+
+        if (!isRecord(parsed) || !("state" in parsed)) {
+          if (import.meta.env.DEV && !didWarnTaskStoreBadJson) {
+            didWarnTaskStoreBadJson = true;
+            console.warn(`[taskStore] Invalid persisted JSON for "${name}"; clearing and using defaults.`);
+          }
+          userScopedRemoveItem(`zustand:${name}`);
+          return null;
+        }
+
+        return parsed as StorageValue<unknown>;
+      } catch {
+        if (import.meta.env.DEV && !didWarnTaskStoreBadJson) {
+          didWarnTaskStoreBadJson = true;
+          console.warn(`[taskStore] Invalid persisted JSON for "${name}"; clearing and using defaults.`);
+        }
+        userScopedRemoveItem(`zustand:${name}`);
+        return null;
+      }
+    }
+
+    // Only migrate legacy global keys if we have an explicit auth scope.
+    if (!getUserStorageScopeKey()) return null;
+
+    // Legacy migration: older builds stored under unscoped `localStorage[name]`.
     const raw = localStorage.getItem(name);
     if (raw == null) return null;
 
@@ -125,6 +160,10 @@ const taskStoreStorage: PersistStorage<unknown, unknown> = {
         return null;
       }
 
+      // Best-effort: move the legacy value into the user-scoped namespace.
+      userScopedSetItem(`zustand:${name}`, JSON.stringify(parsed));
+      localStorage.removeItem(name);
+
       return parsed as StorageValue<unknown>;
     } catch {
       if (import.meta.env.DEV && !didWarnTaskStoreBadJson) {
@@ -136,10 +175,10 @@ const taskStoreStorage: PersistStorage<unknown, unknown> = {
     }
   },
   setItem: (name: string, value: StorageValue<unknown>) => {
-    localStorage.setItem(name, JSON.stringify(value));
+    userScopedSetItem(`zustand:${name}`, JSON.stringify(value));
   },
   removeItem: (name: string) => {
-    localStorage.removeItem(name);
+    userScopedRemoveItem(`zustand:${name}`);
   },
 };
 

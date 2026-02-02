@@ -1,7 +1,9 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import type { PersistStorage, StorageValue } from "zustand/middleware";
 
 import { isoNow } from "../services/storage";
+import { createUserScopedZustandStorage, getUserStorageScopeKey } from "../services/userScopedStorage";
 
 const STORAGE_KEY = "taskmaster:updates";
 const STORE_VERSION = 1;
@@ -35,6 +37,40 @@ const DEFAULTS: UpdatesPersistedStateV1 = {
   lastReadAt: null,
   clearedBeforeAt: null,
 };
+
+const updatesScopedStorage: PersistStorage<unknown, unknown> = (() => {
+  const scoped = createUserScopedZustandStorage();
+
+  return {
+    getItem: (name: string) => {
+      const fromScoped = scoped.getItem(name);
+      if (fromScoped != null) return fromScoped;
+
+      // Only migrate legacy global keys if we have an explicit auth scope.
+      if (!getUserStorageScopeKey()) return null;
+
+      // Legacy migration: unscoped localStorage
+      try {
+        const raw = localStorage.getItem(name);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as StorageValue<unknown>;
+
+        scoped.setItem(name, parsed);
+        localStorage.removeItem(name);
+
+        return parsed;
+      } catch {
+        return null;
+      }
+    },
+    setItem: (name: string, value: StorageValue<unknown>) => {
+      scoped.setItem(name, value);
+    },
+    removeItem: (name: string) => {
+      scoped.removeItem(name);
+    },
+  };
+})();
 
 type UpdatesStore = UpdatesPersistedStateV1 & {
   addEvent: (evt: Omit<UpdateEvent, "id" | "occurredAt">) => UpdateEvent;
@@ -84,7 +120,7 @@ export const useUpdatesStore = create<UpdatesStore>()(
       name: STORAGE_KEY,
       version: STORE_VERSION,
       migrate: (persistedState) => persistedState,
-      storage: createJSONStorage(() => localStorage),
+      storage: updatesScopedStorage,
       partialize: (s) => ({
         events: s.events,
         lastReadAt: s.lastReadAt,

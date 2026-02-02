@@ -116,6 +116,14 @@ export function clearUserUICache() {
   useUserUICacheStore.getState().clear();
 }
 
+// Clears only the in-memory caches used to dedupe requests and memoize results.
+// Does NOT clear the persisted zustand store.
+export function clearUserUIInMemoryCache() {
+  inFlight = null;
+  cached = null;
+  cachedAtMs = 0;
+}
+
 export async function getUserUI(): Promise<UserUI | null> {
   const { userUI } = await getUserUIResult();
   return userUI;

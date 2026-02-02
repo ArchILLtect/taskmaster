@@ -1,7 +1,9 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import type { PersistStorage, StorageValue } from "zustand/middleware";
 
 import { isoNow } from "../services/storage";
+import { createUserScopedZustandStorage, getUserStorageScopeKey } from "../services/userScopedStorage";
 
 const STORAGE_KEY = "taskmaster:inbox";
 const STORE_VERSION = 1;
@@ -30,6 +32,42 @@ const DEFAULTS: InboxPersistedStateV1 = {
   dueSoonWindowDays: 3,
   dismissedTaskIds: [],
 };
+
+const inboxScopedStorage: PersistStorage<unknown, unknown> = (() => {
+  const scoped = createUserScopedZustandStorage();
+
+  return {
+    getItem: (name: string) => {
+      // Preferred: user-scoped key
+      const fromScoped = scoped.getItem(name);
+      if (fromScoped != null) return fromScoped;
+
+      // Only migrate legacy global keys if we have an explicit auth scope.
+      if (!getUserStorageScopeKey()) return null;
+
+      // Legacy migration: older builds wrote to unscoped localStorage under `name`.
+      try {
+        const raw = localStorage.getItem(name);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as StorageValue<unknown>;
+
+        // Best-effort: write into scoped storage then remove legacy.
+        scoped.setItem(name, parsed);
+        localStorage.removeItem(name);
+
+        return parsed;
+      } catch {
+        return null;
+      }
+    },
+    setItem: (name: string, value: StorageValue<unknown>) => {
+      scoped.setItem(name, value);
+    },
+    removeItem: (name: string) => {
+      scoped.removeItem(name);
+    },
+  };
+})();
 
 export const useInboxStore = create<InboxStore>()(
   persist(
@@ -72,7 +110,7 @@ export const useInboxStore = create<InboxStore>()(
       name: STORAGE_KEY,
       version: STORE_VERSION,
       migrate: (persistedState) => persistedState,
-      storage: createJSONStorage(() => localStorage),
+      storage: inboxScopedStorage,
       partialize: (s) => ({
         lastViewedAt: s.lastViewedAt,
         dueSoonWindowDays: s.dueSoonWindowDays,

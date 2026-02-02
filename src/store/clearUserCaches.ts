@@ -1,36 +1,20 @@
 import { useInboxStore } from "./inboxStore";
 import { useTaskStore } from "./taskStore";
 import { useUpdatesStore } from "./updatesStore";
-import { clearUserUICache } from "../services/authService";
-import {
-  USER_UI_STORAGE_KEY,
-} from "../services/userUICacheStore";
-import { DEMO_SESSION_STORAGE_KEY } from "../services/demoSession";
+import { clearUserUIInMemoryCache } from "../services/authService";
 
-const TASK_STORE_KEY = "taskmaster:taskStore";
-const INBOX_STORE_KEY = "taskmaster:inbox";
-const UPDATES_STORE_KEY = "taskmaster:updates";
+let resetInProgress = false;
+let lastResetAtMs = 0;
 
-let clearInProgress = false;
-let lastClearedAtMs = 0;
-
-function safeRemoveLocalStorageKey(key: string) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
-}
-
-export function clearAllUserCaches(): void {
+export function resetUserSessionState(): void {
   // Idempotency guard: multiple sign-out paths (Hub event + manual cleanup, StrictMode, etc.)
-  // can call this back-to-back. The operations are safe but the double log is confusing.
-  if (clearInProgress) return;
+  // can call this back-to-back.
+  if (resetInProgress) return;
   const now = Date.now();
-  if (now - lastClearedAtMs < 250) return;
-  clearInProgress = true;
+  if (now - lastResetAtMs < 250) return;
+  resetInProgress = true;
 
-  // 1) Clear in-memory state for the currently-running session.
+  // Clear in-memory state for the currently-running session.
   const taskState = useTaskStore.getState() as unknown as { clearAllLocal?: () => void; expireTaskCache?: () => void };
   if (typeof taskState.clearAllLocal === "function") taskState.clearAllLocal();
   else taskState.expireTaskCache?.();
@@ -42,28 +26,24 @@ export function clearAllUserCaches(): void {
   if (typeof updatesState.resetAll === "function") updatesState.resetAll();
   else updatesState.clearAll?.();
 
-  // Also clear the authService module-level cache (not just the persisted store),
-  // otherwise a user switch can show stale user metadata until a hard reload.
-  clearUserUICache();
+  // Clear module-level authService caches so a user switch doesn't show stale metadata.
+  clearUserUIInMemoryCache();
 
-  // 2) Remove persisted storage keys last, so the persist middleware doesn't immediately
-  // recreate them during the reset calls above.
-  safeRemoveLocalStorageKey(TASK_STORE_KEY);
-  safeRemoveLocalStorageKey(INBOX_STORE_KEY);
-  safeRemoveLocalStorageKey(UPDATES_STORE_KEY);
-  safeRemoveLocalStorageKey(USER_UI_STORAGE_KEY);
-  safeRemoveLocalStorageKey(DEMO_SESSION_STORAGE_KEY);
+  lastResetAtMs = now;
+  resetInProgress = false;
+}
 
-  if (import.meta.env.DEV) {
-    console.debug("[auth] cleared user-scoped caches", [
-      TASK_STORE_KEY,
-      INBOX_STORE_KEY,
-      UPDATES_STORE_KEY,
-      USER_UI_STORAGE_KEY,
-      DEMO_SESSION_STORAGE_KEY,
+export async function clearCurrentUserPersistedCaches(): Promise<void> {
+  // Clear storage for current scope (per-user) and then reset in-memory state.
+  try {
+    await Promise.all([
+      useTaskStore.persist.clearStorage(),
+      useInboxStore.persist.clearStorage(),
+      useUpdatesStore.persist.clearStorage(),
     ]);
+  } catch {
+    // ignore
+  } finally {
+    resetUserSessionState();
   }
-
-  lastClearedAtMs = now;
-  clearInProgress = false;
 }

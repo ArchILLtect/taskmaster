@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { createUserScopedZustandStorage } from "../services/userScopedStorage";
+import { createUserScopedZustandStorage, getUserStorageScopeKey } from "../services/userScopedStorage";
 
 export const LOCAL_SETTINGS_STORE_VERSION = 1 as const;
 
@@ -35,6 +35,8 @@ function readLegacyDueSoonDays(): number | null {
   // Best-effort migration: older builds stored this on the inbox store.
   // We avoid changing any backend settingsVersion (GraphQL persistence comes later).
   try {
+    // Don't read/migrate legacy global caches unless we have an explicit auth scope.
+    if (!getUserStorageScopeKey()) return null;
     const raw = localStorage.getItem("taskmaster:inbox");
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
