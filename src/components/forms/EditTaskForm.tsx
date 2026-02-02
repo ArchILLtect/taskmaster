@@ -1,10 +1,10 @@
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
-import type { EditTaskFormProps } from "../types/task";
+import type { EditTaskFormProps } from "../../types/task";
 import { useMemo } from "react";
-import { TaskPriority, TaskStatus } from "../API";
-import { getInboxListId } from "../config/inboxSettings";
-import { useTaskmasterData } from "../hooks/useTaskmasterData";
+import { TaskPriority, TaskStatus } from "../../API";
+import { getInboxListId } from "../../config/inboxSettings";
+import { useTaskmasterData } from "../../hooks/useTaskmasterData";
 import { FormSelect } from "./FormSelect";
 
 type Option<T extends string> = { label: string; value: T };

@@ -1,7 +1,7 @@
 import { Box, Flex, HStack, Select, Text, useListCollection } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { FiInfo } from "react-icons/fi";
-import { Tooltip } from "./ui/Tooltip";
+import { Tooltip } from "../ui/Tooltip";
 
 type SelectItem = { label: string; value: string };
 

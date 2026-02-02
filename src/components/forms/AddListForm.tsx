@@ -1,6 +1,6 @@
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
-import type { AddListFormProps } from "../types/list";
+import type { AddListFormProps } from "../../types/list";
 
 export const AddListForm = ({
   newListName,
