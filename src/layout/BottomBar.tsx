@@ -23,6 +23,27 @@ export function BottomBar({
     return isDemo;
   }, [signedIn, isDemo]);
 
+  const handleAcceptResetDemoData = async () => {
+    if (resetting) return;
+
+    setResetting(true);
+    setResetError(null);
+
+    try {
+      await resetDemoData();
+      void fireToast("success", "Demo reset", "Demo lists and tasks were restored.");
+    } catch (err) {
+      const msg =
+        typeof err === "object" && err !== null && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Failed to reset demo data.";
+      setResetError(msg);
+      void fireToast("error", "Reset failed", msg);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <HStack px={4} py={2} borderTopWidth="1px" bg="white">
       <Text fontSize="sm" color="gray.600">
@@ -90,26 +111,7 @@ export function BottomBar({
           setResetError(null);
           setIsResetOpen(false);
         }}
-        onAccept={async () => {
-          {/* TODO? Extract this value into a helper constant */}
-          if (resetting) return;
-          setResetting(true);
-          setResetError(null);
-          try {
-            await resetDemoData();
-            void fireToast("success", "Demo reset", "Demo lists and tasks were restored.");
-          } catch (err) {
-            const msg =
-              typeof err === "object" && err !== null && "message" in err
-                ? String((err as { message: unknown }).message)
-                : "Failed to reset demo data.";
-            setResetError(msg);
-            void fireToast("error", "Reset failed", msg);
-            throw err;
-          } finally {
-            setResetting(false);
-          }
-        }}
+        onAccept={handleAcceptResetDemoData}
         acceptLabel="Reset"
         cancelLabel="Cancel"
         acceptColorPalette="red"
