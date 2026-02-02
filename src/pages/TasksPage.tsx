@@ -14,11 +14,11 @@ import { TaskPriority, TaskStatus } from "../API";
 import { useTasksPageData } from "./useTasksPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
-import { AddTaskForm } from "../components/AddTaskForm";
+import { AddTaskForm } from "../components/forms/AddTaskForm";
 import { useNavigate } from "react-router-dom";
 import { Flex } from "@aws-amplify/ui-react";
 import { DialogModal } from "../components/ui/DialogModal";
-import { EditTaskForm } from "../components/EditTaskForm";
+import { EditTaskForm } from "../components/forms/EditTaskForm";
 import type { TaskUI } from "../types/task";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
@@ -326,10 +326,10 @@ export function TasksPage() {
       <Toaster />
       <VStack w="100%" gap={4} align="start">
         <HStack justify="space-between" w="100%">
-          <VStack align="start" gap={2}>
+          <HStack align="center" gap={2}>
             <Heading size="2xl">Tasks</Heading>
-            <Text>View, search, filter, sort, and manage all your tasks in one place.</Text>
-          </VStack>
+            <Badge>View, search, filter, sort, and manage all your tasks in one place.</Badge>
+          </HStack>
           <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
         </HStack>
 

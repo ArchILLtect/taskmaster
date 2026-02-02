@@ -11,8 +11,8 @@ import {
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { useEffect, useMemo, useState } from "react";
-import { EditListForm } from "../components/EditListForm";
-import { AddListForm } from "../components/AddListForm";
+import { EditListForm } from "../components/forms/EditListForm";
+import { AddListForm } from "../components/forms/AddListForm";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";

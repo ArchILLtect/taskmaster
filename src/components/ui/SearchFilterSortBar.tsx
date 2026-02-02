@@ -1,7 +1,7 @@
 import { Box, Button, HStack, Input, Text } from "@chakra-ui/react";
 import { FiInfo } from "react-icons/fi";
 
-import { FormSelect } from "../FormSelect";
+import { FormSelect } from "../forms/FormSelect";
 import { Tooltip } from "./Tooltip";
 
 export type Option<T extends string = string> = { label: string; value: T };

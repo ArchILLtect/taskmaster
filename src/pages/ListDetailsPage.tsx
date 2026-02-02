@@ -7,10 +7,10 @@ import { buildTaskStackPath, parseTaskStackFromPath } from "../routes/taskStack"
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
-import { AddTaskForm } from "../components/AddTaskForm";
+import { AddTaskForm } from "../components/forms/AddTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
 import type { TaskUI } from "../types/task";
-import { EditListForm } from "../components/EditListForm";
+import { EditListForm } from "../components/forms/EditListForm";
 import { getInboxListId, SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Tooltip } from "../components/ui/Tooltip"
