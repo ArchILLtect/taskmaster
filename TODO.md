@@ -337,6 +337,13 @@ Last refreshed: Jan 31 2026
   - Today: Inbox is a dedicated triage view; the system Inbox list is not directly reachable like normal lists.
   - Decide: should system Inbox be a normal list route (read-only/edit-disabled) or remain hidden behind the Inbox triage?
 
+- [ ] TODO(postmvp) Support time-of-day due times (datetime) for tasks
+  - Today: the UI treats `dueAt` as a “floating day” (date-only) value and formats/compares by day key to avoid timezone drift.
+  - Upgrade path:
+    - Add UX for optional time (e.g. `datetime-local`) and/or a separate `dueTime` field
+    - Decide storage semantics (instant vs floating local time) and migration strategy
+    - Update triage/views bucketing + formatting helpers to respect time-of-day where enabled
+
 - [ ] TODO(postmvp) Task move: allow "move under another task" (reparent)
   - Add an optional "Parent task" field to the task edit flow (alongside "List")
   - Behavior: user selects a target list, then optionally selects a parent task within that list
