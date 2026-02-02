@@ -337,6 +337,10 @@ Last refreshed: Jan 31 2026
   - Today: Inbox is a dedicated triage view; the system Inbox list is not directly reachable like normal lists.
   - Decide: should system Inbox be a normal list route (read-only/edit-disabled) or remain hidden behind the Inbox triage?
 
+- [ ] TODO(P3) Consider adding an "Overdue" View (conditional)
+  - Option: keep overdue sections inside Today/Week for visibility (MVP), but also add a dedicated `/overdue` view.
+  - UX: only show the Overdue view link when there are overdue tasks; style it as high-salience (red + icon).
+
 - [ ] TODO(postmvp) Support time-of-day due times (datetime) for tasks
   - Today: the UI treats `dueAt` as a “floating day” (date-only) value and formats/compares by day key to avoid timezone drift.
   - Upgrade path:
