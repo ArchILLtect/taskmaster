@@ -291,7 +291,6 @@ export const ListsPage = () => {
             </Box>
 
             {/* Collapsible for search, filter, sort options */}
-            {/* TODO? : Create a search/filter component instead of AppCollapsible? */}
             <AppCollapsible title="Search, Filter, and Sort Options">
               <SearchFilterSortBar
                 search={listSearch}
