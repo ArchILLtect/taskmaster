@@ -80,7 +80,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
             that context.
           </Tip>
           <Text color="gray.600" fontSize="lg" maxW="2xl">
-            A fast, store-driven task app prototype with deep-linkable task navigation, local cache + TTL refresh,
+            A fast, store-driven task app prototype with deep-linkable task navigation, a user-scoped local cache + TTL refresh,
             and a guided Admin console for cross-user inspection.
           </Text>
 
@@ -131,6 +131,9 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
               <Text fontSize="sm">
                 No signup. No email. Takes ~5 seconds.
               </Text>
+              <Text fontSize="sm">
+                Local state is scoped per user to prevent cross-account mixing on shared browsers.
+              </Text>
             </Box>
           ) : null}
         </VStack>
@@ -161,6 +164,15 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
           </Heading>
           <Text color="gray.600">
             A persisted local cache with TTL renders immediately and refreshes in the background.
+          </Text>
+        </Box>
+
+        <Box flex="1" minW="280px" p={5} bg="white" rounded="md" boxShadow="sm">
+          <Heading size="md" mb={2}>
+            User-scoped persistence
+          </Heading>
+          <Text color="gray.600">
+            Persisted UI state is namespaced per account, so signing in/out on a shared device doesn’t leak or mix data.
           </Text>
         </Box>
       </HStack>
