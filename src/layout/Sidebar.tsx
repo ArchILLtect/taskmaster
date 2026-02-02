@@ -6,23 +6,23 @@ import { viewLinks } from "../config/sidebar";
 import { useListsPageData } from "../pages/useListsPageData";
 import { useInboxTriageIndicators } from "../hooks/useInboxTriageIndicators";
 import { FcExpired, FcHighPriority } from "react-icons/fc";
+import { useDefaultViewRoute, useSidebarWidthPreset } from "../store/localSettingsStore";
 
 export function Sidebar() {
 
   const { visibleFavorites } = useListsPageData();
   const { hasDueSoon, hasOverdue } = useInboxTriageIndicators();
 
-  // TODO : Add/move this as an option in settings--potentially later with a mouse controlled variable (sliding) functionality:
-  const SIDEBAR_WIDTH = {
-    "small": "200px",
-    "medium": "250px",
-    "large": "300px",
-  };
-  // TODO : Add a setting for this in SettingsPage also.
-  const USER_VIEW = "/today";
+  const sidebarWidthPreset = useSidebarWidthPreset();
+  const defaultViewRoute = useDefaultViewRoute();
 
-  // TODO : Wire this to settings page options once implemented.
-  const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH.small;
+  const SIDEBAR_WIDTH = {
+    small: "200px",
+    medium: "250px",
+    large: "300px",
+  } as const;
+
+  const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH[sidebarWidthPreset] ?? SIDEBAR_WIDTH.small;
 
   const favoriteLinks = visibleFavorites
     .filter((l) => l.isFavorite)
@@ -55,7 +55,7 @@ export function Sidebar() {
           }
         />
         <Separator my={3} />
-        <SidebarCollapse to={USER_VIEW} label="Views" items={viewLinks} defaultOpen={false} />
+        <SidebarCollapse to={defaultViewRoute} label="Views" items={viewLinks} defaultOpen={false} />
         <Separator my={3} />
         <SidebarItem to="/tasks" label="Tasks" main />
         <Separator my={3} />
