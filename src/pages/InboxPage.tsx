@@ -17,6 +17,7 @@ import { useInboxActions } from "../store/inboxStore";
 import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
 import { Tip } from "../components/ui/Tip";
 import { getTodayDateInputValue } from "../services/dateTime";
+import { AppCollapsible } from "../components/AppCollapsible";
 
 
 // TODO: Give this page more thought re: UX/design
@@ -203,7 +204,7 @@ export function InboxPage() {
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <Heading size="2xl">Inbox</Heading>
-          <Text color="gray.600">Actionable triage: new tasks + overdue + due soon. Dismiss stuff to shrink the pile.</Text>
+          <Text color="gray.600">Actionable triage: new tasks + overdue + due soon. Acknowledge overdue/due-soon to shrink the pile.</Text>
         </VStack>
 
         <Button
@@ -228,188 +229,224 @@ export function InboxPage() {
       </Tip>
 
       {/* New tasks */}
-      <Box w="100%">
-        <HStack mb={2} gap={2} alignItems="center">
-          <Icon as={FcPlus} size="lg"/>
-          <Heading size="lg" fontWeight={700}>New tasks</Heading>
-          <Badge rounded="md">{vm.newTasks.length}</Badge>
-        </HStack>
+      <Box w="100%" bg="gray.50" p="3" rounded="md" boxShadow="sm">
+        <AppCollapsible
+          defaultOpen={vm.newTasks.length > 0}
+          mt="0"
+          mb="0"
+          title={
+            <HStack gap={2} alignItems="center">
+              <Icon as={FcPlus} />
+              <Heading size="lg" fontWeight={700}>
+                New tasks
+              </Heading>
+              <Badge rounded="md">{vm.newTasks.length}</Badge>
+            </HStack>
+          }
+        >
+          {vm.newTasks.length === 0 ? (
+            <Text color="gray.600" mt={2}>
+              No new tasks since your last inbox pass. Nice. ✨
+            </Text>
+          ) : (
+            <VStack align="stretch" gap={2} mt={2}>
+              {vm.newTasks.map((t) => {
+                const listForTask = listById.get(t.listId);
+                if (!listForTask) return null;
+                return (
+                  <Flex key={t.id} gap={1} alignItems="center" width="100%">
+                    <Box flex="1">
+                      <TaskRow
+                        task={t}
+                        list={listForTask}
+                        to={linkToTask(t.listId, t.id)}
+                        showLists
+                        onToggleComplete={handleToggleComplete}
+                        onDelete={() => handleDeleteTask(t.id)}
+                      />
+                    </Box>
+                    <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                      <Button
+                        size="2xl"
+                        bg="orange.200"
+                        variant="outline"
+                        height={"36px"}
+                        onClick={() => handleEditTask(t)}
+                        _hover={{
+                          bg: "orange.300",
+                          borderColor: "orange.400",
+                          color: "orange.700",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </VStack>
+                  </Flex>
+                );
+              })}
+            </VStack>
+          )}
+        </AppCollapsible>
+      </Box>
 
-        {vm.newTasks.length === 0 ? (
-          <Text color="gray.600">No new tasks since your last inbox pass. Nice. ✨</Text>
+      {/* Add new task (kept near the top so it doesn't get buried) */}
+      <Box w="100%">
+        {!showAddTaskForm ? (
+          <Button bg="green.200" variant="outline" onClick={prepAddTaskForm}>
+            Add New Task
+          </Button>
         ) : (
-          <VStack align="stretch" gap={2}>
-            {vm.newTasks.map((t) => {
-              const listForTask = listById.get(t.listId);
-              if (!listForTask) return null;
-              return (
-                <Flex
-                  key={t.id}
-                  gap={1}
-                  alignItems={"center"}
-                  width={"100%"}
-                >
-                  <Box flex="1">
-                    <TaskRow
-                      task={t}
-                      list={listForTask}
-                      to={linkToTask(t.listId, t.id)}
-                      showLists
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={() => handleDeleteTask(t.id)}
-                    />
-                  </Box>
-                  <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        dismiss(t.id);
-                      }}
-                    >
-                      Dismiss
-                    </Button>
-                    <Button
-                      size="2xl"
-                      bg="orange.200"
-                      variant="outline"
-                      height={"36px"}
-                      onClick={() => handleEditTask(t)}
-                      _hover={{ bg: "orange.300", borderColor: "orange.400", color: "orange.700", fontWeight: "500", boxShadow: "lg" }}
-                    >
-                      Edit
-                    </Button>
-                  </VStack>
-                </Flex>
-            )})}
-          </VStack>
+          <Box w="100%" p={4} border="1px" borderColor="gray.200" borderRadius="md" boxShadow="sm" bg="gray.50">
+            <AddTaskForm
+              newTaskTitle={newTaskTitle}
+              setNewTaskTitle={setNewTaskTitle}
+              newTaskDescription={newTaskDescription}
+              setNewTaskDescription={setNewTaskDescription}
+              newTaskDueDate={newTaskDueDate}
+              setNewTaskDueDate={setNewTaskDueDate}
+              newTaskPriority={newTaskPriority}
+              setNewTaskPriority={setNewTaskPriority}
+              setShowAddTaskForm={setShowAddTaskForm}
+              navigate={navigate}
+              refresh={refreshData}
+              parentTaskId={undefined}
+            />
+          </Box>
         )}
       </Box>
 
       {/* Overdue */}
-      <Box w="100%" pt={2}>
-        <HStack mb={2} gap={2}>
-          <HStack gap={1} alignItems="center">
-            <Icon as={FcExpired} size="lg"/>
-            <Heading size="lg" fontWeight={700}>
-              Overdue
-            </Heading>
-          </HStack>
-          <Badge rounded="md">{vm.overdueTasks.length}</Badge>
-        </HStack>
-
-        {vm.overdueTasks.length === 0 ? (
-          <Text color="gray.600">No overdue tasks. Keep it up.</Text>
-        ) : (
-          <VStack align="stretch" gap={2}>
-            {vm.overdueTasks.map((t) => {
-              const listForTask = listById.get(t.listId);
-              if (!listForTask) return null;
-              return (
-                <Flex key={t.id} gap={1} alignItems={"center"} width={"100%"}>
-                  <Box flex="1">
-                    <TaskRow
-                      task={t}
-                      list={listForTask}
-                      to={linkToTask(t.listId, t.id)}
-                      showLists
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={() => handleDeleteTask(t.id)}
-                    />
-                  </Box>
-                  <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        dismiss(t.id);
-                      }}
-                    >
-                      Acknowledge
-                    </Button>
-                    <Button
-                      size="2xl"
-                      bg="orange.200"
-                      variant="outline"
-                      height={"36px"}
-                      onClick={() => handleEditTask(t)}
-                      _hover={{
-                        bg: "orange.300",
-                        borderColor: "orange.400",
-                        color: "orange.700",
-                        fontWeight: "500",
-                        boxShadow: "lg",
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </VStack>
-                </Flex>
-              );
-            })}
-          </VStack>
-        )}
+      <Box w="100%" bg="gray.50" p="3" rounded="md" boxShadow="sm">
+        <AppCollapsible
+          defaultOpen={vm.overdueTasks.length > 0}
+          mt="0"
+          mb="0"
+          title={
+            <HStack gap={2} alignItems="center">
+              <Icon as={FcExpired} />
+              <Heading size="lg" fontWeight={700}>
+                Overdue
+              </Heading>
+              <Badge rounded="md">{vm.overdueTasks.length}</Badge>
+            </HStack>
+          }
+        >
+          {vm.overdueTasks.length === 0 ? (
+            <Text color="gray.600" mt={2}>
+              No overdue tasks. Keep it up.
+            </Text>
+          ) : (
+            <VStack align="stretch" gap={2} mt={2}>
+              {vm.overdueTasks.map((t) => {
+                const listForTask = listById.get(t.listId);
+                if (!listForTask) return null;
+                return (
+                  <Flex key={t.id} gap={1} alignItems="center" width="100%">
+                    <Box flex="1">
+                      <TaskRow
+                        task={t}
+                        list={listForTask}
+                        to={linkToTask(t.listId, t.id)}
+                        showLists
+                        onToggleComplete={handleToggleComplete}
+                        onDelete={() => handleDeleteTask(t.id)}
+                      />
+                    </Box>
+                    <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                      <Button size="sm" variant="outline" onClick={() => dismiss(t.id)}>
+                        Acknowledge
+                      </Button>
+                      <Button
+                        size="2xl"
+                        bg="orange.200"
+                        variant="outline"
+                        height={"36px"}
+                        onClick={() => handleEditTask(t)}
+                        _hover={{
+                          bg: "orange.300",
+                          borderColor: "orange.400",
+                          color: "orange.700",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </VStack>
+                  </Flex>
+                );
+              })}
+            </VStack>
+          )}
+        </AppCollapsible>
       </Box>
 
       {/* Due soon */}
-      <Box w="100%" pt={2}>
-        <HStack mb={2} gap={2}>
-          <HStack gap={1} alignItems="center">
-            <Icon as={FcHighPriority} size="lg"/>
-            <Heading size="lg" fontWeight={700}>Due soon</Heading>
-          </HStack>
-          <Badge rounded="md">{vm.dueSoonTasks.length}</Badge>
-        </HStack>
-
-        {vm.dueSoonTasks.length === 0 ? (
-          <Text color="gray.600">Nothing due soon. Future-you says thanks.</Text>
-        ) : (
-          <VStack align="stretch" gap={2}>
-            {vm.dueSoonTasks.map((t) => {
-              const listForTask = listById.get(t.listId);
-              if (!listForTask) return null;
-              return (
-                <Flex
-                  key={t.id}
-                  gap={1}
-                  alignItems={"center"}
-                  width={"100%"}
-                >
-                  <Box flex="1">
-                    <TaskRow
-                      task={t}
-                      list={listForTask}
-                      to={linkToTask(t.listId, t.id)}
-                      showLists
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={() => handleDeleteTask(t.id)}
-                    />
-                  </Box>
-                  <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        dismiss(t.id);
-                    }}
-                  >
-                    Acknowledge
-                  </Button>
-                    <Button
-                      size="2xl"
-                      bg="orange.200"
-                      variant="outline"
-                      height={"36px"}
-                      onClick={() => handleEditTask(t)}
-                      _hover={{ bg: "orange.300", borderColor: "orange.400", color: "orange.700", fontWeight: "500", boxShadow: "lg" }}
-                    >
-                      Edit
-                    </Button>
-                </VStack>
-              </Flex>
-            )})}
-          </VStack>
-        )}
+      <Box w="100%" bg="gray.50" p="3" rounded="md" boxShadow="sm">
+        <AppCollapsible
+          defaultOpen={vm.dueSoonTasks.length > 0}
+          mt="0"
+          mb="0"
+          title={
+            <HStack gap={2} alignItems="center">
+              <Icon as={FcHighPriority} />
+              <Heading size="lg" fontWeight={700}>
+                Due soon
+              </Heading>
+              <Badge rounded="md">{vm.dueSoonTasks.length}</Badge>
+            </HStack>
+          }
+        >
+          {vm.dueSoonTasks.length === 0 ? (
+            <Text color="gray.600" mt={2}>
+              Nothing due soon. Future-you says thanks.
+            </Text>
+          ) : (
+            <VStack align="stretch" gap={2} mt={2}>
+              {vm.dueSoonTasks.map((t) => {
+                const listForTask = listById.get(t.listId);
+                if (!listForTask) return null;
+                return (
+                  <Flex key={t.id} gap={1} alignItems="center" width="100%">
+                    <Box flex="1">
+                      <TaskRow
+                        task={t}
+                        list={listForTask}
+                        to={linkToTask(t.listId, t.id)}
+                        showLists
+                        onToggleComplete={handleToggleComplete}
+                        onDelete={() => handleDeleteTask(t.id)}
+                      />
+                    </Box>
+                    <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                      <Button size="sm" variant="outline" onClick={() => dismiss(t.id)}>
+                        Acknowledge
+                      </Button>
+                      <Button
+                        size="2xl"
+                        bg="orange.200"
+                        variant="outline"
+                        height={"36px"}
+                        onClick={() => handleEditTask(t)}
+                        _hover={{
+                          bg: "orange.300",
+                          borderColor: "orange.400",
+                          color: "orange.700",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </VStack>
+                  </Flex>
+                );
+              })}
+            </VStack>
+          )}
+        </AppCollapsible>
       </Box>
 
       {vm.state.lastViewedAt ? (
@@ -417,34 +454,9 @@ export function InboxPage() {
           Last triage: {new Date(vm.state.lastViewedAt).toLocaleString()}
         </Text>
       ) : (
-        <Text color="gray.500" fontSize="sm">
+        <Tip storageKey="tip:inbox-first-time" title="Heads up">
           First time here — everything counts as “new” once.
-        </Text>
-      )}
-      {!showAddTaskForm && (
-        <Button
-          bg="green.200"
-          variant="outline"
-          onClick={() => prepAddTaskForm()}
-        > Add New Task</Button>
-      )}
-      {showAddTaskForm && (
-        <Box w="50%" p={4} border="1px" borderColor="gray.200" borderRadius="md" boxShadow="sm" bg="gray.50">
-          <AddTaskForm
-            newTaskTitle={newTaskTitle}
-            setNewTaskTitle={setNewTaskTitle}
-            newTaskDescription={newTaskDescription}
-            setNewTaskDescription={setNewTaskDescription}
-            newTaskDueDate={newTaskDueDate}
-            setNewTaskDueDate={setNewTaskDueDate}
-            newTaskPriority={newTaskPriority}
-            setNewTaskPriority={setNewTaskPriority}
-            setShowAddTaskForm={setShowAddTaskForm}
-            navigate={navigate}
-            refresh={refreshData}
-            parentTaskId={undefined}
-          />
-        </Box>
+        </Tip>
       )}
       <DialogModal
         title="Edit Task"

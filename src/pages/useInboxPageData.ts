@@ -28,7 +28,6 @@ export function useInboxPageData() {
     : [];
 
   const newTasks = inboxTasks
-    .filter((t) => !dismissed.has(t.id))
     .filter((t) => isNewTask(t.createdAt, state.lastViewedAt))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

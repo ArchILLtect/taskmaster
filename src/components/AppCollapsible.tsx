@@ -1,8 +1,9 @@
 import { Text, Box, HStack, Collapsible } from "@chakra-ui/react";
 import { FiChevronDown } from "react-icons/fi";
+import type { ReactNode } from "react";
 
 type AppCollapsibleProps = {
-  title: string;
+  title: ReactNode;
   fontSize?: string;
   fontWeight?: string;
   fontColor?: string;
@@ -25,7 +26,15 @@ export function AppCollapsible({ title, fontSize = "lg", fontWeight = "600", fon
           rounded="md"
           _hover={{ bg: "blackAlpha.50" }}
         >
-          <Text fontSize={fontSize} fontWeight={fontWeight} color={fontColor}>{title}</Text>
+          {typeof title === "string" ? (
+            <Text fontSize={fontSize} fontWeight={fontWeight} color={fontColor}>
+              {title}
+            </Text>
+          ) : (
+            <Box fontSize={fontSize} fontWeight={fontWeight} color={fontColor}>
+              {title}
+            </Box>
+          )}
 
           {/* rotate chevron when open */}
           <Collapsible.Indicator asChild>
