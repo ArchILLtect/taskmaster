@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex, Icon } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, Text, VStack, Flex, Icon } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { TaskPriority, TaskStatus } from "../API";
@@ -15,6 +15,7 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { useInboxActions } from "../store/inboxStore";
 import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
+import { Tip } from "../components/ui/Tip";
 
 
 // TODO: Give this page more thought re: UX/design
@@ -70,7 +71,7 @@ export function InboxPage() {
 
   const { vm, lists, loading, err, refreshData } = useInboxPageData();
 
-  const { markViewedNow, setDueSoonWindowDays, dismiss } = useInboxActions();
+  const { markViewedNow, dismiss } = useInboxActions();
 
   const { updateTask, deleteTask } = useTaskActions();
 
@@ -215,29 +216,17 @@ export function InboxPage() {
         </Button>
       </HStack>
 
-      {/* TODO : Add a "Tip" component that is a small window that can be closed (x) with a 'hover-over' type
-                 tooltip that says something like 'click to dismiss this tip' and provides a tip. Then use
-                 it here to give a tip that the "Due soon" window can be set on the settings page. */}
-      {/* TODO : Move this Due soon window setting to the seetings page. */}
-      <HStack gap={3} align="center">
-        <Text fontWeight="600">Due soon window:</Text>
-        <NumberInput.Root
-          size="sm"
-          width="90px"
-          min={1}
-          max={30}
-          value={String(vm.state.dueSoonWindowDays)}
-          onValueChange={({ valueAsNumber }) => {
-            if (!Number.isFinite(valueAsNumber)) return;
-            setDueSoonWindowDays(valueAsNumber);
-          }}
-        >
-          <NumberInput.Input />
-        </NumberInput.Root>
-        <Text color="gray.600" fontSize="sm">
-          days
-        </Text>
-      </HStack>
+      <Tip
+        storageKey="tip:inbox-due-soon-window"
+        title="Tip"
+        action={
+          <Button size="sm" variant="outline" onClick={() => navigate("/settings")}>
+            Open Settings
+          </Button>
+        }
+      >
+        You can change the “Due soon” window (in days) on the Settings page.
+      </Tip>
 
       {/* New tasks */}
       <Box w="100%">
@@ -302,7 +291,7 @@ export function InboxPage() {
       <Box w="100%" pt={2}>
         <HStack mb={2} gap={2}>
           <HStack gap={1} alignItems="center">
-            <Icon as={FcHighPriority} size="lg"/>
+            <Icon as={FcExpired} size="lg"/>
             <Heading size="lg" fontWeight={700}>
               Overdue
             </Heading>
@@ -367,7 +356,7 @@ export function InboxPage() {
       <Box w="100%" pt={2}>
         <HStack mb={2} gap={2}>
           <HStack gap={1} alignItems="center">
-            <Icon as={FcExpired} size="lg"/>
+            <Icon as={FcHighPriority} size="lg"/>
             <Heading size="lg" fontWeight={700}>Due soon</Heading>
           </HStack>
           <Badge rounded="md">{vm.dueSoonTasks.length}</Badge>
