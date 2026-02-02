@@ -1,19 +1,21 @@
-import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex } from "@chakra-ui/react";
+import { Badge, Box, Button, Heading, HStack, NumberInput, Text, VStack, Flex, Icon } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { TaskPriority, TaskStatus } from "../API";
 import { useInboxPageData } from "./useInboxPageData";
 import { useMemo, useState } from "react";
-import { AddTaskForm } from "../components/AddTaskForm";
+import { AddTaskForm } from "../components/forms/AddTaskForm";
 import { useNavigate } from "react-router-dom";
 import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
-import { EditTaskForm } from "../components/EditTaskForm";
+import { EditTaskForm } from "../components/forms/EditTaskForm";
 import type { TaskUI } from "../types";
 import { Toaster } from "../components/ui/Toaster";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { useInboxActions } from "../store/inboxStore";
+import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
+
 
 // TODO: Give this page more thought re: UX/design
 // What’s the best way to help users triage their inbox effectively?
@@ -201,7 +203,7 @@ export function InboxPage() {
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <Heading size="2xl">Inbox</Heading>
-          <Text color="gray.600">Actionable triage: new tasks + due soon. Dismiss stuff to shrink the pile.</Text>
+          <Text color="gray.600">Actionable triage: new tasks + overdue + due soon. Dismiss stuff to shrink the pile.</Text>
         </VStack>
 
         <Button
@@ -213,6 +215,10 @@ export function InboxPage() {
         </Button>
       </HStack>
 
+      {/* TODO : Add a "Tip" component that is a small window that can be closed (x) with a 'hover-over' type
+                 tooltip that says something like 'click to dismiss this tip' and provides a tip. Then use
+                 it here to give a tip that the "Due soon" window can be set on the settings page. */}
+      {/* TODO : Move this Due soon window setting to the seetings page. */}
       <HStack gap={3} align="center">
         <Text fontWeight="600">Due soon window:</Text>
         <NumberInput.Root
@@ -235,8 +241,9 @@ export function InboxPage() {
 
       {/* New tasks */}
       <Box w="100%">
-        <HStack mb={2} gap={2}>
-          <Heading size="sm">New tasks</Heading>
+        <HStack mb={2} gap={2} alignItems="center">
+          <Icon as={FcPlus} size="lg"/>
+          <Heading size="lg" fontWeight={700}>New tasks</Heading>
           <Badge rounded="md">{vm.newTasks.length}</Badge>
         </HStack>
 
@@ -291,10 +298,78 @@ export function InboxPage() {
         )}
       </Box>
 
+      {/* Overdue */}
+      <Box w="100%" pt={2}>
+        <HStack mb={2} gap={2}>
+          <HStack gap={1} alignItems="center">
+            <Icon as={FcHighPriority} size="lg"/>
+            <Heading size="lg" fontWeight={700}>
+              Overdue
+            </Heading>
+          </HStack>
+          <Badge rounded="md">{vm.overdueTasks.length}</Badge>
+        </HStack>
+
+        {vm.overdueTasks.length === 0 ? (
+          <Text color="gray.600">No overdue tasks. Keep it up.</Text>
+        ) : (
+          <VStack align="stretch" gap={2}>
+            {vm.overdueTasks.map((t) => {
+              const listForTask = listById.get(t.listId);
+              if (!listForTask) return null;
+              return (
+                <Flex key={t.id} gap={1} alignItems={"center"} width={"100%"}>
+                  <Box flex="1">
+                    <TaskRow
+                      task={t}
+                      list={listForTask}
+                      to={linkToTask(t.listId, t.id)}
+                      showLists
+                      onToggleComplete={handleToggleComplete}
+                      onDelete={() => handleDeleteTask(t.id)}
+                    />
+                  </Box>
+                  <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        dismiss(t.id);
+                      }}
+                    >
+                      Acknowledge
+                    </Button>
+                    <Button
+                      size="2xl"
+                      bg="orange.200"
+                      variant="outline"
+                      height={"36px"}
+                      onClick={() => handleEditTask(t)}
+                      _hover={{
+                        bg: "orange.300",
+                        borderColor: "orange.400",
+                        color: "orange.700",
+                        fontWeight: "500",
+                        boxShadow: "lg",
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </VStack>
+                </Flex>
+              );
+            })}
+          </VStack>
+        )}
+      </Box>
+
       {/* Due soon */}
       <Box w="100%" pt={2}>
         <HStack mb={2} gap={2}>
-          <Heading size="sm">Due soon</Heading>
+          <HStack gap={1} alignItems="center">
+            <Icon as={FcExpired} size="lg"/>
+            <Heading size="lg" fontWeight={700}>Due soon</Heading>
+          </HStack>
           <Badge rounded="md">{vm.dueSoonTasks.length}</Badge>
         </HStack>
 

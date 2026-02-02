@@ -1,7 +1,19 @@
-import { Button, Text } from "@chakra-ui/react";
+import { Button, HStack, Text } from "@chakra-ui/react";
 import { RouterLink } from "./RouterLink";
 
-export const SidebarItem = ({ to, label, main }: { to: string; label: string ; main?: boolean }) => {
+export const SidebarItem = (
+  {
+    to,
+    label,
+    main,
+    rightAdornment,
+  }: {
+    to: string;
+    label: string;
+    main?: boolean;
+    rightAdornment?: React.ReactNode;
+  }
+) => {
   return (
     <RouterLink to={to}>
       {({ isActive }) => (
@@ -16,9 +28,10 @@ export const SidebarItem = ({ to, label, main }: { to: string; label: string ; m
           bg={isActive ? "blackAlpha.100" : "transparent"}
           _hover={{ bg: "blackAlpha.100" }}
         >
-          <Text truncate>
-            {label}
-          </Text>
+          <HStack w="100%" justify="space-between" gap={2} minW={0}>
+            <Text truncate>{label}</Text>
+            {rightAdornment ? <HStack flexShrink={0} gap={1}>{rightAdornment}</HStack> : null}
+          </HStack>
         </Button>
       )}
     </RouterLink>
