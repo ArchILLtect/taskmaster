@@ -3,6 +3,7 @@ import { useTaskIndex } from "../hooks/useTaskIndex";
 import { getInboxListId } from "../config/inboxSettings";
 import { useInboxView } from "../store/inboxStore";
 import { isDueSoonByKey, isOverdueByKey, toUtcDayKey } from "../services/inboxTriage";
+import { useDueSoonWindowDays } from "../store/localSettingsStore";
 
 function isNewTask(createdAt: string, lastViewedAt: string | null) {
   if (!lastViewedAt) return true;
@@ -15,6 +16,7 @@ export function useInboxPageData() {
   const inboxListId = getInboxListId();
 
   const state = useInboxView();
+  const dueSoonWindowDays = useDueSoonWindowDays();
   const dismissed = useMemo(() => new Set(state.dismissedTaskIds), [state.dismissedTaskIds]);
   const nowMs = state.lastComputedAtMs;
   const nowKey = toUtcDayKey(nowMs);
@@ -32,7 +34,7 @@ export function useInboxPageData() {
   // Due soon should include tasks across ALL lists (not just Inbox)
   const dueSoonTasks = tasks
     .filter((t) => !dismissed.has(t.id))
-    .filter((t) => isDueSoonByKey(t.dueAt ?? null, t.status, nowKey, state.dueSoonWindowDays))
+    .filter((t) => isDueSoonByKey(t.dueAt ?? null, t.status, nowKey, dueSoonWindowDays))
     .sort((a, b) => String(a.dueAt ?? "").localeCompare(String(b.dueAt ?? "")) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   // Overdue tasks across ALL lists
