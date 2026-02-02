@@ -60,13 +60,18 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
             </Box>
             <HStack align="center" gap={1}>
               {showLists ? (
-                <Box w="150px" textAlign="right" truncate>
+                <VStack w="150px" textAlign="right" truncate>
                   <Badge fontSize="sm" color="gray.500">
                     <Text>
                       {list.name || "Unknown List"}
                     </Text>
                   </Badge>
-                </Box>
+                  <Badge fontSize="sm" color="gray.500">
+                    <Text>
+                      {task.dueAt ? new Date(task.dueAt).toLocaleString() : "Anytime"}
+                    </Text>
+                  </Badge>
+                </VStack>
               ) : null}
 
               <VStack align="end" gap={1} w="75px">
