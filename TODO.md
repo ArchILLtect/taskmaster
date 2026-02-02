@@ -77,6 +77,22 @@ Last refreshed: Feb 2 2026
 - [ ] TODO(P2) Add date formatting helper for task due dates TODO? : Done?
   - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string
 
+- [ ] TODO(P3) Add “Snooze” for overdue (and due-soon) tasks
+  - Goal: temporarily hide tasks from overdue/due-soon indicators and sections without losing them
+  - UX ideas:
+    - Add a Snooze button on TaskRow and/or in Inbox triage sections
+    - Provide quick presets: 1 hour, later today, tomorrow morning, next week
+    - Optional: “Bump due date” quick actions (e.g. +1 day / +3 days / +1 week)
+    - Show a “Snoozed until …” chip + an “Unsnooze” action
+  - Options (implementation):
+    - A) Local-only (fastest): add a user-scoped persisted map like `snoozedUntilByTaskId: Record<string, string>` (ISO) in `inboxStore` or `localSettingsStore`; triage views ignore tasks until `now >= snoozedUntil`.
+    - B) Task-backed (cross-device): add a nullable GraphQL field on Task (e.g. `snoozedUntil`) and treat it like a soft visibility rule in Today/Week/Inbox.
+    - C) Due-date mutation (aka “bump due date”; simplest but changes meaning): implement snooze by moving `dueAt` forward (e.g. +1 day / +3 days) and optionally recording the prior due date in a local-only “original due” map.
+  - Open questions:
+    - Should snoozed tasks be hidden everywhere, or only from Inbox/Triage + overdue badges?
+    - Should snooze apply only to open tasks, and should it clear automatically when a task is completed?
+    - Do we want “bump due date” as a distinct action (explicitly edits dueAt) vs treating it as one Snooze strategy?
+
 - [ ] TODO(stretch) Admin: add “Select all across pagination” for list selection
   - In Admin flow, Lists tab currently supports “Select all loaded”
   - Stretch: load remaining list pages for the selected account, then select all
