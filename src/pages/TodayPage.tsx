@@ -1,7 +1,8 @@
-import { Heading, Text, VStack, HStack, Badge } from "@chakra-ui/react";
+import { Heading, Box, Text, VStack, HStack, Badge } from "@chakra-ui/react";
 import { useTodayPageData } from "./useTodayPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { TaskRow } from "../components/TaskRow";
+import { OverdueHeader } from "../components/ui/OverdueHeader";
 
 export function TodayPage() {
   const { loading, overdueTasks, dueTodayTasks, listsById } = useTodayPageData();
@@ -27,8 +28,18 @@ export function TodayPage() {
       ) : null}
 
       {overdueTasks.length > 0 ? (
-        <VStack align="stretch" gap={2} w="100%" mt={2}>
-          <Heading size="md">Overdue</Heading>
+        <VStack
+          align="stretch"
+          bg="gray.50"
+          p="3"
+          rounded="md"
+          boxShadow="sm"
+          gap={2}
+          w="100%"
+          mt={2}
+          mb={4}
+        >
+          <OverdueHeader />
           {overdueTasks.map((task) => {
             const list = listsById.get(task.listId);
             if (!list) return null;
@@ -47,8 +58,11 @@ export function TodayPage() {
       ) : null}
 
       {dueTodayTasks.length > 0 ? (
-        <VStack align="stretch" gap={2} w="100%" mt={4}>
-          <Heading size="md">Due today</Heading>
+        <Box w="100%" bg="gray.50" p="3" rounded="md" boxShadow="sm" mb={4}>
+          <Heading size="xl" fontWeight="700" color="blue.600">
+            Due today
+          </Heading>
+          <VStack align="stretch" gap={2} w="100%" mt={2}>
           {dueTodayTasks.map((task) => {
             const list = listsById.get(task.listId);
             if (!list) return null;
@@ -63,7 +77,8 @@ export function TodayPage() {
               />
             );
           })}
-        </VStack>
+          </VStack>
+        </Box>
       ) : null}
     </VStack>
   );
