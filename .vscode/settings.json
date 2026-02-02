@@ -15,12 +15,16 @@
     "METHODTODOLOGY",
     "partialize",
     "postmvp",
+    "prereq",
     "reparent",
     "reparenting",
     "TOPBAR",
     "triaging",
     "unfavoriting",
-    "unprioritized"
+    "unprioritized",
+    "Unsnooze",
+    "Vite",
+    "Zustand"
   ],
   "todo-tree.filtering.excludeGlobs": [
     "**/node_modules/**",
