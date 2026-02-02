@@ -140,10 +140,22 @@ export function AboutPage() {
         <Heading size="xl" mb={2}>
           What’s next
         </Heading>
-        <Text color="gray.700">
-          Full “one-click demo mode” (no signup) is planned next: a public Try Demo button creates a temporary Cognito
-          user and signs in normally, so the existing bootstrap + seeding logic runs unchanged.
-        </Text>
+        <VStack align="start" gap={2} color="gray.700">
+          <Text>
+            Demo mode is complete and shipped. Next work focuses on polish, long-term persistence, and performance.
+          </Text>
+
+          <Text>
+            Near-term priorities:
+          </Text>
+
+          <Box pl={4}>
+            <Text>• Move user settings + tip dismissals from local-first storage into `UserProfile.settings` (with migrations).</Text>
+            <Text>• Performance tuning: route-level code splitting and bundle size reduction.</Text>
+            <Text>• Updates feed quality: more accurate event typing (before/after status comparisons).</Text>
+            <Text>• Offline groundwork: IndexedDB cache + an offline mutation queue (post-MVP).</Text>
+          </Box>
+        </VStack>
       </Box>
     </VStack>
   );
