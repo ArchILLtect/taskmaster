@@ -1,12 +1,16 @@
-import { Box, Flex, Separator } from "@chakra-ui/react";
+import { Box, Flex, Icon, Separator } from "@chakra-ui/react";
+import { Tooltip } from "../components/ui/Tooltip";
 import { SidebarCollapse } from "../components/SidebarCollapse";
 import { SidebarItem } from "../components/SidebarItem";
 import { viewLinks } from "../config/sidebar";
 import { useListsPageData } from "../pages/useListsPageData";
+import { useInboxTriageIndicators } from "../hooks/useInboxTriageIndicators";
+import { FcExpired, FcHighPriority } from "react-icons/fc";
 
 export function Sidebar() {
 
   const { visibleFavorites } = useListsPageData();
+  const { hasDueSoon, hasOverdue } = useInboxTriageIndicators();
 
   // TODO : Add/move this as an option in settings--potentially later with a mouse controlled variable (sliding) functionality:
   const SIDEBAR_WIDTH = {
@@ -25,7 +29,27 @@ export function Sidebar() {
   return (
     <Flex flexDirection={"column"} justifyContent={"space-between"} w={CURRENT_SIDEBAR_WIDTH} borderRightWidth="1px" p={3} bg="white" boxShadow="sm" position={"sticky"} minH="100%">
       <Box>
-        <SidebarItem to="/inbox" label="Inbox" main />
+        <SidebarItem
+          to="/inbox"
+          label="Inbox"
+          main
+          rightAdornment={
+            hasOverdue || hasDueSoon ? (
+              <>
+                {hasOverdue ? (
+                  <Tooltip content="You have overdue tasks in your Inbox">
+                    <Icon as={FcExpired} boxSize={5} aria-label="Overdue tasks" />
+                  </Tooltip>
+                ) : null}
+                {hasDueSoon ? (
+                  <Tooltip content="You have tasks due soon in your Inbox">
+                    <Icon as={FcHighPriority} boxSize={5} aria-label="Due soon tasks" />
+                  </Tooltip>
+                ) : null}
+              </>
+            ) : null
+          }
+        />
         <Separator my={3} />
         <SidebarCollapse to="/views" label="Views" items={viewLinks} defaultOpen={false} />
         <Separator my={3} />

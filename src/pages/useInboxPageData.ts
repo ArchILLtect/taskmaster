@@ -1,21 +1,12 @@
 import { useMemo } from "react";
 import { useTaskIndex } from "../hooks/useTaskIndex";
-import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
 import { useInboxView } from "../store/inboxStore";
+import { isDueSoonByKey, isOverdueByKey, toUtcDayKey } from "../services/inboxTriage";
 
 function isNewTask(createdAt: string, lastViewedAt: string | null) {
   if (!lastViewedAt) return true;
   return new Date(createdAt).getTime() > new Date(lastViewedAt).getTime();
-}
-
-function isDueSoon(dueAt: string | null | undefined, status: TaskStatus, nowMs: number, windowDays: number) {
-  if (status !== TaskStatus.Open) return false;
-  if (!dueAt) return false;
-
-  const dueMs = new Date(dueAt).getTime();
-  const endMs = nowMs + windowDays * 24 * 60 * 60 * 1000;
-  return dueMs >= nowMs && dueMs <= endMs;
 }
 
 export function useInboxPageData() {
@@ -26,6 +17,7 @@ export function useInboxPageData() {
   const state = useInboxView();
   const dismissed = useMemo(() => new Set(state.dismissedTaskIds), [state.dismissedTaskIds]);
   const nowMs = state.lastComputedAtMs;
+  const nowKey = toUtcDayKey(nowMs);
 
   // Only tasks that belong to the Inbox list
   const inboxTasks = inboxListId
@@ -37,12 +29,19 @@ export function useInboxPageData() {
     .filter((t) => isNewTask(t.createdAt, state.lastViewedAt))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const dueSoonTasks = inboxTasks
+  // Due soon should include tasks across ALL lists (not just Inbox)
+  const dueSoonTasks = tasks
     .filter((t) => !dismissed.has(t.id))
-    .filter((t) => isDueSoon(t.dueAt ?? null, t.status, nowMs, state.dueSoonWindowDays))
-    .sort((a, b) => new Date(a.dueAt ?? 0).getTime() - new Date(b.dueAt ?? 0).getTime());
+    .filter((t) => isDueSoonByKey(t.dueAt ?? null, t.status, nowKey, state.dueSoonWindowDays))
+    .sort((a, b) => String(a.dueAt ?? "").localeCompare(String(b.dueAt ?? "")) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-  const vm = { state, newTasks, dueSoonTasks };
+  // Overdue tasks across ALL lists
+  const overdueTasks = tasks
+    .filter((t) => !dismissed.has(t.id))
+    .filter((t) => isOverdueByKey(t.dueAt ?? null, t.status, nowKey))
+    .sort((a, b) => String(a.dueAt ?? "").localeCompare(String(b.dueAt ?? "")) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  const vm = { state, newTasks, dueSoonTasks, overdueTasks };
 
   return {
     lists,
