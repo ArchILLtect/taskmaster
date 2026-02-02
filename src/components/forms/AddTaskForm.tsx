@@ -8,6 +8,7 @@ import { getInboxListId } from "../../config/inboxSettings";
 import { useTaskmasterData } from "../../hooks/useTaskmasterData";
 import { useTaskActions } from "../../store/taskStore";
 import { FormSelect } from "./FormSelect";
+import { getTodayDateInputValue } from "../../services/dateTime";
 
 type Option<T extends string> = { label: string; value: T };
 
@@ -17,10 +18,7 @@ const isTaskPriority = (v: string): v is TaskPriority =>
 const isTaskStatus = (v: string): v is TaskStatus =>
   (Object.values(TaskStatus) as string[]).includes(v);
 
-// Get current timezone
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-// Set today's date as default due date in YYYY-MM-DD format
-const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
+const todayDate = getTodayDateInputValue();
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {

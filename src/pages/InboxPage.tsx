@@ -16,6 +16,7 @@ import { useTaskActions } from "../store/taskStore";
 import { useInboxActions } from "../store/inboxStore";
 import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
 import { Tip } from "../components/ui/Tip";
+import { getTodayDateInputValue } from "../services/dateTime";
 
 
 // TODO: Give this page more thought re: UX/design
@@ -49,10 +50,8 @@ function isoToDateInput(iso?: string | null) {
   return d.toISOString().slice(0, 10);
 }
 
-// Get current timezone
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
-const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
+const todayDate = getTodayDateInputValue();
 
 export function InboxPage() {
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);

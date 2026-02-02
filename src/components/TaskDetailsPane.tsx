@@ -11,6 +11,7 @@ import { fireToast } from "../hooks/useFireToast";
 import type { TaskUI } from "../types/task";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
 import { useTaskActions } from "../store/taskStore";
+import { formatDueDate, getTodayDateInputValue } from "../services/dateTime";
 
 // --- animations
 const pulse = keyframes`
@@ -32,18 +33,7 @@ function isoToDateInput(iso?: string | null) {
   return d.toISOString().slice(0, 10);
 }
 
-// Get current timezone
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-// Set today's date as default due date in YYYY-MM-DD format
-const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
-
-const formatDue = (iso?: string | null) => {
-  if (!iso) return "Someday";
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? "Someday"
-    : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-};
+const todayDate = getTodayDateInputValue();
 
 export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   function TaskDetailsPane({
@@ -273,7 +263,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                   </HStack>
 
                   <Text color="gray.600" fontSize="sm">
-                    Due: {formatDue(selected.dueAt)}
+                    Due: {formatDueDate(selected.dueAt)}
                   </Text>
                 </Flex>
               </>

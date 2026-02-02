@@ -25,6 +25,7 @@ import { useTaskActions } from "../store/taskStore";
 import { getInboxListId } from "../config/inboxSettings";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
+import { getTodayDateInputValue } from "../services/dateTime";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -39,10 +40,8 @@ function isoToDateInput(iso?: string | null) {
   return d.toISOString().slice(0, 10);
 }
 
-// Get current timezone
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
-const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
+const todayDate = getTodayDateInputValue();
 
 type Option<T extends string> = { label: string; value: T };
 

@@ -15,11 +15,10 @@ import { getInboxListId, SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
 import { Tooltip } from "../components/ui/Tooltip"
 import { useTaskActions } from "../store/taskStore";
+import { getTodayDateInputValue } from "../services/dateTime";
 
-// Get current timezone
-const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // Set today's date as default due date in YYYY-MM-DD format
-const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: userTimeZone });
+const todayDate = getTodayDateInputValue();
 
 export function ListDetailsPage() {
 
