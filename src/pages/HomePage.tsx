@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { signIn } from "aws-amplify/auth";
 import { createDemoCredentials } from "../services/demoAuthService";
 import { clearDemoSessionActive, setDemoSessionActive } from "../services/demoSession";
+import { Tip } from "../components/ui/Tip";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/today";
@@ -74,6 +75,10 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
           </HStack>
 
           <Heading size="2xl">TaskMaster</Heading>
+          <Tip storageKey="tip:home-deeplinks" title="Tip">
+            Most pages support deep links. If someone shares a task or list URL, logging in will bring you right back to
+            that context.
+          </Tip>
           <Text color="gray.600" fontSize="lg" maxW="2xl">
             A fast, store-driven task app prototype with deep-linkable task navigation, local cache + TTL refresh,
             and a guided Admin console for cross-user inspection.

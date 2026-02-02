@@ -16,6 +16,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { Tooltip } from "../components/ui/Tooltip"
 import { useTaskActions } from "../store/taskStore";
 import { getTodayDateInputValue } from "../services/dateTime";
+import { Tip } from "../components/ui/Tip";
 
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = getTodayDateInputValue();
@@ -239,6 +240,10 @@ export function ListDetailsPage() {
       <Toaster />
       {/* Left: task list */}
         <VStack align="start" gap={2} w={"40vw"}>
+          <Tip storageKey="tip:list-details-pane-stack" title="Tip">
+            Click a task to open its details in the right-hand pane. The URL encodes the current “pane stack”, so you
+            can refresh or share links without losing context.
+          </Tip>
           <Flex flexDir={"column"} w={"100%"} mb={4} gap={2}>
             <Flex justify="space-between" align="center">
               <HStack align="center" gap={3} maxW={"60%"}>

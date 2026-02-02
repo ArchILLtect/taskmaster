@@ -3,6 +3,7 @@ import { useSettingsPageData } from "./useSettingsPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useDueSoonWindowDays, useSetDueSoonWindowDays } from "../store/localSettingsStore";
 import { clearUserScopedKeysByPrefix } from "../services/userScopedStorage";
+import { Tip } from "../components/ui/Tip";
 
 export function SettingsPage() {
   
@@ -15,6 +16,11 @@ export function SettingsPage() {
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <Heading size="2xl">Settings</Heading>
+
+      <Tip storageKey="tip:settings-local" title="Tip">
+        Settings and dismissed tips are stored per user in this browser. If you switch devices or clear storage, you’ll
+        see onboarding tips again.
+      </Tip>
 
       <Box pt={2} w="100%">
         <Heading size="lg">Inbox</Heading>

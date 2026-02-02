@@ -3,6 +3,7 @@ import { useTodayPageData } from "./useTodayPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { TaskRow } from "../components/TaskRow";
 import { OverdueHeader } from "../components/ui/OverdueHeader";
+import { Tip } from "../components/ui/Tip";
 
 export function TodayPage() {
   const { loading, overdueTasks, dueTodayTasks, listsById } = useTodayPageData();
@@ -22,6 +23,10 @@ export function TodayPage() {
           </Badge>
         </HStack>
       </HStack>
+
+      <Tip storageKey="tip:today-overdue" title="Tip">
+        Tasks are considered overdue once their due date is before today (based on your local date).
+      </Tip>
 
       {overdueTasks.length === 0 && dueTodayTasks.length === 0 ? (
         <Text color="gray.600">No tasks due today. Nice.</Text>

@@ -18,6 +18,10 @@ export function Sidebar() {
     "medium": "250px",
     "large": "300px",
   };
+  // TODO : Add a setting for this in SettingsPage also.
+  const USER_VIEW = "/today";
+
+  // TODO : Wire this to settings page options once implemented.
   const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH.small;
 
   const favoriteLinks = visibleFavorites
@@ -51,7 +55,7 @@ export function Sidebar() {
           }
         />
         <Separator my={3} />
-        <SidebarCollapse to="/views" label="Views" items={viewLinks} defaultOpen={false} />
+        <SidebarCollapse to={USER_VIEW} label="Views" items={viewLinks} defaultOpen={false} />
         <Separator my={3} />
         <SidebarItem to="/tasks" label="Tasks" main />
         <Separator my={3} />

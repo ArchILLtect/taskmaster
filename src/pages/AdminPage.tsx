@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { FiInfo } from "react-icons/fi";
 import { isCurrentUserAdmin } from "../services/authIdentity";
 import { Tooltip } from "../components/ui/Tooltip";
+import { Tip } from "../components/ui/Tip";
 import {
   backfillMissingUserProfileEmails,
   listUserProfilesByEmailAdminPage,
@@ -472,6 +473,10 @@ export function AdminPage() {
     return (
       <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
         <Heading size="2xl">Admin</Heading>
+        <Tip storageKey="tip:admin-scope" title="Tip">
+          This page is restricted to admin users. It exposes cross-user diagnostics, so keep it out of screenshots and
+          screen shares.
+        </Tip>
         <Text color="gray.600">Not authorized.</Text>
       </VStack>
     );
@@ -487,6 +492,11 @@ export function AdminPage() {
           <Badge>Tasks: {counts.tasks}</Badge>
         </HStack>
       </HStack>
+
+      <Tip storageKey="tip:admin-modes" title="Tip">
+        Some sections support “safe” modes to reduce sensitive data exposure. Use them if you’re demoing or debugging
+        in shared environments.
+      </Tip>
 
       {err ? (
         <Box bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" p={3} w="100%">

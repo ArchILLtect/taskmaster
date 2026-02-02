@@ -5,6 +5,7 @@ import { TaskRow } from "../components/TaskRow";
 import { formatUtcDayKeyWithWeekday } from "../services/dateTime";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { OverdueHeader } from "../components/ui/OverdueHeader";
+import { Tip } from "../components/ui/Tip";
 
 export function WeekPage() {
   const { loading, overdueTasks, dueThisWeekTasks, days, listsById } = useWeekPageData();
@@ -31,6 +32,10 @@ export function WeekPage() {
       {startDayKey && endDayKey ? (
         <Text color="gray.600">{`${formatUtcDayKeyWithWeekday(startDayKey)} to ${formatUtcDayKeyWithWeekday(endDayKey)}`}</Text>
       ) : null}
+
+      <Tip storageKey="tip:week-collapsible" title="Tip">
+        Each day is collapsible. If you’re looking for an unscheduled task, check the Tasks page.
+      </Tip>
 
       {overdueTasks.length === 0 && dueThisWeekTasks.length === 0 ? (
         <Text color="gray.600">Nothing scheduled for the next 7 days.</Text>

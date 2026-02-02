@@ -26,6 +26,7 @@ import { getInboxListId } from "../config/inboxSettings";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 import { getTodayDateInputValue } from "../services/dateTime";
+import { Tip } from "../components/ui/Tip";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -331,6 +332,10 @@ export function TasksPage() {
           </HStack>
           <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={setShowCompletedTasks} />
         </HStack>
+
+        <Tip storageKey="tip:tasks-filters" title="Tip">
+          Use “Filters & Sorting” to quickly find tasks. “Someday” tasks are the ones without a due date.
+        </Tip>
 
         <HStack gap={2} flexWrap="wrap" justifyContent={"center"} w={"100%"}>
           <Badge variant="outline">Total: {taskCounts.total}</Badge>

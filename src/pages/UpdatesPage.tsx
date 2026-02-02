@@ -10,6 +10,7 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { useTaskActions } from "../store/taskStore";
 import { useUpdatesActions, useUpdatesView } from "../store/updatesStore";
 import { getInboxListId } from "../config/inboxSettings";
+import { Tip } from "../components/ui/Tip";
 
 export function UpdatesPage() {
 
@@ -117,6 +118,11 @@ export function UpdatesPage() {
         </HStack>
       </HStack>
 
+      <Tip storageKey="tip:updates-local" title="Tip">
+        Updates are stored locally in this browser. Use “Clear read” to prune noise and “Mark all read” to reset your
+        unread badge.
+      </Tip>
+
       {vm.events.length === 0 ? (
         <Text color="gray.600">No updates yet.</Text>
       ) : (
@@ -186,10 +192,6 @@ export function UpdatesPage() {
           fireToast("success", "Updates cleared", "All update events have been removed.");
         }}
       />
-
-      <Text color="gray.500" fontSize="sm">
-        Tip: Events are captured from task actions and stored locally.
-      </Text>
     </VStack>
   );
 }

@@ -3,6 +3,7 @@ import { Box, Button, Heading, Text, VStack } from "@chakra-ui/react";
 import { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
+import { Tip } from "../components/ui/Tip";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/today";
@@ -36,6 +37,11 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" justify={"center"} alignItems={"center"} rounded="md" boxShadow="sm">
       <Heading size="2xl">Login</Heading>
+
+      <Tip storageKey="tip:login-redirect" title="Tip">
+        If you were sent here from a shared link, just sign in — you’ll be redirected back to the page you were trying
+        to open.
+      </Tip>
 
       {intent === "demo" ? (
         <Box p={3} bg="purple.50" borderWidth="1px" borderColor="purple.200" rounded="md" w="100%">

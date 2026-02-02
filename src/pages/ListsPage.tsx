@@ -22,6 +22,7 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
+import { Tip } from "../components/ui/Tip";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -265,6 +266,9 @@ export const ListsPage = () => {
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <Toaster />
+      <Tip storageKey="tip:lists-system-inbox" title="Tip">
+        The Inbox is a system list — it can’t be deleted or renamed. Favorite lists to pin them in the sidebar.
+      </Tip>
       <Flex gap={4} w="100%">
         <Box w="50%">
           <Box w="100%" mb={4}>

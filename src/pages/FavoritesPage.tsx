@@ -8,6 +8,7 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
+import { Tip } from "../components/ui/Tip";
 
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -75,6 +76,9 @@ export function FavoritesPage() {
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <Toaster />
+      <Tip storageKey="tip:favorites-source" title="Tip">
+        Favorites are just lists with “favorite” enabled. You can add/remove favorites from the Lists page anytime.
+      </Tip>
       <Box w="100%" mb={4}>
         <HStack justify="space-between" width="100%">
           <VStack align="start">

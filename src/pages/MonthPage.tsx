@@ -5,6 +5,7 @@ import { AppCollapsible } from "../components/AppCollapsible";
 import { TaskRow } from "../components/TaskRow";
 import { formatUtcDayKeyWithWeekday, formatUtcMonthYear } from "../services/dateTime";
 import { OverdueHeader } from "../components/ui/OverdueHeader";
+import { Tip } from "../components/ui/Tip";
 
 export function MonthPage() {
   const { loading, monthStartKey, monthEndKey, overdueTasks, tasksInMonth, weeks, listsById } = useMonthPageData();
@@ -26,6 +27,10 @@ export function MonthPage() {
       </HStack>
 
       <Text color="gray.600">{formatUtcMonthYear(monthStartKey)}</Text>
+
+      <Tip storageKey="tip:month-collapsible" title="Tip">
+        Weeks and days are collapsible. Tasks without a due date won’t appear here — they’re still available in Tasks.
+      </Tip>
 
       {overdueTasks.length === 0 && tasksInMonth.length === 0 ? (
         <Text color="gray.600">Nothing scheduled for this month.</Text>

@@ -7,6 +7,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { isCacheFresh, useTaskStoreView, useTaskActions } from "../store/taskStore";
 import { clearAllUserCaches } from "../store/clearUserCaches";
 import { getUserUIResult } from "../services/authService";
+import { Tip } from "../components/ui/Tip";
 
 export function DevPage() {
 
@@ -23,6 +24,11 @@ export function DevPage() {
       <Toaster />
       <Heading size="2xl">Dev</Heading>
       <Text>This page is for development and testing purposes.</Text>
+
+      <Tip storageKey="tip:dev-cache" title="Tip">
+        “Expire task cache” forces the next render to treat persisted data as stale, which is handy for testing
+        hydrate+refresh behavior.
+      </Tip>
 
       <VStack align="start" gap={2} w="100%" p={3} bg="gray.50" rounded="md" borderWidth="1px">
         <Heading size="sm">Task cache (taskmaster:taskStore)</Heading>
