@@ -31,7 +31,7 @@
     "**/out/**",
     "**/amplify/**",
   ],
-  "todo-tree.tree.scanMode": "open files",
+  "todo-tree.tree.scanMode": "workspace",
   "todo-tree.regex.regex": "(TODO\\(P[1-5]\\)|TODO\\(stretch\\)|TODO\\(postmvp\\)|TODO\\?|TODO[ \\t]|FIXME[ \\t]|BUG[ \\t]|HACK[ \\t]|NOTE[ \\t]|REVIEW[ \\t])",
   "todo-tree.general.tagGroups": {},
   "todo-tree.general.tags": [
