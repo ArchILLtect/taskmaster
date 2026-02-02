@@ -6,6 +6,7 @@ import { SendTaskToInboxButton } from "./buttons/SendTaskToInboxButton"
 import type { TaskUI, TaskRowProps } from "../types";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
+import { formatDueDate } from "../services/dateTime";
 
 export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, onDelete }: TaskRowProps) => {
 
@@ -68,7 +69,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                   </Badge>
                   <Badge fontSize="sm" color="gray.500">
                     <Text>
-                      {task.dueAt ? new Date(task.dueAt).toLocaleString() : "Anytime"}
+                      {formatDueDate(task.dueAt, { noneLabel: "Anytime" })}
                     </Text>
                   </Badge>
                 </VStack>
