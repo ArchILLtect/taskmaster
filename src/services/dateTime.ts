@@ -1,0 +1,84 @@
+import { isoToDayKey, toUtcDayKey } from "./inboxTriage";
+
+export function getUserTimeZone(): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return typeof tz === "string" && tz.length > 0 ? tz : "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
+/**
+ * Returns today's date in YYYY-MM-DD suitable for `<input type="date" />`.
+ *
+ * Note: this is intentionally user-timezone aware (via Intl).
+ */
+export function getTodayDateInputValue(timeZone: string = getUserTimeZone()): string {
+  // en-CA reliably formats as YYYY-MM-DD.
+  return new Date().toLocaleDateString("en-CA", { timeZone });
+}
+
+/**
+ * Converts an absolute timestamp (ms since epoch) into a YYYY-MM-DD string in the given timezone.
+ * Useful for "now" comparisons without forcing UTC semantics.
+ */
+export function msToDateInputValue(ms: number, timeZone: string = getUserTimeZone()): string {
+  return new Date(ms).toLocaleDateString("en-CA", { timeZone });
+}
+
+function parseDayKey(dayKey: string): { y: number; m: number; d: number } | null {
+  const match = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(dayKey);
+  if (!match) return null;
+
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const d = Number(match[3]);
+
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+
+  return { y, m, d };
+}
+
+export function formatUtcDayKey(
+  dayKey: string,
+  opts?: {
+    noneLabel?: string;
+    locale?: string | string[];
+    month?: "short" | "long";
+  }
+): string {
+  const parsed = parseDayKey(dayKey);
+  if (!parsed) return opts?.noneLabel ?? dayKey;
+
+  // Use a UTC date so the label does not drift for users in negative offsets.
+  const date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+
+  return date.toLocaleDateString(opts?.locale, {
+    year: "numeric",
+    month: opts?.month ?? "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/**
+ * Formats a task dueAt for UI.
+ *
+ * Important: our app currently treats due dates as "floating" day-only values,
+ * stored as an ISO string anchored at 00:00:00Z. To preserve that behavior,
+ * we format using the ISO's UTC day key (YYYY-MM-DD) and render in UTC.
+ */
+export function formatDueDate(
+  dueAt?: string | null,
+  opts?: { noneLabel?: string; locale?: string | string[]; month?: "short" | "long" }
+): string {
+  const noneLabel = opts?.noneLabel ?? "Someday";
+  const dueKey = isoToDayKey(dueAt);
+  if (!dueKey) return noneLabel;
+  return formatUtcDayKey(dueKey, { noneLabel, locale: opts?.locale, month: opts?.month });
+}
+
+export function getNowUtcDayKey(nowMs: number = Date.now()): string {
+  return toUtcDayKey(nowMs);
+}
