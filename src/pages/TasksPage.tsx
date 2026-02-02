@@ -55,7 +55,6 @@ const SORT_OPTIONS: Option<SortKey>[] = [
   { label: "Title", value: "title" },
 ];
 
-// TODO? : This is needed for new component still I think!
 function isSortKey(v: string): v is SortKey {
   return SORT_OPTIONS.some((o) => o.value === v);
 }
