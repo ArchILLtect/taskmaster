@@ -1,16 +1,22 @@
-import { Box, HStack, VStack, Text, Badge, Button, Grid } from "@chakra-ui/react";
+import { Box, HStack, VStack, Text, Badge, Button, Flex, Grid, Icon } from "@chakra-ui/react";
 import { IoRefreshCircleOutline, IoCheckmarkCircleOutline, IoTrash } from "react-icons/io5";
+import { FcHighPriority } from "react-icons/fc";
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./ui/Tooltip";
 import { SendTaskToInboxButton } from "./buttons/SendTaskToInboxButton"
 import type { TaskUI, TaskRowProps } from "../types";
 import { TaskStatus } from "../API";
 import { getInboxListId } from "../config/inboxSettings";
-import { formatDueDate } from "../services/dateTime";
+import { formatDueDate, getTodayDateInputValue } from "../services/dateTime";
+import { isoToDayKey } from "../services/inboxTriage";
 
 export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, onDelete }: TaskRowProps) => {
 
   const inboxListId = getInboxListId();
+
+  const todayKey = getTodayDateInputValue();
+  const dueKey = isoToDayKey(task.dueAt);
+  const isOverdue = task.status === TaskStatus.Open && dueKey != null && dueKey < todayKey;
 
   const isOffLimits = task.listId === (inboxListId ?? "");
 
@@ -61,18 +67,20 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
             </Box>
             <HStack align="center" gap={1}>
               {showLists ? (
-                <VStack w="150px" textAlign="right" truncate>
+                <Flex w="150px" flexDirection={"column"} gap={3} minW="0">
                   <Badge fontSize="sm" color="gray.500">
-                    <Text>
+                    <Text truncate>
                       {list.name || "Unknown List"}
                     </Text>
                   </Badge>
-                  <Badge fontSize="sm" color="gray.500">
-                    <Text>
+                  <Badge fontSize="sm" color="gray.500" justifyContent={"space-between"}>
+                    <Text fontWeight={800} color={isOverdue ? "red.400" : "gray.800"}>Due: </Text>
+                    {isOverdue && <Icon as={FcHighPriority} mr={1} />}
+                    <Text truncate>
                       {formatDueDate(task.dueAt, { noneLabel: "Anytime" })}
                     </Text>
                   </Badge>
-                </VStack>
+                </Flex>
               ) : null}
 
               <VStack align="end" gap={1} w="75px">
@@ -95,7 +103,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                         onClick={onComplete}
                         variant="outline"
                       >
-                        <IoRefreshCircleOutline color="blue" />
+                        <Icon as={IoRefreshCircleOutline} color="blue" />
                       </Button>
                     </Tooltip>
                   </Box>
@@ -112,7 +120,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                         onClick={onComplete}
                         variant="ghost"
                       >
-                        <IoCheckmarkCircleOutline color="green" />
+                        <Icon as={IoCheckmarkCircleOutline} color="green" />
                       </Button>
                     </Tooltip>
 
@@ -127,7 +135,7 @@ export const TaskRow = ({ task, list, to, showLists, onMove, onToggleComplete, o
                         onClick={onDeleteClick}
                         variant="ghost"
                       >
-                        <IoTrash color="red" />
+                        <Icon as={IoTrash} color="red.500" />
                       </Button>
                     </Tooltip>
                     <SendTaskToInboxButton
