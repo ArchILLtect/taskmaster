@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useTaskIndexView } from "../store/taskStore";
 import { useInboxView } from "../store/inboxStore";
-import { isDueSoonByKey, isOverdueByKey, toUtcDayKey } from "../services/inboxTriage";
+import { isDueSoonByKey, isOverdueByKey } from "../services/inboxTriage";
+import { msToDateInputValue } from "../services/dateTime";
 import { useDueSoonWindowDays } from "../store/localSettingsStore";
 
 export function useInboxTriageIndicators(): {
@@ -13,7 +14,7 @@ export function useInboxTriageIndicators(): {
   const dueSoonWindowDays = useDueSoonWindowDays();
 
   const dismissed = useMemo(() => new Set(inbox.dismissedTaskIds), [inbox.dismissedTaskIds]);
-  const nowKey = toUtcDayKey(inbox.lastComputedAtMs);
+  const nowKey = msToDateInputValue(inbox.lastComputedAtMs);
 
   const hasOverdue = useMemo(() => {
     return tasks.some(

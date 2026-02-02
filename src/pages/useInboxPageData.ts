@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { useTaskIndex } from "../hooks/useTaskIndex";
 import { getInboxListId } from "../config/inboxSettings";
 import { useInboxView } from "../store/inboxStore";
-import { isDueSoonByKey, isOverdueByKey, toUtcDayKey } from "../services/inboxTriage";
+import { isDueSoonByKey, isOverdueByKey } from "../services/inboxTriage";
+import { msToDateInputValue } from "../services/dateTime";
 import { useDueSoonWindowDays } from "../store/localSettingsStore";
 
 function isNewTask(createdAt: string, lastViewedAt: string | null) {
@@ -19,7 +20,7 @@ export function useInboxPageData() {
   const dueSoonWindowDays = useDueSoonWindowDays();
   const dismissed = useMemo(() => new Set(state.dismissedTaskIds), [state.dismissedTaskIds]);
   const nowMs = state.lastComputedAtMs;
-  const nowKey = toUtcDayKey(nowMs);
+  const nowKey = msToDateInputValue(nowMs);
 
   // Only tasks that belong to the Inbox list
   const inboxTasks = inboxListId
