@@ -56,13 +56,14 @@ Last refreshed: Feb 2 2026
 ---
 
 ## Platform / Foundations
-- [ ] TODO(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times TODO? : Done?
-  - display
-  - comparisons
+- [ ] TODO(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times
+  - [x] (foundation): `src/services/dateTime.ts` centralizes timezone detection (`getUserTimeZone`) + day-key helpers for comparisons/labels.
+  - [x] (comparisons): overdue/due-soon logic uses day-key semantics in triage/views.
+  - [ ] (consistency): remove remaining ad-hoc ISO/date conversions in UI (some still assume UTC via `toISOString().slice(0, 10)`), and standardize how `dueAt` is encoded/decoded for date inputs.
 
-- [ ] TODO(P3) Architecture guardrail: forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**` TODO? : Done?
-  - Force all API access through store/hooks (matches current architecture intent)
-  - An eslint rule block already exists (commented out) in `eslint.config.js`
+- [x] TODO(P3) Architecture guardrail: forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`
+  - Enforced in `eslint.config.js` via `no-restricted-imports` for `src/pages/**`, `src/components/**`, and `src/hooks/**`.
+  - Keeps UI-layer data access going through store/hooks.
 
 ---
 
@@ -74,8 +75,9 @@ Last refreshed: Feb 2 2026
   - Audit existing Tips for relevance and remove any that feel redundant
   - Candidate components: task/list headers, empty states, filter bars
 
-- [ ] TODO(P2) Add date formatting helper for task due dates TODO? : Done?
-  - In TaskDetailsPane, the “Due: {selected.dueAt ?? 'Someday'}” prints an ISO string
+- [x] TODO(P2) Add date formatting helper for task due dates
+  - Implemented in `src/services/dateTime.ts` as `formatDueDate`.
+  - Used by `TaskRow` and `TaskDetailsPane` so we no longer print raw ISO strings.
 
 - [ ] TODO(P3) Add “Snooze” for overdue (and due-soon) tasks
   - Goal: temporarily hide tasks from overdue/due-soon indicators and sections without losing them
@@ -108,24 +110,23 @@ Last refreshed: Feb 2 2026
 - [x] `TODO`(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
   - Uses `useUserUI` via the profile page data hook.
 
-- [ ] TODO(P2) Ensure user metadata always updates on account switch TODO? : Done?
-  - Goal: avoid requiring a full browser reload to see username/email/role updates.
-  - Today: improved by clearing authService in-memory cache on session reset and applying per-user storage scope during auth lifecycle.
-  - Still worth validating: `useUserUI` refresh behavior on fast account switches (no reload).
+- [x] TODO(P2) Ensure user metadata always updates on account switch
+  - Implemented via auth lifecycle hooks + Hub listeners (`useAuthUser` + `useUserUI`) and cache guards.
+  - Validation still belongs in the manual QA checklist item (fast account switches without reload).
 
 - [x] `TODO`(P3) Add an app footer
   - [x] Link to the showcase site
   - [x] Move the Sign Out button into the footer
   - [x] Add an email link: `mailto:nick@nickhanson.me`
 
-- [ ] TODO(P3) Replace the tick/refresh() pattern everywhere (after migration) TODO? : Done?
-  - Zustand is now in place; this is now safe refactor work.
-  - Targets:
-    - Remove redundant `refresh()` calls after mutations where store actions already `refreshAll()`.
-    - Prefer selectors/views over pushing refresh callbacks deep into components.
+- [ ] TODO(P3) Replace the tick/refresh() pattern everywhere (after migration)
+  - [x] (prereq): Zustand store actions already call `refreshAll()` after mutations.
+  - [ ] (refactor): remove remaining `refresh` prop threading and redundant `refresh()` calls in pages/components.
 
 - [ ] TODO(P1) Find a way to ensure refreshing of favorites sidebar section upon starring/un-starring lists for favorites.
-- [ ] TODO(P1) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage. TODO? : Done?
+- [ ] TODO(P1) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage.
+  - [x] `Toaster` is present in ListDetailsPage, so the basic toast plumbing exists.
+  - [ ] audit the edit/add/cancel flows for incorrect or unconditional toasts (e.g., success toasts firing on error) and ensure close/cancel always leaves UI in a consistent state.
 - [ ] TODO(P1) Add Tooltip/Toast for "already in inbox"
 
 ---
@@ -377,16 +378,13 @@ Last refreshed: Feb 2 2026
 ---
 
 ## Routing & Navigation
-- [ ] TODO(P1) Improve navigation for system Inbox list TODO? : Done?
-  - Today: Inbox is a dedicated triage view; the system Inbox list is not directly reachable like normal lists.
-  - Decide: should system Inbox be a normal list route (read-only/edit-disabled) or remain hidden behind the Inbox triage?
+- [ ] TODO(P1) Improve navigation for system Inbox list
+  - [x] system Inbox is treated as special (hidden from normal list visibility/favorites; edit/favorite/delete disabled when detected).
+  - [ ] decide whether the system Inbox should be directly navigable (e.g., a read-only list route) vs staying exclusively behind `/inbox` triage.
 
-- [ ] TODO(P3) Inbox triage: decide whether “dismiss” should exist long-term TODO? : Done?
-  - Current UX: tasks can be dismissed from Inbox triage
-  - Concern: without a normal list route to the system inbox list, dismissed tasks may feel "lost" to users
-  - Potential options:
-    - Keep dismiss, but add clear "Show dismissed" and/or a dedicated route to system inbox list
-    - Replace dismiss with "Snooze" semantics (time-based)
+- [ ] TODO(P3) Inbox triage: decide whether “dismiss” should exist long-term
+  - [x] Inbox triage supports “dismiss”.
+  - [ ] define long-term intent (dismiss vs snooze), and ensure dismissed tasks remain discoverable (show dismissed and/or add a system inbox list route).
 
 - [ ] TODO(stretch) Consider adding an "Overdue" View (conditional)
   - Option: keep overdue sections inside Today/Week for visibility (MVP), but also add a dedicated `/overdue` view.
