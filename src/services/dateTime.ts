@@ -40,6 +40,30 @@ function parseDayKey(dayKey: string): { y: number; m: number; d: number } | null
   return { y, m, d };
 }
 
+/**
+ * Returns the first day of the month for the given day key.
+ * Example: 2026-02-14 -> 2026-02-01
+ */
+export function startOfMonthDayKey(dayKey: string): string {
+  const parsed = parseDayKey(dayKey);
+  if (!parsed) return dayKey;
+  return `${dayKey.slice(0, 7)}-01`;
+}
+
+/**
+ * Returns the last day of the month for the given day key.
+ * Example: 2026-02-14 -> 2026-02-28
+ */
+export function endOfMonthDayKey(dayKey: string): string {
+  const parsed = parseDayKey(dayKey);
+  if (!parsed) return dayKey;
+
+  // Last day of month: day 0 of next month (in UTC).
+  // Note: `parsed.m` is 1-based (01-12). JS months are 0-based.
+  const d = new Date(Date.UTC(parsed.y, parsed.m, 0));
+  return d.toISOString().slice(0, 10);
+}
+
 export function formatUtcDayKey(
   dayKey: string,
   opts?: {
