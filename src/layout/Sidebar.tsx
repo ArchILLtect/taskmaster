@@ -37,12 +37,12 @@ export function Sidebar() {
             hasOverdue || hasDueSoon ? (
               <>
                 {hasOverdue ? (
-                  <Tooltip content="You have overdue tasks">
+                  <Tooltip content="You have overdue tasks" showArrow>
                     <Icon as={FcExpired} boxSize={5} aria-label="Overdue tasks" />
                   </Tooltip>
                 ) : null}
                 {hasDueSoon ? (
-                  <Tooltip content="You have tasks due soon">
+                  <Tooltip content="You have tasks due soon" showArrow>
                     <Icon as={FcHighPriority} boxSize={5} aria-label="Due soon tasks" />
                   </Tooltip>
                 ) : null}
