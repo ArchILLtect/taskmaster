@@ -97,14 +97,14 @@ Mini-diagram:
 
 ```mermaid
 flowchart LR
-  UI[React UI\n(pages/components)] -->|read via hooks/selectors| Store[Zustand stores\n(taskStore, inbox, updates)]
+  UI["React UI<br/>(pages/components)"] -->|read via hooks/selectors| Store["Zustand stores<br/>(taskStore, inbox, updates)"]
   UI -->|mutations via actions| Store
 
-  Store --> API[taskmasterApi\n(GraphQL wrapper)]
+  Store --> API["taskmasterApi<br/>(GraphQL wrapper)"]
   API --> AppSync[AppSync GraphQL]
   AppSync --> DB[(DynamoDB)]
 
-  Store <--> Cache[(localStorage\nTTL cache)]
+  Store <--> Cache[(localStorage<br/>TTL cache)]
 ```
 
 ## 🧩 Routing model (pane stack)
