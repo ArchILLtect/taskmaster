@@ -433,7 +433,7 @@ export function TasksPage() {
                   size="2xl"
                   bg="orange.200"
                   variant="outline"
-                  height={task.status === TaskStatus.Done ? "74px" : "94px"}
+                  height={"95px"}
                   onClick={() => handleEditTask(task)}
                   _hover={{
                     bg: "orange.300",

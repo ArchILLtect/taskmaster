@@ -250,39 +250,37 @@ export function InboxPage() {
             </Text>
           ) : (
             <VStack align="stretch" gap={2} mt={2}>
-              {vm.newTasks.map((t) => {
-                const listForTask = listById.get(t.listId);
+              {vm.newTasks.map((task) => {
+                const listForTask = listById.get(task.listId);
                 if (!listForTask) return null;
                 return (
-                  <Flex key={t.id} gap={1} alignItems="center" width="100%">
+                  <Flex key={task.id} gap={1} alignItems="center" width="100%">
                     <Box flex="1">
                       <TaskRow
-                        task={t}
+                        task={task}
                         list={listForTask}
-                        to={linkToTask(t.listId, t.id)}
+                        to={linkToTask(task.listId, task.id)}
                         showLists
                         onToggleComplete={handleToggleComplete}
-                        onDelete={() => handleDeleteTask(t.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
                       />
                     </Box>
-                    <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                      <Button
-                        size="2xl"
-                        bg="orange.200"
-                        variant="outline"
-                        height={"36px"}
-                        onClick={() => handleEditTask(t)}
-                        _hover={{
-                          bg: "orange.300",
-                          borderColor: "orange.400",
-                          color: "orange.700",
-                          fontWeight: "500",
-                          boxShadow: "lg",
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </VStack>
+                    <Button
+                      size="2xl"
+                      bg="orange.200"
+                      variant="outline"
+                      height={"95px"}
+                      onClick={() => handleEditTask(task)}
+                      _hover={{
+                        bg: "orange.300",
+                        borderColor: "orange.400",
+                        color: "orange.700",
+                        fontWeight: "500",
+                        boxShadow: "lg",
+                      }}
+                    >
+                      Edit
+                    </Button>
                   </Flex>
                 );
               })}
@@ -339,23 +337,23 @@ export function InboxPage() {
             </Text>
           ) : (
             <VStack align="stretch" gap={2} mt={2}>
-              {vm.overdueTasks.map((t) => {
-                const listForTask = listById.get(t.listId);
+              {vm.overdueTasks.map((task) => {
+                const listForTask = listById.get(task.listId);
                 if (!listForTask) return null;
                 return (
-                  <Flex key={t.id} gap={1} alignItems="center" width="100%">
+                  <Flex key={task.id} gap={1} alignItems="center" width="100%">
                     <Box flex="1">
                       <TaskRow
-                        task={t}
+                        task={task}
                         list={listForTask}
-                        to={linkToTask(t.listId, t.id)}
+                        to={linkToTask(task.listId, task.id)}
                         showLists
                         onToggleComplete={handleToggleComplete}
-                        onDelete={() => handleDeleteTask(t.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
                       />
                     </Box>
                     <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                      <Button size="sm" variant="outline" onClick={() => dismiss(t.id)}>
+                      <Button size="sm" variant="outline" onClick={() => dismiss(task.id)}>
                         Acknowledge
                       </Button>
                       <Button
@@ -363,7 +361,7 @@ export function InboxPage() {
                         bg="orange.200"
                         variant="outline"
                         height={"36px"}
-                        onClick={() => handleEditTask(t)}
+                        onClick={() => handleEditTask(task)}
                         _hover={{
                           bg: "orange.300",
                           borderColor: "orange.400",
@@ -405,23 +403,23 @@ export function InboxPage() {
             </Text>
           ) : (
             <VStack align="stretch" gap={2} mt={2}>
-              {vm.dueSoonTasks.map((t) => {
-                const listForTask = listById.get(t.listId);
+              {vm.dueSoonTasks.map((task) => {
+                const listForTask = listById.get(task.listId);
                 if (!listForTask) return null;
                 return (
-                  <Flex key={t.id} gap={1} alignItems="center" width="100%">
+                  <Flex key={task.id} gap={1} alignItems="center" width="100%">
                     <Box flex="1">
                       <TaskRow
-                        task={t}
+                        task={task}
                         list={listForTask}
-                        to={linkToTask(t.listId, t.id)}
+                        to={linkToTask(task.listId, task.id)}
                         showLists
                         onToggleComplete={handleToggleComplete}
-                        onDelete={() => handleDeleteTask(t.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
                       />
                     </Box>
                     <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                      <Button size="sm" variant="outline" onClick={() => dismiss(t.id)}>
+                      <Button size="sm" variant="outline" onClick={() => dismiss(task.id)}>
                         Acknowledge
                       </Button>
                       <Button
@@ -429,7 +427,7 @@ export function InboxPage() {
                         bg="orange.200"
                         variant="outline"
                         height={"36px"}
-                        onClick={() => handleEditTask(t)}
+                        onClick={() => handleEditTask(task)}
                         _hover={{
                           bg: "orange.300",
                           borderColor: "orange.400",
