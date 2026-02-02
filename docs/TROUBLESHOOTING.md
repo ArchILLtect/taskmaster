@@ -6,6 +6,25 @@ TaskMaster uses persisted Zustand stores for fast reloads, and a TTL-based cache
 - You’re seeing cached task data (it will refresh automatically when stale).
 - A local persisted UX setting is hiding content (e.g., Inbox dismissals).
 
+## React “Maximum update depth exceeded” / `getSnapshot` warning (Zustand)
+If the app loads and then immediately freezes or white-screens, and the console shows something like:
+
+- `The result of getSnapshot should be cached to avoid an infinite loop`
+- `Uncaught Error: Maximum update depth exceeded`
+
+…the most common cause is a Zustand selector that returns a **new object/array literal** every render.
+
+Bad (unstable snapshot):
+- `useStore((s) => ({ a: s.a }))`
+
+Good:
+- `useStore((s) => s.a)` (primitive)
+- `useStore((s) => s.setA)` (function)
+
+If you truly need multiple fields:
+- Prefer a dedicated “view hook” that returns cached references (see the patterns in `src/store/taskStore.ts` / `src/store/inboxStore.ts`).
+- Or use `zustand/shallow` with a stable selector.
+
 ## Reset local state (recommended during development)
 TaskMaster persists a small amount of state in `localStorage`.
 

@@ -1,3 +1,5 @@
+- TODO(P2): Persist user settings + tips in GraphQL (AppSync) instead of localStorage; bump settingsVersion once the full settings set is ready.
+- TODO(P2): Add a real Settings model + migration path for existing local settings (dueSoonWindowDays) and tip dismissals.
 <!-- {root}/TODO.md -->
 
 # TO-DO (as time permits)
