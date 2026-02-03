@@ -3,7 +3,6 @@ import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
-import { Toaster } from "../components/ui/Toaster";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
@@ -75,7 +74,6 @@ export function FavoritesPage() {
 
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-      <Toaster />
       <Tip storageKey="tip:favorites-source" title="Tip">
         Favorites are just lists with “favorite” enabled. You can add/remove favorites from the Lists page anytime.
       </Tip>

@@ -2,7 +2,6 @@ import { Button, Code, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { GraphQLSmokeTest } from "../dev/GraphQLSmokeTest";
 import { useDevPageData } from "./useDevPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-import { Toaster } from "../components/ui/Toaster";
 import { fireToast } from "../hooks/useFireToast";
 import { isCacheFresh, useTaskStoreView, useTaskActions } from "../store/taskStore";
 import { clearCurrentUserPersistedCaches } from "../store/clearUserCaches";
@@ -21,7 +20,6 @@ export function DevPage() {
 
   return (
     <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-      <Toaster />
       <Heading size="2xl">Dev</Heading>
       <Text>This page is for development and testing purposes.</Text>
 

@@ -1,5 +1,4 @@
 import { Box, Flex, Heading, Text, VStack, HStack, Center, Button, Spinner, Icon } from "@chakra-ui/react";
-import { Toaster } from "../components/ui/Toaster";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
 import { useListDetailsPageData } from "./useListDetailsPageData";
@@ -240,7 +239,6 @@ export function ListDetailsPage() {
 
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
-      <Toaster />
       {/* Left: list details */}
         <VStack align="start" gap={2} w={"40vw"}>
           <Flex flexDir={"column"} w={"100%"} mb={4} gap={2}>

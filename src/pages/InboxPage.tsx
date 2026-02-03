@@ -10,7 +10,6 @@ import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/forms/EditTaskForm";
 import type { TaskUI } from "../types";
-import { Toaster } from "../components/ui/Toaster";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { useInboxActions } from "../store/inboxStore";
@@ -207,7 +206,6 @@ export function InboxPage() {
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-      <Toaster />
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <Heading size="2xl">Inbox</Heading>

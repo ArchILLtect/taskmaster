@@ -5,7 +5,6 @@ import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { TaskPriority, TaskStatus } from "../API";
 import { useTasksPageData } from "./useTasksPageData";
 import { fireToast } from "../hooks/useFireToast";
-import { Toaster } from "../components/ui/Toaster";
 import { AddTaskForm, type AddTaskFormHandle } from "../components/forms/AddTaskForm";
 import { useNavigate } from "react-router-dom";
 import { Flex } from "@aws-amplify/ui-react";
@@ -319,7 +318,6 @@ export function TasksPage() {
   
   return (
     <VStack minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
-      <Toaster />
       <VStack w="100%" gap={4} align="start">
         <HStack justify="space-between" w="100%">
           <HStack align="center" gap={2}>

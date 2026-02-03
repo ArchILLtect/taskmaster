@@ -6,7 +6,6 @@ import { EditListForm } from "../components/forms/EditListForm";
 import { AddListForm } from "../components/forms/AddListForm";
 import { getInboxListId, isInboxList } from "../config/inboxSettings";
 import { fireToast } from "../hooks/useFireToast";
-import { Toaster } from "../components/ui/Toaster";
 import type { ListUI } from "../types";
 import { SYSTEM_INBOX_NAME } from "../config/inboxSettings";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
@@ -256,7 +255,6 @@ export const ListsPage = () => {
 
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
-      <Toaster />
       {/* Left: list details */}
       <VStack align="start" gap={2} w={"40vw"}>
         <VStack w="100%">
