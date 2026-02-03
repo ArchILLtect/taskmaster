@@ -58,6 +58,7 @@ export function InboxPage() {
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [addTaskSaving, setAddTaskSaving] = useState(false);
   const addTaskFormRef = useRef<AddTaskFormHandle | null>(null);
+  const [isDoneTriagingDialogOpen, setIsDoneTriagingDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskUI | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -80,6 +81,10 @@ export function InboxPage() {
   const isDialogOpen = !!selectedTask;
   const linkToTask = (listId: string, taskId: string) => buildTaskStackPath(listId, [taskId]);
   const listById = useMemo(() => new Map(lists.map(l => [l.id, l])), [lists]);
+
+  const triageIds = useMemo(() => {
+    return [...vm.overdueTasks, ...vm.dueSoonTasks].map((t) => t.id);
+  }, [vm.dueSoonTasks, vm.overdueTasks]);
 
   const handleToggleComplete = async (taskId: string, nextStatus: TaskStatus) => {
     if (!taskId || !nextStatus) return;
@@ -213,22 +218,48 @@ export function InboxPage() {
 
         <Button
           onClick={() => {
-            const ids = [...vm.overdueTasks, ...vm.dueSoonTasks].map((t) => t.id);
-            dismissMany(ids);
-
-            const count = ids.length;
-            fireToast(
-              "success",
-              "Done triaging",
-              count > 0
-                ? `Ignored ${count} ${count === 1 ? "notification" : "notifications"}.`
-                : "No overdue or due-soon notifications to ignore."
-            );
+            if (triageIds.length === 0) {
+              fireToast("info", "Done triaging", "No overdue or due-soon notifications to ignore.");
+              return;
+            }
+            setIsDoneTriagingDialogOpen(true);
           }}
         >
           Done triaging
         </Button>
       </HStack>
+
+      <DialogModal
+        title="Ignore all due/overdue notifications?"
+        body={
+          <VStack align="start" gap={2}>
+            <Text>
+              This will ignore {triageIds.length} {triageIds.length === 1 ? "notification" : "notifications"}.
+            </Text>
+            <Text color="gray.600" fontSize="sm">
+              You can reset ignored notifications in Settings.
+            </Text>
+          </VStack>
+        }
+        open={isDoneTriagingDialogOpen}
+        setOpen={setIsDoneTriagingDialogOpen}
+        acceptLabel="Ignore all"
+        acceptColorPalette="green"
+        acceptVariant="solid"
+        cancelLabel="Cancel"
+        cancelVariant="outline"
+        onAccept={() => {
+          dismissMany(triageIds);
+          fireToast(
+            "success",
+            "Done triaging",
+            `Ignored ${triageIds.length} ${triageIds.length === 1 ? "notification" : "notifications"}.`
+          );
+        }}
+        onCancel={() => {
+          // no-op
+        }}
+      />
 
       <Tip
         storageKey="tip:inbox-due-soon-window"
@@ -249,9 +280,19 @@ export function InboxPage() {
           mt="0"
           mb="0"
           headerCenter={
-            <Button bg="green.200" size={"xs"} variant="outline" onClick={openAddTaskDialog}>
+            <Box
+              bg="green.200"
+              w="122px"
+              h="32px"
+              borderWidth="thin"
+              border="solid gray.200"
+              rounded="sm"
+              alignContent="center"
+              boxShadow="xs"
+              onClick={openAddTaskDialog}
+            >
               Add New Task
-            </Button>
+            </Box>
           }
           title={
             <HStack gap={2} alignItems="center">
@@ -367,25 +408,25 @@ export function InboxPage() {
                       >
                         Ignore
                       </Button>
-                    <Button
-                      size="sm"
-                      bg="orange.200"
-                      variant="outline"
-                      height="36px"
-                      onClick={() => handleEditTask(task)}
-                      _hover={{
-                        bg: "orange.300",
-                        borderColor: "orange.400",
-                        color: "orange.700",
-                        fontWeight: "500",
-                        boxShadow: "lg",
-                      }}
-                    >
-                      <HStack>
-                        <Icon size={"sm"} as={FiEdit2} />
-                        Edit
-                      </HStack>
-                    </Button>
+                      <Button
+                        size="sm"
+                        bg="orange.200"
+                        variant="outline"
+                        height="36px"
+                        onClick={() => handleEditTask(task)}
+                        _hover={{
+                          bg: "orange.300",
+                          borderColor: "orange.400",
+                          color: "orange.700",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        <HStack>
+                          <Icon size={"sm"} as={FiEdit2} />
+                          Edit
+                        </HStack>
+                      </Button>
                     </VStack>
                   </Flex>
                 );
@@ -449,25 +490,25 @@ export function InboxPage() {
                       >
                         Ignore
                       </Button>
-                    <Button
-                      size="sm"
-                      bg="orange.200"
-                      variant="outline"
-                      height="36px"
-                      onClick={() => handleEditTask(task)}
-                      _hover={{
-                        bg: "orange.300",
-                        borderColor: "orange.400",
-                        color: "orange.700",
-                        fontWeight: "500",
-                        boxShadow: "lg",
-                      }}
-                    >
-                      <HStack>
-                        <Icon size={"sm"} as={FiEdit2} />
-                        Edit
-                      </HStack>
-                    </Button>
+                      <Button
+                        size="sm"
+                        bg="orange.200"
+                        variant="outline"
+                        height="36px"
+                        onClick={() => handleEditTask(task)}
+                        _hover={{
+                          bg: "orange.300",
+                          borderColor: "orange.400",
+                          color: "orange.700",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        <HStack>
+                          <Icon size={"sm"} as={FiEdit2} />
+                          Edit
+                        </HStack>
+                      </Button>
                     </VStack>
                   </Flex>
                 );
