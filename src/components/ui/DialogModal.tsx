@@ -11,6 +11,8 @@ type DialogModalProps = {
   onCancel: () => void;
   isModal?: boolean;
 
+  hideFooter?: boolean;
+
   acceptLabel?: string;
   cancelLabel?: string;
   acceptColorPalette?: string;
@@ -37,9 +39,11 @@ export const DialogModal = ({
   loading,
   disableClose,
   closeOnAccept,
+  hideFooter,
 } : DialogModalProps) => {
 
   const handleAccept = async () => {
+    let didSucceed = false;
     try {
       if (list) {
         await onAccept(list.id, list.isFavorite);
@@ -47,12 +51,15 @@ export const DialogModal = ({
         await onAccept();
       }
 
-      if (closeOnAccept !== false) {
-        setOpen(false);
-      }
+      didSucceed = true;
+
     } catch (error) {
       console.error("Error in dialog accept action:", error);
       fireToast("error", "Error", "There was an issue processing your request.");
+    }
+
+    if (didSucceed && closeOnAccept !== false) {
+      setOpen(false);
     }
   };
 
@@ -77,21 +84,27 @@ export const DialogModal = ({
             <Dialog.Body paddingX={4} paddingY={2} >
               {body}
             </Dialog.Body>
-            <Dialog.Footer>
-              <Dialog.ActionTrigger asChild>
-                <Button variant={cancelVariant ?? "outline"} onClick={handleCancel} disabled={Boolean(loading) || Boolean(disableClose)}>
-                  {cancelLabel ?? "Cancel"}
+            {hideFooter ? null : (
+              <Dialog.Footer>
+                <Dialog.ActionTrigger asChild>
+                  <Button
+                    variant={cancelVariant ?? "outline"}
+                    onClick={handleCancel}
+                    disabled={Boolean(loading) || Boolean(disableClose)}
+                  >
+                    {cancelLabel ?? "Cancel"}
+                  </Button>
+                </Dialog.ActionTrigger>
+                <Button
+                  onClick={handleAccept}
+                  colorPalette={acceptColorPalette}
+                  variant={acceptVariant}
+                  loading={loading}
+                >
+                  {acceptLabel ?? "Accept"}
                 </Button>
-              </Dialog.ActionTrigger>
-              <Button
-                onClick={handleAccept}
-                colorPalette={acceptColorPalette}
-                variant={acceptVariant}
-                loading={loading}
-              >
-                {acceptLabel ?? "Accept"}
-              </Button>
-            </Dialog.Footer>
+              </Dialog.Footer>
+            )}
             <Dialog.CloseTrigger asChild>
               <CloseButton aria-label="Close" onClick={handleCancel} disabled={Boolean(loading) || Boolean(disableClose)} />
             </Dialog.CloseTrigger>
