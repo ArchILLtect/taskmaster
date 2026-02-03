@@ -242,7 +242,7 @@ export function InboxPage() {
           mt="0"
           mb="0"
           headerCenter={
-            <Button bg="green.200" variant="outline" onClick={openAddTaskDialog}>
+            <Button bg="green.200" size={"xs"} variant="outline" onClick={openAddTaskDialog}>
               Add New Task
             </Button>
           }
