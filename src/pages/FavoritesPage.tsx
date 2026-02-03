@@ -25,10 +25,10 @@ export function FavoritesPage() {
     try {
       await deleteTaskListSafeById(listId);
       // Fire toast notification for list deletion
-      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
+      fireToast("info", "List Deleted", "The list has been successfully deleted.");
     } catch (error) {
       console.error("Error deleting list:", error);
-      await fireToast("error", "Error deleting list", "There was an issue deleting the list.");
+      fireToast("error", "Error deleting list", "There was an issue deleting the list.");
     }
   };
 
@@ -50,10 +50,10 @@ export function FavoritesPage() {
         id: listId,
         isFavorite: reverseFavorite
       });
-      await fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
+      fireToast("warning", "Favorite Toggled", `The list has been ${reverseFavorite ? "added to" : "removed from"} favorites.`);
     } catch (error) {
       console.error("Error updating favorite status:", error);
-      await fireToast("error", "Error updating favorite", "There was an issue updating the favorite status.");
+      fireToast("error", "Error updating favorite", "There was an issue updating the favorite status.");
     }
   };
 
@@ -67,7 +67,7 @@ export function FavoritesPage() {
 
   const cancelUnfavorite = async () => {
     setIsDialogOpen(false);
-    await fireToast("info", "Unfavorite Cancelled", "The unfavorite action has been cancelled.");
+    fireToast("info", "Unfavorite Cancelled", "The unfavorite action has been cancelled.");
   }
 
   if (loading) return <BasicSpinner />;

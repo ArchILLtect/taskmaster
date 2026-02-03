@@ -139,11 +139,11 @@ export const ListsPage = () => {
       setShowAddListForm(false);
 
       // Fire toast notification for unimplemented feature
-      await fireToast("success", "List Created", "The new list has been successfully created.");
+      fireToast("success", "List Created", "The new list has been successfully created.");
 
     } catch (error) {
       // Fire toast notification for unimplemented feature
-      await fireToast("error", "Creation Failed", "There was an error creating the list. Please try again. Error:" + (error instanceof Error ? error.message : String(error)));
+      fireToast("error", "Creation Failed", "There was an error creating the list. Please try again. Error:" + (error instanceof Error ? error.message : String(error)));
       setSaving(false);
     } finally {
       setSaving(false);
@@ -174,10 +174,10 @@ export const ListsPage = () => {
       });
       setIsEditing(false);
       // Fire toast notification for unimplemented feature
-      await fireToast("success", "List Saved", "Your changes have been saved successfully.");
+      fireToast("success", "List Saved", "Your changes have been saved successfully.");
     } catch (error) {
       // Fire toast notification for unimplemented feature
-      await fireToast("error", "Save Failed", "There was an error saving the list. Please try again. Error details: " + (error instanceof Error ? error.message : String(error)));
+      fireToast("error", "Save Failed", "There was an error saving the list. Please try again. Error details: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setSaving(false);
     }
@@ -191,10 +191,10 @@ export const ListsPage = () => {
 
     try {
       await deleteTaskListSafeById(listId);
-      await fireToast("info", "List Deleted", "The list has been successfully deleted.");
+      fireToast("info", "List Deleted", "The list has been successfully deleted.");
     } catch (error) {
       console.error("Failed to delete list:", error);
-      await fireToast("error", "Failed to delete list", "An error occurred while deleting the list.");
+      fireToast("error", "Failed to delete list", "An error occurred while deleting the list.");
       return;
     }
   };
@@ -208,7 +208,7 @@ export const ListsPage = () => {
     await updateTaskList({ id: listId, isFavorite });
 
     // Fire toast notification for unimplemented feature
-    await fireToast("warning", "Favorite Toggled", `The list has been ${isFavorite ? "added to" : "removed from"} favorites.`);
+    fireToast("warning", "Favorite Toggled", `The list has been ${isFavorite ? "added to" : "removed from"} favorites.`);
   };
 
   const prepAddListForm = () => {
