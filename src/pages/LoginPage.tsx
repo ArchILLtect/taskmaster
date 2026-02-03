@@ -4,23 +4,27 @@ import { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { Tip } from "../components/ui/Tip";
+import { useDefaultLandingRoute } from "../store/localSettingsStore";
 
-function sanitizeRedirect(raw: string | null): string {
-  if (!raw) return "/today";
-  if (!raw.startsWith("/")) return "/today";
-  if (raw.startsWith("//")) return "/today";
-  if (raw.includes("://")) return "/today";
+function sanitizeRedirect(raw: string | null, fallback: string): string {
+  if (!raw) return fallback;
+  if (!raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//")) return fallback;
+  if (raw.includes("://")) return fallback;
+  // Avoid loops / confusing flows.
+  if (raw === "/login") return fallback;
   return raw;
 }
 
 export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLoading: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const defaultLandingRoute = useDefaultLandingRoute();
 
   const redirectTarget = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    return sanitizeRedirect(params.get("redirect"));
-  }, [location.search]);
+    return sanitizeRedirect(params.get("redirect"), defaultLandingRoute);
+  }, [defaultLandingRoute, location.search]);
 
   const intent = useMemo(() => {
     const params = new URLSearchParams(location.search);

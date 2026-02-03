@@ -9,14 +9,26 @@ export type SidebarWidthPreset = "small" | "medium" | "large";
 
 export type DefaultViewRoute = "/today" | "/week" | "/month";
 
+export type DefaultLandingRoute =
+  | "/today"
+  | "/inbox"
+  | "/tasks"
+  | "/lists"
+  | "/favorites"
+  | "/updates"
+  | "/week"
+  | "/month";
+
 export type LocalSettingsState = {
   dueSoonWindowDays: number;
   sidebarWidthPreset: SidebarWidthPreset;
   defaultViewRoute: DefaultViewRoute;
+  defaultLandingRoute: DefaultLandingRoute;
 
   setDueSoonWindowDays: (days: number) => void;
   setSidebarWidthPreset: (preset: SidebarWidthPreset) => void;
   setDefaultViewRoute: (route: DefaultViewRoute) => void;
+  setDefaultLandingRoute: (route: DefaultLandingRoute) => void;
 };
 
 function normalizeDueSoonDays(days: number): number {
@@ -29,6 +41,19 @@ function normalizeSidebarWidthPreset(value: unknown): SidebarWidthPreset {
 
 function normalizeDefaultViewRoute(value: unknown): DefaultViewRoute {
   return value === "/today" || value === "/week" || value === "/month" ? value : "/today";
+}
+
+function normalizeDefaultLandingRoute(value: unknown): DefaultLandingRoute {
+  return value === "/today" ||
+    value === "/inbox" ||
+    value === "/tasks" ||
+    value === "/lists" ||
+    value === "/favorites" ||
+    value === "/updates" ||
+    value === "/week" ||
+    value === "/month"
+    ? value
+    : "/today";
 }
 
 function readLegacyDueSoonDays(): number | null {
@@ -52,6 +77,7 @@ function readLegacyDueSoonDays(): number | null {
 const DEFAULT_DUE_SOON_DAYS = readLegacyDueSoonDays() ?? 3;
 const DEFAULT_SIDEBAR_WIDTH_PRESET: SidebarWidthPreset = "small";
 const DEFAULT_DEFAULT_VIEW_ROUTE: DefaultViewRoute = "/today";
+const DEFAULT_DEFAULT_LANDING_ROUTE: DefaultLandingRoute = "/today";
 
 export const useLocalSettingsStore = create<LocalSettingsState>()(
   persist(
@@ -59,6 +85,7 @@ export const useLocalSettingsStore = create<LocalSettingsState>()(
       dueSoonWindowDays: DEFAULT_DUE_SOON_DAYS,
       sidebarWidthPreset: DEFAULT_SIDEBAR_WIDTH_PRESET,
       defaultViewRoute: DEFAULT_DEFAULT_VIEW_ROUTE,
+      defaultLandingRoute: DEFAULT_DEFAULT_LANDING_ROUTE,
 
       setDueSoonWindowDays: (days) => {
         set({ dueSoonWindowDays: normalizeDueSoonDays(days) });
@@ -71,6 +98,10 @@ export const useLocalSettingsStore = create<LocalSettingsState>()(
       setDefaultViewRoute: (route) => {
         set({ defaultViewRoute: normalizeDefaultViewRoute(route) });
       },
+
+      setDefaultLandingRoute: (route) => {
+        set({ defaultLandingRoute: normalizeDefaultLandingRoute(route) });
+      },
     }),
     {
       name: "taskmaster:localSettings",
@@ -81,13 +112,18 @@ export const useLocalSettingsStore = create<LocalSettingsState>()(
           dueSoonWindowDays: normalizeDueSoonDays(s?.dueSoonWindowDays ?? DEFAULT_DUE_SOON_DAYS),
           sidebarWidthPreset: normalizeSidebarWidthPreset(s?.sidebarWidthPreset ?? DEFAULT_SIDEBAR_WIDTH_PRESET),
           defaultViewRoute: normalizeDefaultViewRoute(s?.defaultViewRoute ?? DEFAULT_DEFAULT_VIEW_ROUTE),
-        } satisfies Pick<LocalSettingsState, "dueSoonWindowDays" | "sidebarWidthPreset" | "defaultViewRoute">;
+          defaultLandingRoute: normalizeDefaultLandingRoute(s?.defaultLandingRoute ?? DEFAULT_DEFAULT_LANDING_ROUTE),
+        } satisfies Pick<
+          LocalSettingsState,
+          "dueSoonWindowDays" | "sidebarWidthPreset" | "defaultViewRoute" | "defaultLandingRoute"
+        >;
       },
       storage: createUserScopedZustandStorage(),
       partialize: (s) => ({
         dueSoonWindowDays: s.dueSoonWindowDays,
         sidebarWidthPreset: s.sidebarWidthPreset,
         defaultViewRoute: s.defaultViewRoute,
+        defaultLandingRoute: s.defaultLandingRoute,
       }),
     }
   )
@@ -117,4 +153,12 @@ export function useDefaultViewRoute(): DefaultViewRoute {
 
 export function useSetDefaultViewRoute(): LocalSettingsState["setDefaultViewRoute"] {
   return useLocalSettingsStore((s) => s.setDefaultViewRoute);
+}
+
+export function useDefaultLandingRoute(): DefaultLandingRoute {
+  return useLocalSettingsStore((s) => s.defaultLandingRoute);
+}
+
+export function useSetDefaultLandingRoute(): LocalSettingsState["setDefaultLandingRoute"] {
+  return useLocalSettingsStore((s) => s.setDefaultLandingRoute);
 }
