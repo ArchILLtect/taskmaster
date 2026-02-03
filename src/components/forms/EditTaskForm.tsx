@@ -166,11 +166,11 @@ export const EditTaskForm = ({
 
       {!hideButtons ? (
         <Flex justify="space-between" align="center" width="100%">
-          <Button variant="ghost" onClick={onClose} disabled={saving}>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
 
-          <Button colorScheme="green" onClick={() => onSave(task)} loading={saving}>
+          <Button colorPalette="green" variant="solid" onClick={() => onSave(task)} loading={saving}>
             Save
           </Button>
         </Flex>

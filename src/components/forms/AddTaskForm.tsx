@@ -1,14 +1,19 @@
-import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
+import { Box, VStack, Input, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { buildTaskStackPath } from "../../routes/taskStack";
 import { TaskStatus, TaskPriority } from "../../API";
 import type { TaskUI, AddTaskFormProps } from "../../types/task";
-import { useMemo, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { getInboxListId } from "../../config/inboxSettings";
 import { useTaskmasterData } from "../../hooks/useTaskmasterData";
 import { useTaskActions } from "../../store/taskStore";
 import { FormSelect } from "./FormSelect";
 import { getTodayDateInputValue } from "../../services/dateTime";
+
+export type AddTaskFormHandle = {
+  submit: () => Promise<void>;
+  cancel: () => void;
+};
 
 type Option<T extends string> = { label: string; value: T };
 
@@ -45,7 +50,7 @@ function nextSortOrder(tasks: TaskUI[], parentTaskId: string | null) {
   return max + 1;
 }
 
-export const AddTaskForm = ({
+export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
   listId,
   stack,
   tasksInList,
@@ -57,11 +62,11 @@ export const AddTaskForm = ({
   setNewTaskDueDate,
   newTaskPriority,
   setNewTaskPriority,
-  setShowAddTaskForm,
   navigate,
-  refresh: _refresh,
-  parentTaskId
-}: AddTaskFormProps) => {
+  parentTaskId,
+  onCreated,
+  onSavingChange,
+}: AddTaskFormProps, ref) => {
 
   const [saving, setSaving] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>(TaskStatus.Open);
@@ -83,12 +88,11 @@ export const AddTaskForm = ({
     return items;
   }, [allLists, inboxListId]);
 
-  const onCancel = () => {
-    setShowAddTaskForm?.(false);
-    resetFormAndClose();
+  const cancel = () => {
+    resetForm();
   };
 
-  const onCreate = async () => {
+  const submit = async () => {
     if (saving) return;
 
     setSaving(true);
@@ -100,8 +104,6 @@ export const AddTaskForm = ({
 
       const created = await createTask({
         listId: selectedListId,
-        // sortOrder: nextSortOrder(tasksInList, parent), --was the previous line--
-        // TODO: Will the refactored line break anything?
         sortOrder: tasksInList ? nextSortOrder(tasksInList, parent) : 1,
         parentTaskId: parent,
         title: newTaskTitle.trim() || "Untitled Task",
@@ -115,50 +117,56 @@ export const AddTaskForm = ({
         isDemo: false,
       });
 
-      // navigate same as before (open the task pane for top-level tasks)
-      // const nextStack = parentTaskId ? stack : [...stack, created.id]; was the previous line
-      // TODO: will the refactored line break anything?
       const nextStack = parentTaskId ? stack : [...(stack || []), created.id];
 
-      // navigate to inbox if no listId
-      if (!listId) {
-        navigate("/inbox");
+      if (onCreated) {
+        onCreated({ id: created.id, listId: selectedListId });
       } else {
-        // TODO: Had to add " || []" to fix TS error here--will it break anything?
-        navigate(buildTaskStackPath(listId, nextStack || []));
+        // Default navigation behavior (legacy):
+        // - if invoked from a list route, keep the pane-stack semantics
+        // - otherwise, return to inbox
+        if (!listId) {
+          navigate("/inbox");
+        } else {
+          navigate(buildTaskStackPath(listId, nextStack || []));
+        }
       }
 
-      // reset form + close
-      resetFormAndClose();
+      resetForm();
 
     } catch (error) {
       console.error("Error creating task:", error);
+      throw error;
     } finally {
       setSaving(false);
     }
   };
 
-  const resetFormAndClose = () => {
+  const resetForm = () => {
     setNewTaskTitle("");
     setNewTaskDescription("");
     setNewTaskDueDate("");
     setNewTaskPriority(TaskPriority.Medium);
     setNewTaskStatus(TaskStatus.Open);
-    setShowAddTaskForm?.(false);
   };
 
-  return (
-  <Box w="100%" mt={2} p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
-    <VStack align="start" gap={2}>
-      <Flex justify="space-between" align="center" width="100%">
-        <Heading size="sm" fontWeight="bold">New Task</Heading>
-        <CloseButton
-          onClick={onCancel}
-          size="xs"
-        />
-      </Flex>
+  useImperativeHandle(
+    ref,
+    () => ({
+      submit,
+      cancel,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [submit]
+  );
 
-      <div style={{height: "1px", width: "100%", backgroundColor: "gray"}} />
+  useEffect(() => {
+    onSavingChange?.(saving);
+  }, [onSavingChange, saving]);
+
+  return (
+    <Box w="100%" mt={2} p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
+      <VStack align="start" gap={2}>
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
@@ -238,17 +246,9 @@ export const AddTaskForm = ({
         minW="200px"
         maxW="200px"
       />
-
-      <Flex justify="space-between" align="center" width="100%">
-        <Button variant="ghost" onClick={onCancel} disabled={saving}>
-          Cancel
-        </Button>
-
-        <Button colorScheme="green" onClick={onCreate} loading={saving}>
-          Create
-        </Button>
-      </Flex>
-    </VStack>
-  </Box>
+      </VStack>
+    </Box>
   );
-}
+});
+
+AddTaskForm.displayName = "AddTaskForm";

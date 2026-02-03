@@ -55,11 +55,11 @@ export const AddListForm = ({
       </FormControl>
 
       <Flex justify="space-between" align="center" width="100%">
-        <Button variant="ghost" onClick={onCancel} disabled={saving}>
+        <Button variant="outline" onClick={onCancel} disabled={saving}>
           Cancel
         </Button>
 
-        <Button colorScheme="green" onClick={onCreate} loading={saving}>
+        <Button colorPalette="green" variant="solid" onClick={onCreate} loading={saving}>
           Create
         </Button>
       </Flex>

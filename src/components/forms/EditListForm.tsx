@@ -63,11 +63,11 @@ export const EditListForm = ({
       </FormControl>
 
       <Flex justify="space-between" align="center" width="100%">
-        <Button variant="ghost" onClick={onCancel} disabled={saving}>
+        <Button variant="outline" onClick={onCancel} disabled={saving}>
           Cancel
         </Button>
 
-        <Button colorScheme="green" onClick={onSave} loading={saving}>
+        <Button colorPalette="green" variant="solid" onClick={onSave} loading={saving}>
           Save
         </Button>
       </Flex>
