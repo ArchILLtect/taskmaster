@@ -241,14 +241,10 @@ export function ListDetailsPage() {
   return (
     <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
       <Toaster />
-      {/* Left: task list */}
+      {/* Left: list details */}
         <VStack align="start" gap={2} w={"40vw"}>
-          <Tip storageKey="tip:list-details-pane-stack" title="Tip">
-            Click a task to open its details in the right-hand pane. The URL encodes the current “pane stack”, so you
-            can refresh or share links without losing context.
-          </Tip>
           <Flex flexDir={"column"} w={"100%"} mb={4} gap={2}>
-            <Flex justify="space-between" align="center">
+            <Flex justify="space-between">
               <HStack align="center" gap={3} maxW={"60%"}>
                 <Heading size="2xl">List:</Heading>
                 <Flex gap={2} alignItems={"center"} maxW={"100%"}>
@@ -271,6 +267,11 @@ export function ListDetailsPage() {
               <CompletedTasksToggle showCompletedTasks={showCompletedTasks} setShowCompletedTasks={toggleShowCompletedTasks} />
             </Flex>
           </Flex>
+
+          <Tip storageKey="tip:list-details-pane-stack" title="Tip">
+            Click a task to open its details in the right-hand pane. The URL encodes the current “pane stack”, so you
+            can refresh or share links without losing context.
+          </Tip>
 
           {isEditing && currentList &&
             <EditListForm
@@ -404,7 +405,7 @@ export function ListDetailsPage() {
           />
         </VStack>
 
-      {/* Right: stacked panes */}
+      {/* Right: task details */}
       {stack.length === 0 && (
         <Box h="84vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
           <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
