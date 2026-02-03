@@ -100,10 +100,11 @@ export type AddTaskFormProps = {
   setNewTaskDueDate: (dueDate: string) => void;
   newTaskPriority: TaskPriority;
   setNewTaskPriority: (priority: TaskPriority) => void;
-  setShowAddTaskForm?: (show: boolean) => void;
   navigate: (path: string) => void;
-  refresh: () => void;
   parentTaskId?: string | null;
+
+  onCreated?: (created: { id: string; listId: string }) => void;
+  onSavingChange?: (saving: boolean) => void;
 };
 
 export type EditTaskFormProps = {
