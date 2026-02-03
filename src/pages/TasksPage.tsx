@@ -1,20 +1,12 @@
-import {
-  Box,
-  Heading,
-  HStack,
-  Text,
-  VStack,
-  Button,
-  Badge,
-} from "@chakra-ui/react";
+import { Box, Heading, HStack, Text, VStack, Button, Badge, Icon } from "@chakra-ui/react";
 import { TaskRow } from "../components/TaskRow";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
 import { TaskPriority, TaskStatus } from "../API";
 import { useTasksPageData } from "./useTasksPageData";
 import { fireToast } from "../hooks/useFireToast";
 import { Toaster } from "../components/ui/Toaster";
-import { AddTaskForm } from "../components/forms/AddTaskForm";
+import { AddTaskForm, type AddTaskFormHandle } from "../components/forms/AddTaskForm";
 import { useNavigate } from "react-router-dom";
 import { Flex } from "@aws-amplify/ui-react";
 import { DialogModal } from "../components/ui/DialogModal";
@@ -27,6 +19,7 @@ import { AppCollapsible } from "../components/AppCollapsible";
 import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 import { getTodayDateInputValue } from "../services/dateTime";
 import { Tip } from "../components/ui/Tip";
+import { FiEdit2 } from "react-icons/fi";
 
 // --- helpers (keep local, simple)
 function dateInputToIso(date: string) {
@@ -68,7 +61,9 @@ const priorityToRank: Record<TaskPriority, number> = {
 export function TasksPage() {
 
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
-  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [addTaskSaving, setAddTaskSaving] = useState(false);
+  const addTaskFormRef = useRef<AddTaskFormHandle | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskUI | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -251,8 +246,8 @@ export function TasksPage() {
     }
   };
 
-  const handleSave = async (selectedTask: TaskUI | null) => {
-    if (!selectedTask) return;
+  const handleSave = async (selectedTask: TaskUI | null): Promise<boolean> => {
+    if (!selectedTask) return false;
 
     const nextListId = draftTaskListId || selectedTask.listId;
     const didMoveLists = nextListId !== selectedTask.listId;
@@ -273,17 +268,21 @@ export function TasksPage() {
         ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
       });
       fireToast("success", "Task saved", "The task has been successfully updated.");
+      return true;
     } catch (error) {
       console.error("Error saving task:", error);
       fireToast("error", "Error saving task", "There was an issue saving the task.");
+      return false;
     } finally {
       setSaving(false);
-      resetFormAndClose();
     }
   };
 
   const acceptChanges = async () => {
-    await handleSave(selectedTask)
+    const didSucceed = await handleSave(selectedTask);
+    if (didSucceed) {
+      resetFormAndClose();
+    }
   };
 
   const cancelEditTask = () => {
@@ -291,21 +290,19 @@ export function TasksPage() {
     fireToast("info", "Edit cancelled", "Task edit has been cancelled.");
   };
 
-  const prepAddTaskForm = () => {
-    if (showAddTaskForm) {
-      setShowAddTaskForm(false);
-      return;
-    } else {
-      setShowAddTaskForm(!showAddTaskForm);
-      let newTaskTitleUnique = newTaskTitle;
-      if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === ("New Task")) {
-        newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
-      }
-      setNewTaskTitle(newTaskTitleUnique);
-      setNewTaskDescription("");
-      setNewTaskDueDate(todayDate);
-      setNewTaskPriority(TaskPriority.Medium);
+  const openAddTaskDialog = () => {
+    // Prevent modal overlap with the edit dialog.
+    setSelectedTask(null);
+
+    setIsAddTaskDialogOpen(true);
+    let newTaskTitleUnique = newTaskTitle;
+    if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === "New Task") {
+      newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
     }
+    setNewTaskTitle(newTaskTitleUnique);
+    setNewTaskDescription("");
+    setNewTaskDueDate(todayDate);
+    setNewTaskPriority(TaskPriority.Medium);
   };
 
   const resetFormAndClose = () => {
@@ -447,23 +444,25 @@ export function TasksPage() {
                     boxShadow: "lg",
                   }}
                 >
-                  Edit
+                  <VStack>
+                    <Icon size={"sm"} as={FiEdit2} />
+                    Edit
+                  </VStack>
                 </Button>
               </Flex>
             );
           })}
         </VStack>
       )}
-    {!showAddTaskForm && (
-      <Button
-          bg="green.200"
-          variant="outline"
-          onClick={() => prepAddTaskForm()}
-        > Add New Task</Button>
-      )}
-      {showAddTaskForm && (
-        <Box w="50%" p={4} border="1px" borderColor="gray.200" borderRadius="md" boxShadow="sm" bg="gray.50">
+      <Button bg="green.200" variant="outline" onClick={openAddTaskDialog}>
+        Add New Task
+      </Button>
+
+      <DialogModal
+        title="Add Task"
+        body={
           <AddTaskForm
+            ref={addTaskFormRef}
             newTaskTitle={newTaskTitle}
             setNewTaskTitle={setNewTaskTitle}
             newTaskDescription={newTaskDescription}
@@ -472,13 +471,34 @@ export function TasksPage() {
             setNewTaskDueDate={setNewTaskDueDate}
             newTaskPriority={newTaskPriority}
             setNewTaskPriority={setNewTaskPriority}
-            setShowAddTaskForm={setShowAddTaskForm}
             navigate={navigate}
-            refresh={refreshData}
             parentTaskId={undefined}
+            onSavingChange={setAddTaskSaving}
+            onCreated={(created) => {
+              navigate(`/lists/${created.listId}/tasks/${created.id}`);
+            }}
           />
-        </Box>
-      )}
+        }
+        open={isAddTaskDialogOpen}
+        setOpen={(open) => {
+          if (!open) {
+            addTaskFormRef.current?.cancel();
+          }
+          setIsAddTaskDialogOpen(open);
+        }}
+        acceptLabel="Create"
+        acceptColorPalette="green"
+        acceptVariant="solid"
+        cancelLabel="Cancel"
+        loading={addTaskSaving}
+        onAccept={async () => {
+          await addTaskFormRef.current?.submit();
+        }}
+        onCancel={() => {
+          addTaskFormRef.current?.cancel();
+          setIsAddTaskDialogOpen(false);
+        }}
+      />
       <DialogModal
         title="Edit Task"
         body={
@@ -500,7 +520,9 @@ export function TasksPage() {
             setDraftTaskDueDate={setDraftTaskDueDate}
             saving={saving}
             setSaving={setSaving}
-            onSave={() => handleSave(selectedTask)}
+            onSave={async () => {
+              await handleSave(selectedTask);
+            }}
             onClose={cancelEditTask}
             refresh={refreshData}
           />
@@ -508,6 +530,13 @@ export function TasksPage() {
         }
         open={isDialogOpen}
         setOpen={(open) => { if (!open) setSelectedTask(null); }} // Keeps the close dialog button functional
+        acceptLabel="Save"
+        acceptColorPalette="green"
+        acceptVariant="solid"
+        cancelLabel="Cancel"
+        cancelVariant="outline"
+        loading={saving}
+        closeOnAccept={false}
         onAccept={acceptChanges}
         onCancel={cancelEditTask}
       />

@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, VStack, HStack, Center, Button, Spinner } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, VStack, HStack, Center, Button, Spinner, Icon } from "@chakra-ui/react";
 import { Toaster } from "../components/ui/Toaster";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, Navigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import { buildTaskStackPath, parseTaskStackFromPath } from "../routes/taskStack"
 import { TaskDetailsPane } from "../components/TaskDetailsPane";
 import { TaskRow } from "../components/TaskRow";
 import { CompletedTasksToggle } from "../components/CompletedTasksToggle";
-import { AddTaskForm } from "../components/forms/AddTaskForm";
+import { AddTaskForm, type AddTaskFormHandle } from "../components/forms/AddTaskForm";
 import { TaskPriority, TaskStatus } from "../API";
 import type { TaskUI } from "../types/task";
 import { EditListForm } from "../components/forms/EditListForm";
@@ -17,6 +17,8 @@ import { Tooltip } from "../components/ui/Tooltip"
 import { useTaskActions } from "../store/taskStore";
 import { getTodayDateInputValue } from "../services/dateTime";
 import { Tip } from "../components/ui/Tip";
+import { DialogModal } from "../components/ui/DialogModal";
+import { FiEdit2 } from "react-icons/fi";
 
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = getTodayDateInputValue();
@@ -24,9 +26,11 @@ const todayDate = getTodayDateInputValue();
 export function ListDetailsPage() {
 
   const [pulseTaskId, setPulseTaskId] = useState<string | null>(null);
-  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
   const [showAddListItemForm, setShowAddListItemForm] = useState(false);
   const [showCompletedTasks, setShowCompletedTasks] = useState(true);
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [addTaskSaving, setAddTaskSaving] = useState(false);
+  const addTaskFormRef = useRef<AddTaskFormHandle | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState(todayDate);
@@ -199,21 +203,20 @@ export function ListDetailsPage() {
     await fireToast("info", "Toggle Completed Tasks", `Completed tasks are now ${showCompletedTasks ? "hidden" : "visible"}.`);
   }
 
-  const prepAddTaskForm = () => {
-    if (showAddTaskForm) {
-      setShowAddTaskForm(false);
-      return;
-    } else {
-      setShowAddTaskForm(!showAddTaskForm);
-      let newTaskTitleUnique = newTaskTitle;
-      if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === ("New Task")) {
-        newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
-      }
-      setNewTaskTitle(newTaskTitleUnique);
-      setNewTaskDescription("");
-      setNewTaskDueDate(todayDate);
-      setNewTaskPriority(TaskPriority.Medium);
+  const openAddTaskDialog = () => {
+    // Close the "Add New Item" tray so the dialog is the single focus.
+    setShowAddListItemForm(false);
+    setAddTaskSaving(false);
+    setIsAddTaskDialogOpen(true);
+
+    let newTaskTitleUnique = newTaskTitle;
+    if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === "New Task") {
+      newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
     }
+    setNewTaskTitle(newTaskTitleUnique);
+    setNewTaskDescription("");
+    setNewTaskDueDate(todayDate);
+    setNewTaskPriority(TaskPriority.Medium);
   };
 
   // Note: `lists` comes from an async hook; don't redirect until loading is finished.
@@ -257,7 +260,10 @@ export function ListDetailsPage() {
               
               <Tooltip content={isOffLimits ? "Editing is disabled for the system Inbox list." : "Edit list details for list " + listName}>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(v => !v)} disabled={isOffLimits}>
-                  {isEditing ? "Hide Edit" : "Edit"}
+                  <HStack gap={2}>
+                    {!isEditing ? <Icon as={FiEdit2} /> : null}
+                    <Text>{isEditing ? "Hide Edit" : "Edit (inline)"}</Text>
+                  </HStack>
                 </Button>
               </Tooltip>
             </Flex>
@@ -311,54 +317,91 @@ export function ListDetailsPage() {
           )}
 
           {/* Add new list item section */}
-          <Box mt={4} p={2} bg="green.200" rounded="md" cursor="pointer" onClick={addListItem("task")}>
-            <Text>Add New Item</Text>
-          </Box>
+          <Button color="black.500" bg={"green.200"} variant={"outline"} mt={3} onClick={addListItem("task")}>
+            Add New Item
+          </Button>
           {showAddListItemForm && (
             <Box w="100%" mt={2} p={2} bg="gray.50" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
               <VStack align="start" gap={2}>
                 <Heading size="sm">New List Item</Heading>
                 <>
-                  <Button
-                    bg="green.200"
-                    variant="outline"
-                    onClick={() => fireToast("info", "Not Implemented", "This feature is coming soon!")}
-                  >Add New Event</Button>
-                  {!showAddTaskForm && (
+                  <Button bg="green.200" variant="outline" onClick={openAddTaskDialog} minW="145px">
+                    Add New Task
+                  </Button>
+                  <Box display="flex" gap={1} alignItems="center">
                     <Button
                       bg="green.200"
                       variant="outline"
-                      onClick={() => prepAddTaskForm()}
-                    > Add New Task</Button>
-                  )}
-                  <Button
-                    bg="green.200"
-                    variant="outline"
-                    onClick={() => fireToast("info", "Not Implemented", "This feature is coming soon!")}
-                  >Add New Note</Button>
+                      onClick={() => fireToast("info", "Not Implemented", "This feature is coming soon!")}
+                      disabled={true}
+                      minW="145px"
+                    >Add New Event</Button>
+                    <Text fontSize="sm">(Coming Soon)</Text>
+                  </Box>
+                  <Box display="flex" gap={1} alignItems="center">
+                    <Button
+                      bg="green.200"
+                      variant="outline"
+                      onClick={() => fireToast("info", "Not Implemented", "This feature is coming soon!")}
+                      disabled={true}
+                      minW="145px"
+                    >Add New Note</Button>
+                    <Text fontSize="sm">(Coming Soon)</Text>
+                  </Box>
                 </>
               </VStack>
-              {showAddTaskForm && (
-                <AddTaskForm
-                  listId={currentList?.id}
-                  stack={stack}
-                  tasksInList={tasksInList}
-                  newTaskTitle={newTaskTitle}
-                  setNewTaskTitle={setNewTaskTitle}
-                  newTaskDescription={newTaskDescription}
-                  setNewTaskDescription={setNewTaskDescription}
-                  newTaskDueDate={newTaskDueDate}
-                  setNewTaskDueDate={setNewTaskDueDate}
-                  newTaskPriority={newTaskPriority}
-                  setNewTaskPriority={setNewTaskPriority}
-                  setShowAddTaskForm={setShowAddTaskForm}
-                  navigate={navigate}
-                  refresh={refresh}
-                  parentTaskId={undefined}
-                />
-              )}
             </Box>
           )}
+
+          <DialogModal
+            title="Add Task"
+            body={
+              <AddTaskForm
+                ref={addTaskFormRef}
+                listId={currentList?.id}
+                stack={stack}
+                tasksInList={tasksInList}
+                newTaskTitle={newTaskTitle}
+                setNewTaskTitle={setNewTaskTitle}
+                newTaskDescription={newTaskDescription}
+                setNewTaskDescription={setNewTaskDescription}
+                newTaskDueDate={newTaskDueDate}
+                setNewTaskDueDate={setNewTaskDueDate}
+                newTaskPriority={newTaskPriority}
+                setNewTaskPriority={setNewTaskPriority}
+                navigate={navigate}
+                parentTaskId={undefined}
+                onSavingChange={setAddTaskSaving}
+                onCreated={(created) => {
+                  setShowAddListItemForm(false);
+                  setAddTaskSaving(false);
+                  setIsAddTaskDialogOpen(false);
+                  navigate(buildTaskStackPath(created.listId, [created.id]));
+                }}
+              />
+            }
+            open={isAddTaskDialogOpen}
+            setOpen={(open) => {
+              if (!open) {
+                addTaskFormRef.current?.cancel();
+                setAddTaskSaving(false);
+              }
+              setIsAddTaskDialogOpen(open);
+            }}
+            acceptLabel="Create"
+            acceptColorPalette="green"
+            acceptVariant="solid"
+            cancelLabel="Cancel"
+            loading={addTaskSaving}
+            onAccept={async () => {
+              await addTaskFormRef.current?.submit();
+            }}
+            onCancel={() => {
+              addTaskFormRef.current?.cancel();
+              setAddTaskSaving(false);
+              setIsAddTaskDialogOpen(false);
+            }}
+          />
         </VStack>
 
       {/* Right: stacked panes */}

@@ -3,8 +3,8 @@ import { TaskRow } from "../components/TaskRow";
 import { buildTaskStackPath } from "../routes/taskStack";
 import { TaskPriority, TaskStatus } from "../API";
 import { useInboxPageData } from "./useInboxPageData";
-import { useMemo, useState } from "react";
-import { AddTaskForm } from "../components/forms/AddTaskForm";
+import { useMemo, useRef, useState } from "react";
+import { AddTaskForm, type AddTaskFormHandle } from "../components/forms/AddTaskForm";
 import { useNavigate } from "react-router-dom";
 import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
@@ -15,6 +15,7 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { useInboxActions } from "../store/inboxStore";
 import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
+import { FiEdit2 } from "react-icons/fi";
 import { Tip } from "../components/ui/Tip";
 import { getTodayDateInputValue } from "../services/dateTime";
 import { AppCollapsible } from "../components/AppCollapsible";
@@ -55,7 +56,9 @@ function isoToDateInput(iso?: string | null) {
 const todayDate = getTodayDateInputValue();
 
 export function InboxPage() {
-  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [addTaskSaving, setAddTaskSaving] = useState(false);
+  const addTaskFormRef = useRef<AddTaskFormHandle | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskUI | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("New Task");
   const [newTaskDescription, setNewTaskDescription] = useState("");
@@ -98,6 +101,8 @@ export function InboxPage() {
   };
 
   const handleEditTask = async (task: TaskUI) => {
+    // Ensure the add dialog doesn't compete with the edit dialog.
+    setIsAddTaskDialogOpen(false);
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskListId(task.listId ?? "");
@@ -161,21 +166,23 @@ export function InboxPage() {
     fireToast("info", "Edit cancelled", "Task edit has been cancelled.");
   };
 
-  const prepAddTaskForm = () => {
-    if (showAddTaskForm) {
-      setShowAddTaskForm(false);
-      return;
-    } else {
-      setShowAddTaskForm(!showAddTaskForm);
-      let newTaskTitleUnique = newTaskTitle;
-      if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === ("New Task")) {
-        newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
-      }
-      setNewTaskTitle(newTaskTitleUnique);
-      setNewTaskDescription("");
-      setNewTaskDueDate(todayDate);
-      setNewTaskPriority(TaskPriority.Medium);
+  const openAddTaskDialog = () => {
+    // Ensure the edit dialog doesn't compete with the add dialog.
+    setSelectedTask(null);
+
+    setIsAddTaskDialogOpen(true);
+    let newTaskTitleUnique = newTaskTitle;
+    if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === "New Task") {
+      newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
     }
+    setNewTaskTitle(newTaskTitleUnique);
+    setNewTaskDescription("");
+    setNewTaskDueDate(todayDate);
+    setNewTaskPriority(TaskPriority.Medium);
+  };
+
+  const closeAddTaskDialog = () => {
+    setIsAddTaskDialogOpen(false);
   };
 
   const resetFormAndClose = () => {
@@ -234,10 +241,15 @@ export function InboxPage() {
           defaultOpen={vm.newTasks.length > 0}
           mt="0"
           mb="0"
+          headerCenter={
+            <Button bg="green.200" variant="outline" onClick={openAddTaskDialog}>
+              Add New Task
+            </Button>
+          }
           title={
             <HStack gap={2} alignItems="center">
               <Icon as={FcPlus} />
-              <Heading size="lg" fontWeight={700}>
+              <Heading size="lg" fontWeight={700} minW="86px">
                 New tasks
               </Heading>
               <Badge rounded="md">{vm.newTasks.length}</Badge>
@@ -279,7 +291,10 @@ export function InboxPage() {
                         boxShadow: "lg",
                       }}
                     >
-                      Edit
+                      <VStack>
+                        <Icon size={"sm"} as={FiEdit2} />
+                        Edit
+                      </VStack>
                     </Button>
                   </Flex>
                 );
@@ -287,32 +302,6 @@ export function InboxPage() {
             </VStack>
           )}
         </AppCollapsible>
-      </Box>
-
-      {/* Add new task (kept near the top so it doesn't get buried) */}
-      <Box w="100%">
-        {!showAddTaskForm ? (
-          <Button bg="green.200" variant="outline" onClick={prepAddTaskForm}>
-            Add New Task
-          </Button>
-        ) : (
-          <Box w="100%" p={4} border="1px" borderColor="gray.200" borderRadius="md" boxShadow="sm" bg="gray.50">
-            <AddTaskForm
-              newTaskTitle={newTaskTitle}
-              setNewTaskTitle={setNewTaskTitle}
-              newTaskDescription={newTaskDescription}
-              setNewTaskDescription={setNewTaskDescription}
-              newTaskDueDate={newTaskDueDate}
-              setNewTaskDueDate={setNewTaskDueDate}
-              newTaskPriority={newTaskPriority}
-              setNewTaskPriority={setNewTaskPriority}
-              setShowAddTaskForm={setShowAddTaskForm}
-              navigate={navigate}
-              refresh={refreshData}
-              parentTaskId={undefined}
-            />
-          </Box>
-        )}
       </Box>
 
       {/* Overdue */}
@@ -353,11 +342,24 @@ export function InboxPage() {
                       />
                     </Box>
                     <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                      <Button size="sm" variant="outline" onClick={() => dismiss(task.id)}>
-                        Acknowledge
+                      <Button
+                        size="sm"
+                        minW="81.4792px"
+                        variant="outline"
+                        bg="red.200"
+                        onClick={() => dismiss(task.id)}
+                        _hover={{
+                          bg: "orange.600",
+                          borderColor: "red.600",
+                          color: "orange.100",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        Ignore
                       </Button>
                       <Button
-                        size="2xl"
+                        size="sm"
                         bg="orange.200"
                         variant="outline"
                         height={"36px"}
@@ -370,7 +372,7 @@ export function InboxPage() {
                           boxShadow: "lg",
                         }}
                       >
-                        Edit
+                        <Icon size={"sm"} as={FiEdit2} /> Edit
                       </Button>
                     </VStack>
                   </Flex>
@@ -419,11 +421,24 @@ export function InboxPage() {
                       />
                     </Box>
                     <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
-                      <Button size="sm" variant="outline" onClick={() => dismiss(task.id)}>
-                        Acknowledge
+                      <Button
+                        size="sm"
+                        minW="81.4792px"
+                        variant="outline"
+                        bg="red.200"
+                        onClick={() => dismiss(task.id)}
+                        _hover={{
+                          bg: "orange.600",
+                          borderColor: "red.600",
+                          color: "orange.100",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        Ignore
                       </Button>
                       <Button
-                        size="2xl"
+                        size="sm"
                         bg="orange.200"
                         variant="outline"
                         height={"36px"}
@@ -436,7 +451,7 @@ export function InboxPage() {
                           boxShadow: "lg",
                         }}
                       >
-                        Edit
+                        <Icon size={"sm"} as={FiEdit2} /> Edit
                       </Button>
                     </VStack>
                   </Flex>
@@ -452,10 +467,53 @@ export function InboxPage() {
           Last triage: {new Date(vm.state.lastViewedAt).toLocaleString()}
         </Text>
       ) : (
-        <Tip storageKey="tip:inbox-first-time" title="Heads up">
-          First time here — everything counts as “new” once.
+        <Tip storageKey="tip:inbox-first-time" title="First time here!">
+          Everything counts as “new” once. After you triage your inbox, only new or updated items will appear here.
         </Tip>
       )}
+      <DialogModal
+        title="Add Task"
+        body={
+          <AddTaskForm
+            ref={addTaskFormRef}
+            newTaskTitle={newTaskTitle}
+            setNewTaskTitle={setNewTaskTitle}
+            newTaskDescription={newTaskDescription}
+            setNewTaskDescription={setNewTaskDescription}
+            newTaskDueDate={newTaskDueDate}
+            setNewTaskDueDate={setNewTaskDueDate}
+            newTaskPriority={newTaskPriority}
+            setNewTaskPriority={setNewTaskPriority}
+            navigate={navigate}
+            parentTaskId={undefined}
+            onSavingChange={setAddTaskSaving}
+            onCreated={() => {
+              // Keep user on Inbox after creating from Inbox.
+              navigate("/inbox");
+            }}
+          />
+        }
+        open={isAddTaskDialogOpen}
+        setOpen={(open) => {
+          if (!open) {
+            addTaskFormRef.current?.cancel?.();
+          }
+          setIsAddTaskDialogOpen(open);
+        }}
+        acceptLabel="Create"
+        acceptColorPalette="green"
+        acceptVariant="solid"
+        cancelLabel="Cancel"
+        loading={addTaskSaving}
+        onAccept={async () => {
+          await addTaskFormRef.current?.submit?.();
+        }}
+        onCancel={() => {
+          addTaskFormRef.current?.cancel?.();
+          closeAddTaskDialog();
+        }}
+      />
+
       <DialogModal
         title="Edit Task"
         body={

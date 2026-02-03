@@ -1,8 +1,8 @@
-import { forwardRef, useState } from "react";
-import { Box, Flex, Button, Heading, HStack, Text, VStack, Badge, Center, Spinner } from "@chakra-ui/react";
+import { forwardRef, useRef, useState } from "react";
+import { Box, Flex, Button, Heading, HStack, Text, VStack, Badge, Center, Spinner, Icon } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { buildTaskStackPath, nextStackFromLevel } from "../routes/taskStack";
-import { AddTaskForm } from "./forms/AddTaskForm";
+import { AddTaskForm, type AddTaskFormHandle } from "./forms/AddTaskForm";
 import { SubTaskRow } from "./SubTaskRow";
 import type { TaskDetailsPaneProps } from "../types/task";
 import { EditTaskForm } from "./forms/EditTaskForm";
@@ -12,6 +12,8 @@ import type { TaskUI } from "../types/task";
 import { useTaskmasterData } from "../hooks/useTaskmasterData";
 import { useTaskActions } from "../store/taskStore";
 import { formatDueDate, getTodayDateInputValue } from "../services/dateTime";
+import { DialogModal } from "./ui/DialogModal";
+import { FiEdit2 } from "react-icons/fi";
 
 // --- animations
 const pulse = keyframes`
@@ -56,7 +58,9 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     onDelete }, ref
   ) {
   
-  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [addTaskSaving, setAddTaskSaving] = useState(false);
+  const addTaskFormRef = useRef<AddTaskFormHandle | null>(null);
   const selected = tasksInList.find((t) => t.id === taskId);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -94,22 +98,20 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       completedAt,
     });
   };
-  
-  const prepAddTaskForm = () => {
-    if (showAddTaskForm) {
-      setShowAddTaskForm(false);
-      return;
-    } else {
-      setShowAddTaskForm(!showAddTaskForm);
-      let newTaskTitleUnique = newTaskTitle;
-      if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === ("New Task")) {
-        newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
-      }
-      setNewTaskTitle(newTaskTitleUnique);
-      setNewTaskDescription("");
-      setNewTaskDueDate(todayDate);
-      setNewTaskPriority(TaskPriority.Medium);
+
+  const openAddTaskDialog = () => {
+    // Avoid overlapping an inline edit form with a modal flow.
+    setIsEditing(false);
+    setAddTaskSaving(false);
+    setIsAddTaskDialogOpen(true);
+    let newTaskTitleUnique = newTaskTitle;
+    if (newTaskTitle === null || newTaskTitle === "" || newTaskTitle === "New Task") {
+      newTaskTitleUnique = `New Task--${Math.random().toString(36).substring(2, 12)}`;
     }
+    setNewTaskTitle(newTaskTitleUnique);
+    setNewTaskDescription("");
+    setNewTaskDueDate(todayDate);
+    setNewTaskPriority(TaskPriority.Medium);
   };
 
   const handleSave = async (selectedTask: TaskUI) => {
@@ -123,6 +125,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
         tasksInList.every((t) => t.id === selectedTask.id || t.parentTaskId != null)
       : false;
 
+    let didSucceed = false;
     try {
       setSaving(true);
       await updateTask({
@@ -144,14 +147,19 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       if (didMoveLastTopLevelTask || didMoveSubtask) {
         navigate(buildTaskStackPath(nextListId, [selectedTask.id]));
       }
+
+      didSucceed = true;
+      fireToast("success", "Task saved", "The task has been successfully updated.");
+      setIsEditing(false);
+      resetFormAndClose();
     } catch (error) {
       console.error("Error saving task:", error);
       fireToast("error", "Error saving task", "There was an issue saving the task.");
     } finally {
       setSaving(false);
-      resetFormAndClose();
-      fireToast("success", "Task saved", "The task has been successfully updated.");
     }
+
+    return didSucceed;
   };
 
   const resetFormAndClose = () => {
@@ -224,7 +232,10 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                     setIsEditing((v) => !v);
                   }}
                 >
-                  {isEditing ? "Hide Edit" : "Edit"}
+                  <HStack gap={2}>
+                    {!isEditing ? <Icon as={FiEdit2} /> : null}
+                    <Text>{isEditing ? "Hide Edit" : "Edit (inline)"}</Text>
+                  </HStack>
                 </Button>
             </HStack>
 
@@ -247,7 +258,9 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 skipModal={true}
                 saving={saving}
                 setSaving={setSaving}
-                onSave={() => handleSave(selected)}
+                onSave={async () => {
+                  await handleSave(selected);
+                }}
                 onClose={() => setIsEditing(false)}
                 refresh={refresh}
               />
@@ -330,32 +343,58 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
               </Box>
             )}
           </VStack>
-          {!showAddTaskForm ? (
-            <Button
-              bg="green.200"
-              variant="outline"
-              onClick={() => prepAddTaskForm()}
-            > Add New Task</Button>
-            ) : null}
-          {showAddTaskForm && (
-            <AddTaskForm
-              listId={listId}
-              stack={stack}
-              tasksInList={tasksInList}
-              newTaskTitle={newTaskTitle}
-              setNewTaskTitle={setNewTaskTitle}
-              newTaskDescription={newTaskDescription}
-              setNewTaskDescription={setNewTaskDescription}
-              newTaskDueDate={newTaskDueDate}
-              setNewTaskDueDate={setNewTaskDueDate}
-              newTaskPriority={newTaskPriority}
-              setNewTaskPriority={setNewTaskPriority}
-              setShowAddTaskForm={setShowAddTaskForm}
-              navigate={navigate}
-              refresh={refresh}
-              parentTaskId={selected.id}
-            />
-          )}
+          <Button color="black.500" bg={"green.200"} variant={"outline"} mt={3} onClick={openAddTaskDialog}>
+            Add New Task
+          </Button>
+
+          <DialogModal
+            title="Add Task"
+            body={
+              <AddTaskForm
+                ref={addTaskFormRef}
+                listId={listId}
+                stack={stack}
+                tasksInList={tasksInList}
+                newTaskTitle={newTaskTitle}
+                setNewTaskTitle={setNewTaskTitle}
+                newTaskDescription={newTaskDescription}
+                setNewTaskDescription={setNewTaskDescription}
+                newTaskDueDate={newTaskDueDate}
+                setNewTaskDueDate={setNewTaskDueDate}
+                newTaskPriority={newTaskPriority}
+                setNewTaskPriority={setNewTaskPriority}
+                navigate={navigate}
+                parentTaskId={selected.id}
+                onSavingChange={setAddTaskSaving}
+                onCreated={(created) => {
+                  setAddTaskSaving(false);
+                  setIsAddTaskDialogOpen(false);
+                  navigate(buildTaskStackPath(listId, nextStackFromLevel(stack, taskId, created.id)));
+                }}
+              />
+            }
+            open={isAddTaskDialogOpen}
+            setOpen={(open) => {
+              if (!open) {
+                addTaskFormRef.current?.cancel();
+                setAddTaskSaving(false);
+              }
+              setIsAddTaskDialogOpen(open);
+            }}
+            acceptLabel="Create"
+            acceptColorPalette="green"
+            acceptVariant="solid"
+            cancelLabel="Cancel"
+            loading={addTaskSaving}
+            onAccept={async () => {
+              await addTaskFormRef.current?.submit();
+            }}
+            onCancel={() => {
+              addTaskFormRef.current?.cancel();
+              setAddTaskSaving(false);
+              setIsAddTaskDialogOpen(false);
+            }}
+          />
         </Box>
       )}
     </Box>
