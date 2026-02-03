@@ -1,5 +1,6 @@
-import { Button, HStack, Text } from "@chakra-ui/react";
+import { Button, HStack, Flex, Text, Icon } from "@chakra-ui/react";
 import { RouterLink } from "./RouterLink";
+import { FiList } from "react-icons/fi";
 
 export const SidebarItem = (
   {
@@ -28,7 +29,10 @@ export const SidebarItem = (
           bg={isActive ? "blackAlpha.100" : "transparent"}
           _hover={{ bg: "blackAlpha.100" }}
         >
-          <HStack w="100%" justify="space-between" gap={2} minW={0}>
+          <HStack w="100%" gap={2} minW={0}>
+            { to.startsWith("/lists/") &&
+              <Icon as={FiList } />
+            }
             <Text truncate>{label}</Text>
             {rightAdornment ? <HStack flexShrink={0} gap={1}>{rightAdornment}</HStack> : null}
           </HStack>
