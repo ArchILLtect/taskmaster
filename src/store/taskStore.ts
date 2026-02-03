@@ -20,6 +20,10 @@ import {
 
 const EMPTY_TASKS: TaskUI[] = [];
 
+function isReservedSystemInboxName(name: unknown): boolean {
+  return typeof name === "string" && name.trim() === SYSTEM_INBOX_NAME;
+}
+
 export type TaskIndexes = {
   listsById: Record<string, ListUI>;
   tasksById: Record<string, TaskUI>;
@@ -493,11 +497,17 @@ export const useTaskStore = create<TaskStoreState>()(
       },
 
       createTaskList: async (input) => {
+        if (isReservedSystemInboxName((input as { name?: unknown } | null | undefined)?.name)) {
+          throw new Error(`"${SYSTEM_INBOX_NAME}" is reserved for the system Inbox.`);
+        }
         await taskmasterApi.createTaskList(input);
         await get().refreshAll(undefined, { reason: "mutation" });
       },
 
       updateTaskList: async (input) => {
+        if ("name" in input && isReservedSystemInboxName((input as { name?: unknown } | null | undefined)?.name)) {
+          throw new Error(`"${SYSTEM_INBOX_NAME}" is reserved for the system Inbox.`);
+        }
         await taskmasterApi.updateTaskList(input);
         await get().refreshAll(undefined, { reason: "mutation" });
       },
