@@ -44,6 +44,13 @@
 
 ## Local storage keys
 
-- **`taskmaster:taskStore`**: Persisted tasks/lists cache (with TTL and migrations).
-- **`taskmaster:inbox`**: Persisted inbox UX state (dismissals/preferences).
-- **`taskmaster:updates`**: Persisted Updates feed + read markers.
+TaskMaster scopes most persisted keys per signed-in user.
+
+- **`taskmaster:authScope`**: The current user scope key used for local persistence.
+- **`taskmaster:u:<scope>:zustand:taskmaster:taskStore`**: Persisted tasks/lists cache (with TTL and migrations).
+- **`taskmaster:u:<scope>:zustand:taskmaster:inbox`**: Persisted Inbox triage state (dismissed notification task ids).
+- **`taskmaster:u:<scope>:zustand:taskmaster:updates`**: Persisted Updates feed + read markers.
+- **`taskmaster:u:<scope>:zustand:taskmaster:user`**: Cached user display info (email/role).
+- **`taskmaster:u:<scope>:zustand:taskmaster:localSettings`**: Local preferences (sidebar width, default routes, due-soon window).
+- **`taskmaster:u:<scope>:inboxListId`**: Cached system Inbox list id mapping.
+- **`taskmaster:storageDisclosureAck:v1`**: Storage disclosure banner dismissal.

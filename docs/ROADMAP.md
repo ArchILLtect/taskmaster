@@ -106,7 +106,7 @@ These are intentionally unspecified until earlier phases are complete.
 Current code reality (as of today):
 - Pages read/write data via Zustand stores under `src/store/*`.
 - Store actions call the GraphQL wrapper (`src/api/taskmasterApi.ts`).
-- Local persistence uses Zustand `persist` for fast reloads (cached lists/tasks, updates feed, inbox prefs).
+- Local persistence uses Zustand `persist` for fast reloads, and is scoped per signed-in user in localStorage (cached lists/tasks, updates feed, inbox triage state, local settings).
 
 References:
 - Current routing + pages: [src/App.tsx](../src/App.tsx)

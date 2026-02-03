@@ -62,10 +62,17 @@ Operational verification:
 The app persists some state in localStorage for UX (faster reload / cached views). Treat localStorage as readable by anyone with access to the device/browser profile.
 
 - [ ] Do not store access tokens or sensitive secrets in localStorage.
-- [ ] Sanity-check what’s persisted under these keys:
-	- `taskmaster:taskStore` (tasks/lists cache with TTL)
-	- `taskmaster:inbox` (inbox preferences/dismissals)
-	- `taskmaster:updates` (updates feed + read markers)
+- [ ] Sanity-check what’s persisted under TaskMaster keys.
+	- Most persisted keys are scoped per signed-in user:
+		- `taskmaster:authScope`
+		- `taskmaster:u:<scope>:zustand:taskmaster:taskStore`
+		- `taskmaster:u:<scope>:zustand:taskmaster:inbox`
+		- `taskmaster:u:<scope>:zustand:taskmaster:updates`
+		- `taskmaster:u:<scope>:zustand:taskmaster:user`
+		- `taskmaster:u:<scope>:zustand:taskmaster:localSettings`
+		- `taskmaster:u:<scope>:inboxListId`
+	- Non-scoped UX keys:
+		- `taskmaster:storageDisclosureAck:v1` (storage disclosure banner dismissal)
 - [ ] Ensure persisted state is validated/migrated defensively (corrupted JSON should not break startup).
 
 ---
@@ -87,4 +94,4 @@ When deploying the SPA, prefer enabling standard security headers at the host/CD
 - [ ] Avoid logging user content (task titles/descriptions) to third-party services.
 - [ ] If error reporting is added later (Sentry/etc.), scrub PII and auth tokens.
 - [ ] Provide a basic privacy policy once the app is exposed to real users.
-- [ ] Add a storage disclosure if needed (localStorage caches and auth storage).
+- [x] Storage disclosure banner exists (localStorage caches and auth storage).

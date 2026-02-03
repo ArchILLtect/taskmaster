@@ -114,9 +114,11 @@ The app uses persisted local caches (for faster reload) and will rebuild derived
 - [ ] If you made breaking changes to persisted store shapes, bump the persist version(s) in:
 	- [src/store/taskStore.ts](../src/store/taskStore.ts)
 - [ ] If you see “stuck” UI after deploy, validate that clearing these keys resolves it:
-	- `taskmaster:taskStore`
-	- `taskmaster:inbox`
-	- `taskmaster:updates`
+	- Recommended: clear all `taskmaster:u:` keys (scoped local persistence)
+	- Or clear the specific scoped Zustand keys:
+		- `taskmaster:u:<scope>:zustand:taskmaster:taskStore`
+		- `taskmaster:u:<scope>:zustand:taskmaster:inbox`
+		- `taskmaster:u:<scope>:zustand:taskmaster:updates`
 
 ---
 

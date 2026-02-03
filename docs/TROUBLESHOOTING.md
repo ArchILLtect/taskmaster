@@ -28,18 +28,27 @@ If you truly need multiple fields:
 ## Reset local state (recommended during development)
 TaskMaster persists a small amount of state in `localStorage`.
 
-Keys in use:
-- `taskmaster:taskStore` (tasks/lists cache with TTL)
-- `taskmaster:inbox` (inbox preferences + dismissals)
-- `taskmaster:updates` (updates event feed + read markers)
-- `taskmaster:user` (cached user display info)
+Most keys are **scoped per signed-in user** (to avoid cross-user cache flashes on shared browsers).
+
+Common keys you’ll see:
+- `taskmaster:authScope` (current auth scope marker used for scoping)
+- `taskmaster:u:<scope>:zustand:taskmaster:taskStore` (tasks/lists cache with TTL)
+- `taskmaster:u:<scope>:zustand:taskmaster:inbox` (Inbox triage dismissal state)
+- `taskmaster:u:<scope>:zustand:taskmaster:updates` (Updates event feed + read markers)
+- `taskmaster:u:<scope>:zustand:taskmaster:user` (cached user display info)
+- `taskmaster:u:<scope>:zustand:taskmaster:localSettings` (sidebar width + default routes + due-soon window)
+- `taskmaster:u:<scope>:inboxListId` (system Inbox list id mapping)
+
+Other UX keys:
+- `taskmaster:storageDisclosureAck:v1` (storage disclosure banner dismissal)
+- `taskmaster:u:<scope>:tip:*` (dismissed tips)
 
 To reset:
 1. Open browser devtools → Application/Storage → Local Storage.
-2. Remove the keys above.
+2. Remove keys by prefix (recommended): `taskmaster:u:`.
 3. Refresh the page.
 
-Tip: If you only want to reset tasks/lists cache (but keep UX state), clear only `taskmaster:taskStore`.
+Tip: If you only want to reset tasks/lists cache (but keep UX state), clear only `taskmaster:u:<scope>:zustand:taskmaster:taskStore`.
 
 ## `npm run dev` exits immediately
 If `npm run dev` exits with code 1:
@@ -59,7 +68,7 @@ If you believe you *should* be an admin:
 1. Confirm your Cognito user is in the `Admin` group for the current environment.
 2. Sign out and sign back in (group membership changes may not reflect until a fresh session).
 3. Clear the cached user display/role key and refresh:
-	- `taskmaster:user`
+	- `taskmaster:u:<scope>:zustand:taskmaster:user`
 
 Notes:
 - The Admin console is currently **read-only** (inspection/debug only). Editing/deleting items from `/admin` is intentionally deferred.
@@ -75,7 +84,7 @@ What to do:
 Updates events are appended after successful task mutations (create/update/delete). If you don’t see an expected event:
 
 - Confirm the mutation succeeded (check network tab and UI toast).
-- Clear `taskmaster:updates` to reset the feed.
+- Clear `taskmaster:u:<scope>:zustand:taskmaster:updates` to reset the feed.
 - Note: some updates may be categorized as “task_updated” vs “task_completed/reopened” depending on what fields changed.
 
 ## Time zones / due dates

@@ -31,9 +31,22 @@ npm run build
 
 If the UI looks “stuck” (stale cached tasks, odd inbox dismissals, etc.), clear the persisted keys in browser devtools → Application → Local Storage:
 
-- `taskmaster:taskStore` (tasks/lists cache with TTL)
-- `taskmaster:inbox` (inbox preferences/dismissals)
-- `taskmaster:updates` (updates event feed + read markers)
+TaskMaster scopes most persisted keys per signed-in user to prevent cross-user cache flashes.
+
+Recommended reset options:
+
+1) **Full local reset (dev-friendly):** remove all keys with prefix `taskmaster:u:`.
+2) **Targeted reset:** remove only the current user’s scoped Zustand keys, for example:
+	- `taskmaster:u:<scope>:zustand:taskmaster:taskStore`
+	- `taskmaster:u:<scope>:zustand:taskmaster:inbox`
+	- `taskmaster:u:<scope>:zustand:taskmaster:updates`
+	- `taskmaster:u:<scope>:zustand:taskmaster:user`
+	- `taskmaster:u:<scope>:zustand:taskmaster:localSettings`
+
+Other useful keys:
+- `taskmaster:authScope` (current storage scope identity)
+- `taskmaster:storageDisclosureAck:v1` (storage disclosure banner dismissal)
+- `taskmaster:u:<scope>:inboxListId` (system inbox list id mapping)
 
 ## Notes
 

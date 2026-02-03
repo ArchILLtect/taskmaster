@@ -33,11 +33,15 @@ References:
 - Consistent layout via AppShell (top bar + sidebar).
 - Deep-linkable task details via the “pane stack” route.
 - Activity feed (“Updates”) that can be marked read and cleared.
+- Inbox triage: system Inbox staging + overdue/due-soon attention with per-task and bulk ignore.
+- Settings: local preferences (default routes, due-soon window) and safe demo data controls.
+- Storage disclosure banner acknowledging local persistence.
 
 ## Acceptance criteria (current prototype)
 - App runs locally via `npm run dev`.
 - Lists and tasks render from Zustand stores backed by Amplify GraphQL.
 - Task create/status changes persist via GraphQL, and the app keeps a persisted cache in localStorage for fast reloads.
+	- Note: persisted keys are scoped per signed-in user in the browser to avoid cross-user cache flashes.
 
 ---
 

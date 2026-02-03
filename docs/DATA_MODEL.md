@@ -161,11 +161,21 @@ What could go inside onboarding
 
 ## Local persistence structures
 This app persists a small set of UI/runtime state in `localStorage` via Zustand `persist`:
-- Tasks + lists cache: `taskmaster:taskStore` (see [src/store/taskStore.ts](../src/store/taskStore.ts))
-- Updates feed + read markers: `taskmaster:updates` (see [src/store/updatesStore.ts](../src/store/updatesStore.ts))
-- Inbox preferences: `taskmaster:inbox` (see [src/store/inboxStore.ts](../src/store/inboxStore.ts))
-- User display cache: `taskmaster:user` (see [src/services/userUICacheStore.ts](../src/services/userUICacheStore.ts))
-- System inbox list id: `taskmaster.inboxListId` (see [src/config/inboxSettings.ts](../src/config/inboxSettings.ts))
+
+### User-scoped localStorage (current)
+Most persisted keys are scoped per signed-in user (to prevent cross-user cache flashes).
+
+- Auth scope marker: `taskmaster:authScope` (see [src/services/userScopedStorage.ts](../src/services/userScopedStorage.ts))
+- Tasks + lists cache (Zustand persist): `taskmaster:u:<scope>:zustand:taskmaster:taskStore` (see [src/store/taskStore.ts](../src/store/taskStore.ts))
+- Updates feed + read markers: `taskmaster:u:<scope>:zustand:taskmaster:updates` (see [src/store/updatesStore.ts](../src/store/updatesStore.ts))
+- Inbox triage dismissals: `taskmaster:u:<scope>:zustand:taskmaster:inbox` (see [src/store/inboxStore.ts](../src/store/inboxStore.ts))
+- User display cache: `taskmaster:u:<scope>:zustand:taskmaster:user` (see [src/services/userUICacheStore.ts](../src/services/userUICacheStore.ts))
+- Local settings: `taskmaster:u:<scope>:zustand:taskmaster:localSettings` (see [src/store/localSettingsStore.ts](../src/store/localSettingsStore.ts))
+- System inbox list id mapping: `taskmaster:u:<scope>:inboxListId` (see [src/config/inboxSettings.ts](../src/config/inboxSettings.ts))
+
+Other UX keys:
+- Storage disclosure banner dismissal: `taskmaster:storageDisclosureAck:v1` (see [src/components/ui/StorageDisclosureBanner.tsx](../src/components/ui/StorageDisclosureBanner.tsx))
+- Dismissed tips: `taskmaster:u:<scope>:tip:*` (see [src/components/ui/Tip.tsx](../src/components/ui/Tip.tsx))
 
 Helper utilities:
 - [src/services/storage.ts](../src/services/storage.ts)

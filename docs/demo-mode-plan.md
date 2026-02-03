@@ -290,10 +290,8 @@ Client handler:
 1) `POST /auth/demo`
 2) Parse JSON: `{ username, password }`
 3) `await signIn({ username, password })`
-4) Set a local “demo session” flag on success (so demo UX doesn’t depend on the first token’s `cognito:groups` claim)
-  - Example: localStorage `taskmaster:isDemoSession = "1"` (and clear it on sign-out)
-4) Redirect to `?redirect=` if present; otherwise default to `/today`
-5) Existing “post-login seed if empty” logic executes normally
+4) Redirect to `?redirect=` if present; otherwise use the configured default landing route (fallback: `/today`).
+5) Existing versioned seeding logic executes normally (see Step 9).
 
 Endpoint wiring note
 - The client should use the deployed REST endpoint URL (from Amplify API output / config). Treat this as environment/config-driven, not hard-coded.
@@ -318,9 +316,8 @@ Current approach (as implemented):
 Important:
 - Avoid seeding on every sign-in.
 - Prefer `seedVersion` over “0 lists” checks (more robust when you later change the seed dataset)
-- If `cognito:groups` includes `"Demo"`, allow demo-only UX (badge, reset) and/or seed a richer dataset.
-  - Gotcha: do not block demo UX on this claim for the first session; it may be missing initially.
-  - For the first session, treat the user as demo based on the local “demo session” flag set after a successful `/auth/demo` call.
+- Demo UX should not depend on the first session token having the `cognito:groups` claim.
+	- In the current app, demo content is marked via `isDemo: true` on records, and Settings includes safe demo-data controls (clear/reset/add) that operate only on demo-marked items.
 - If not demo, seed minimal onboarding data.
 
 ---

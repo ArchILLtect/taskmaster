@@ -49,7 +49,7 @@ All app state that drives the UI lives in Zustand stores under `src/store/**`.
 - Direct imports from `src/api/**` are forbidden in UI (pages/components). Amplify generated `../API` is restricted to enums only (`TaskStatus`, `TaskPriority`).
 - Persistence:
 	- `taskStore` persists `{ lists, tasks, lastLoadedAtMs }` with a TTL; indexes are rebuilt on hydration.
-	- Inbox + Updates stores persist their own local UI state (dismissals, read markers, event feed).
+	- Inbox + Updates stores persist their own local UI state (dismissals, read markers, event feed) in **user-scoped localStorage**.
 
 Core stores:
 - Tasks/lists: [src/store/taskStore.ts](../src/store/taskStore.ts)
@@ -66,6 +66,7 @@ Network boundary:
 
 Persistence primitives:
 - JSON + time helpers: [src/services/storage.ts](../src/services/storage.ts)
+- User-scoped storage helpers (keying + zustand storage): [src/services/userScopedStorage.ts](../src/services/userScopedStorage.ts)
 
 ## Amplify + GraphQL (current)
 GraphQL schema exists under Amplify:
@@ -177,8 +178,8 @@ This is safe to run on every authenticated boot because it only writes when the 
 - Sign-out cleanup:
 	- User-scoped cache clearing exists (`taskStore` + inbox/updates + userUI)
 - Inbox + Updates:
-	- These are locally persisted (per browser), not per user (by design for MVP)
-	- We decided to defer per-user persistence as a stretch goal
+	- These are locally persisted (per browser) and scoped per signed-in user to avoid cross-user cache flashes.
+	- They are not yet synchronized to the backend (no cross-device persistence yet).
 
 ### Goal
 - New users should be able to experience the app immediately without manually creating lists/tasks.
@@ -231,17 +232,21 @@ Temporary opt-out is supported via `?demo=0` or `localStorage.taskmaster:seedDem
 - On sign-out:
 	- Clear task store local cache (so next user doesn’t see old cached tasks)
 	- Clear user UI cache
-	- Optionally clear inbox/updates local stores OR scope them per-user locally (future)
+	- Clear user-scoped inbox/updates/localSettings caches (these are scoped per user locally)
 - On sign-in:
 	- “belt + suspenders”: clear caches on auth sign-in event (Hub listener), then bootstrap again
+
+### Demo data management (implemented)
+- Settings includes a Demo Data section that can clear/reset/add demo content without touching non-demo items.
+- Implementation: [src/services/demoDataService.ts](../src/services/demoDataService.ts)
 
 ### Stretch goals (post-MVP)
 - Persist inbox/updates per user in DynamoDB
 - Route-level code splitting to reduce bundle size
 
 ### Notes / Intentional tradeoffs
-- Inbox/Updates are currently browser-local and may reset on account switching.
-	- This is acceptable for MVP and will be upgraded later.
+- Inbox/Updates are browser-local (no backend sync yet) but are scoped per signed-in user in localStorage.
+	- This is acceptable for MVP and can be upgraded to backend persistence later.
 - Seed + settings/onboarding use versioning (forward-only migration style).
 
 ## UI, Hooks, and API Boundaries (Intentional)

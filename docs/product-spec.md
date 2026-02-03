@@ -19,64 +19,48 @@ It is intentionally product-focused (not implementation-focused) so collaborator
 
 **Purpose**
 
-InboxPage is not supposed to just display a list of tasks; it is a separate component that acts as a staging area.
+InboxPage is a staging area for new/untriaged tasks and a place to surface time-based attention cues.
 
-The Inbox is the central processing area for tasks that need your attention or don't yet have a home in a specific list, acting as a temporary holding place for newly captured items, assigned tasks, or those from integrations like email/Slack. It's where you review, organize, and triage tasks, deciding whether to move them to a project list, schedule them for today, or process them further.
+**Current MVP behavior (implemented)**
 
-**What goes into the Inbox by default**
+- The Inbox is backed by a hidden **system list** named `__Inbox`.
+- Tasks in the system Inbox list are **always visible** in the Inbox UI (staging area).
+- The Inbox page also surfaces **attention cues** across *all lists*:
+	- Overdue tasks
+	- Due-soon tasks (window controlled by a user setting)
+- Users can **ignore** (dismiss) overdue/due-soon notifications per task, or in bulk via “Done triaging”.
+	- Ignoring is local UX state: it does **not** delete or complete tasks.
+	- Ignoring does not remove staging tasks from `__Inbox`.
+	- Ignored state can be reset from Settings.
 
-- Assigned tasks: Tasks assigned to you by others.
-- Integration tasks: Items created from connected services (e.g., Gmail, Slack).
-- Quick Command tasks: Tasks created using the universal shortcut (Shift+Option+Space on desktop).
-- Manually added tasks: Tasks you create directly in the inbox.
-
-**How to use it**
-
-- Capture: Quickly add tasks to your inbox using quick commands or integrations.
-- Review: Check your inbox for items that need processing.
-- Organize: Move tasks from the inbox to relevant project lists, assign them due dates, or add details.
-
-Essentially, the Inbox is your starting point for handling new inputs before they're filed away into your organized lists.
-
-**Primary user actions**
+**Primary user actions (MVP)**
 
 - Capture a new task into Inbox
-- Triage an Inbox task:
+- Triage:
 	- Move to a list
-	- Schedule (set due date / put into “Today”)
-	- Dismiss (remove from active attention without “completing”)
-	- Acknowledge (mark as seen/handled without necessarily completing)
-- Complete / reopen
-- Delete (if supported)
-
-**Data source (reads/writes)**
-
-- Reads tasks from the data layer filtered to “Inbox scope”
-	- Implementation may be: a hidden “system list” (e.g. listId = `inbox`) or a dedicated Inbox flag.
-- Writes are task mutations (create/update/move/dismiss/acknowledge).
+	- Schedule (set due date)
+	- Complete / reopen
+	- Delete
+- Ignore attention cues:
+	- Ignore a single overdue/due-soon task notification
+	- “Done triaging” (bulk ignore overdue/due-soon)
 
 **Special rules / invariants (don’t break this list)**
 
 - Inbox is a staging area for new/untriaged items.
-- Inbox tasks may be stored as a hidden “system list”.
-- Inbox is not shown in normal list navigation.
-- Inbox supports triage: move, schedule, dismiss, acknowledge.
-- “New task” default behavior can route into Inbox (if enabled).
+- Inbox tasks are stored as a hidden “system list” named `__Inbox`.
+- The system Inbox list is not shown in normal list navigation.
+- Dismiss/ignore is about attention cues (overdue/due-soon), not about completing/deleting tasks.
 
 **Out of scope for MVP**
 
 - Integrations ingestion (Gmail/Slack/etc.)
 - Universal shortcut / quick command UI
 - Multi-user assignment workflows (beyond displaying an assignee)
-- Automation rules (“if labeled X then move to Y”)
 
 ---
 
 ### Lists
-
-**Purpose**
-
-Lists are the primary organizational containers for tasks (projects/areas) and are the main navigation surface.
 
 **Primary user actions**
 
@@ -96,9 +80,12 @@ Lists are the primary organizational containers for tasks (projects/areas) and a
 
 **Out of scope for MVP**
 
-- Full list CRUD (create/rename/delete) unless explicitly prioritized
 - Sharing/permissions
 - Complex list types (smart lists, filters-as-lists)
+
+**In scope for MVP (implemented)**
+
+- Full list CRUD exists (create/rename/delete), with guardrails around the system Inbox name `__Inbox`.
 
 ---
 
@@ -227,4 +214,14 @@ Settings is where user-level preferences live (appearance, defaults, integration
 - Billing
 - Complex role/permission management
 - Enterprise policy controls
+
+**Current MVP behavior (implemented)**
+
+- Choose default view route (Today/Week/Month) and default post-login landing route.
+- Configure due-soon window days.
+- Reset ignored Inbox notifications (clears locally persisted dismissal state).
+- Manage demo data safely:
+	- Clear demo data only (never deletes non-demo items)
+	- Reset demo data (re-seed demo content while preserving non-demo)
+	- Add more demo tasks/lists (generators for testing and exploration)
 
