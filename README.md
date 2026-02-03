@@ -27,9 +27,12 @@ The UI is **store-driven**:
 ## ✨ Features
 
 - Authenticated app shell (sidebar + top bar)
+- Inbox triage (system Inbox staging + overdue/due-soon indicators across all lists)
 - Task lists + tasks (GraphQL-backed)
 - Task details “pane stack” navigation (deep-linkable)
 - Updates feed + read markers (local/persisted UX state)
+- Settings: default landing/view routes, reset ignored Inbox notifications, and demo data controls
+- Storage disclosure banner (acknowledgement persisted)
 - Admin-only console (`/admin`) for cross-user inspection (email → account → lists → tasks)
   - Note: intentionally read-only for now (admin item editing/deleting is deferred)
 - Dev-only GraphQL smoke testing route (`/dev`)
@@ -120,12 +123,31 @@ The list details view supports an “infinite pane stack” encoded in the URL:
 
 ## 💾 Local persistence (client cache)
 
-Some state is cached in `localStorage` to make reloads fast and UX smoother.
+TaskMaster persists some UX/cache state in `localStorage` to make reloads fast and UX smoother.
 
-Reset keys (useful when debugging “stuck” UI):
-- `taskmaster:taskStore`
-- `taskmaster:inbox`
-- `taskmaster:updates`
+### User-scoped localStorage
+
+Persisted stores are **scoped per signed-in user** in the browser to avoid cross-user “flash of old data” issues on shared devices.
+
+At runtime this looks like:
+- `taskmaster:authScope` (stores the current scope key)
+- `taskmaster:u:<scope>:zustand:taskmaster:taskStore`
+- `taskmaster:u:<scope>:zustand:taskmaster:inbox`
+- `taskmaster:u:<scope>:zustand:taskmaster:updates`
+- `taskmaster:u:<scope>:zustand:taskmaster:user`
+- `taskmaster:u:<scope>:zustand:taskmaster:localSettings`
+- `taskmaster:u:<scope>:inboxListId`
+
+Non-store UX keys:
+- `taskmaster:storageDisclosureAck:v1` (dismissal for the storage disclosure banner)
+- `taskmaster:u:<scope>:tip:*` (dismissed tips)
+
+### Reset local state
+
+If the UI looks “stuck” (stale cached tasks, odd Inbox dismissals, etc.), clear keys by prefix in browser devtools → Application → Local Storage:
+- `taskmaster:u:` (clears all scoped keys for all users)
+
+Or, to surgically reset one area, clear the specific scoped `zustand:*` keys for the current user.
 
 ---
 
