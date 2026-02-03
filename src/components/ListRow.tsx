@@ -1,5 +1,6 @@
-import { Box, HStack, Text, Button, Flex } from "@chakra-ui/react";
+import { Box, HStack, Text, Button, Flex, Icon } from "@chakra-ui/react";
 import { IoTrash, IoStar, IoStarSharp } from "react-icons/io5";
+import { FiEdit2 } from "react-icons/fi";
 import { RouterLink } from "./RouterLink";
 import { Tooltip } from "./ui/Tooltip";
 import type { ListRowProps } from "../types";
@@ -86,9 +87,12 @@ export const ListRow = ({ list, setSelectedList, to, isEditable, isEditing, setI
                   </Flex>
                   {isEditable && (
                   <Flex gap={1} flexDirection="column" alignItems="end">
-                    <Tooltip content="Edit list">
+                    <Tooltip content={isEditing ? "Hide inline editor" : "Edit (inline)"}>
                       <Button size="sm" variant="outline" onClick={onEditingClick}>
-                        {isEditing ? "Hide Edit" : "Edit"}
+                        <HStack gap={2}>
+                          {!isEditing ? <Icon as={FiEdit2} /> : null}
+                          <Text>{isEditing ? "Hide Edit" : "Edit"}</Text>
+                        </HStack>
                       </Button>
                     </Tooltip>
                   </Flex>
