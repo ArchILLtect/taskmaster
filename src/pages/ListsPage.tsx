@@ -1,13 +1,4 @@
-import {
-  Box,
-  Flex,
-  VStack,
-  HStack,
-  Heading,
-  Text,
-  Button,
-  Badge,
-} from "@chakra-ui/react";
+import { Box, Flex, VStack, HStack, Heading, Text, Button, Badge } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { useEffect, useMemo, useState } from "react";
