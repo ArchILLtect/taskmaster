@@ -356,7 +356,7 @@ export function TasksPage() {
           </Badge>
         </HStack>
 
-        <AppCollapsible title="Filters & Sorting" width="50%">
+        <AppCollapsible title="Filters & Sorting" width="100%">
           <SearchFilterSortBar
             search={taskSearch}
             setSearch={setTaskSearch}
@@ -428,11 +428,12 @@ export function TasksPage() {
                     onDelete={() => handleDeleteTask(task.id)}
                   />
                 </Box>
+                <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
                 <Button
-                  size="2xl"
+                  size="xl"
                   bg="orange.200"
                   variant="outline"
-                  height={"95px"}
+                  height={"75px"}
                   onClick={() => handleEditTask(task)}
                   _hover={{
                     bg: "orange.300",
@@ -447,6 +448,7 @@ export function TasksPage() {
                     Edit
                   </VStack>
                 </Button>
+                </VStack>
               </Flex>
             );
           })}
