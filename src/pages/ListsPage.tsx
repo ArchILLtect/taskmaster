@@ -1,4 +1,4 @@
-import { Box, Flex, VStack, HStack, Heading, Text, Button, Badge } from "@chakra-ui/react";
+import { Box, Flex, VStack, HStack, Center, Heading, Text, Button, Badge } from "@chakra-ui/react";
 import { useListsPageData } from "./useListsPageData";
 import { ListRow } from "../components/ListRow";
 import { useEffect, useMemo, useState } from "react";
@@ -255,94 +255,91 @@ export const ListsPage = () => {
   if (loading) return <BasicSpinner />;
 
   return (
-    <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+    <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
       <Toaster />
-      <Tip storageKey="tip:lists-system-inbox" title="Tip">
-        The Inbox is a system list — it can’t be deleted or renamed. Favorite lists to pin them in the sidebar.
-      </Tip>
-      <Flex gap={4} w="100%">
-        <Box w="50%">
-          <Box w="100%" mb={4}>
-            <Box w="100%" mb={4}>
-              <HStack justify="space-between" width="100%">
-                <VStack align="start">
-                  <Heading size="2xl">Lists</Heading>
-                  <Text>Search, filter, sort, and manage your lists.</Text>
-                  <HStack gap={2} flexWrap="wrap">
-                    <Badge variant="outline">Total: {listCounts.total}</Badge>
-                    <Badge variant="outline" colorPalette="yellow">
-                      Favorites: {listCounts.favorites}
-                    </Badge>
-                    <Badge variant="solid" colorPalette="purple">
-                      Showing: {listCounts.showing}
-                    </Badge>
-                  </HStack>
-                </VStack>
+      {/* Left: list details */}
+      <VStack align="start" gap={2} w={"40vw"}>
+        <VStack w="100%">
+          <Box w="100%">
+            <VStack gap={3} align="start" mb={4}>
+              <Heading size="2xl">Lists</Heading>
+              <Text>Search, filter, sort, and manage your lists.</Text>
+              <Tip storageKey="tip:lists-system-inbox" title="Tip">
+                The Inbox is a system list — it can’t be deleted or renamed. Favorite lists to pin them in the sidebar.
+              </Tip>
+              <HStack gap={2} flexWrap="wrap" justifyContent={"center"} w={"100%"}>
+                <Badge variant="outline">Total: {listCounts.total}</Badge>
+                <Badge variant="outline" colorPalette="yellow">
+                  Favorites: {listCounts.favorites}
+                </Badge>
+                <Badge variant="solid" colorPalette="purple">
+                  Showing: {listCounts.showing}
+                </Badge>
               </HStack>
-            </Box>
-
-            {/* Collapsible for search, filter, sort options */}
-            <AppCollapsible title="Search, Filter, and Sort Options">
-              <SearchFilterSortBar
-                search={listSearch}
-                setSearch={setListSearch}
-                searchPlaceholder="Search name/description"
-                searchHelperText="Search lists by name or description."
-                filter={{
-                  title: "Filter",
-                  items: LIST_FILTER_OPTIONS,
-                  value: listFilter,
-                  onChange: (v) => setListFilter((v as ListFilterKey) || "all"),
-                  placeholder: "All lists",
-                  helperText: "Filter the visible lists",
-                }}
-                sort={{
-                  title: "Sort",
-                  items: LIST_SORT_OPTIONS,
-                  value: listSort,
-                  onChange: (v) => setListSort((v as ListSortKey) || "sortOrder"),
-                  placeholder: "Manual (sort order)",
-                  helperText: "Choose how lists are ordered",
-                }}
-                onClear={() => {
-                  setListSearch("");
-                  setListFilter("all");
-                  setListSort("sortOrder");
-                }}
-                resultsCount={visibleListItems.length}
-              />
-            </AppCollapsible>
-
-            {loading ? <Text>Loading…</Text> : null}
-            {err ? <Text>Failed to load lists.</Text> : null}
-
-            {!loading && !err ? (
-              visibleLists.length > 0 ? (
-
-                <VStack align="stretch" gap={2} width={"100%"}>
-                  {visibleListItems.map((l) => {
-                  const system = isInboxList(l, inboxListId);
-
-                  return (
-                    <ListRow
-                      key={l.id}
-                      list={l}
-                      setSelectedList={handleListSelect()}
-                      to={`/lists/${l.id}`}
-                      isActive={false}
-                      isEditing={isEditing}
-                      isEditable={!system}
-                      setIsEditing={setIsEditing}
-                      onDelete={system ? undefined : () => handleDeleteList(l.id)}
-                      onToggleFavorite={system ? undefined : () => onToggleFavorite(l.id, !l.isFavorite)}
-                    />
-                  )})}
-                </VStack>
-              ) : (
-                <Text>No lists available. Create a new list to get started.</Text>
-              )
-            ) : null}
+            </VStack>
           </Box>
+
+          {/* Collapsible for search, filter, sort options */}
+          <AppCollapsible title="Search, Filter, and Sort Options">
+            <SearchFilterSortBar
+              search={listSearch}
+              setSearch={setListSearch}
+              searchPlaceholder="Search name/description"
+              searchHelperText="Search lists by name or description."
+              filter={{
+                title: "Filter",
+                items: LIST_FILTER_OPTIONS,
+                value: listFilter,
+                onChange: (v) => setListFilter((v as ListFilterKey) || "all"),
+                placeholder: "All lists",
+                helperText: "Filter the visible lists",
+              }}
+              sort={{
+                title: "Sort",
+                items: LIST_SORT_OPTIONS,
+                value: listSort,
+                onChange: (v) => setListSort((v as ListSortKey) || "sortOrder"),
+                placeholder: "Manual (sort order)",
+                helperText: "Choose how lists are ordered",
+              }}
+              onClear={() => {
+                setListSearch("");
+                setListFilter("all");
+                setListSort("sortOrder");
+              }}
+              resultsCount={visibleListItems.length}
+            />
+          </AppCollapsible>
+
+          {loading ? <Text>Loading…</Text> : null}
+          {err ? <Text>Failed to load lists.</Text> : null}
+
+          {!loading && !err ? (
+            visibleLists.length > 0 ? (
+
+              <VStack align="stretch" gap={2} width={"100%"}>
+                {visibleListItems.map((l) => {
+                const system = isInboxList(l, inboxListId);
+
+                return (
+                  <ListRow
+                    key={l.id}
+                    list={l}
+                    setSelectedList={handleListSelect()}
+                    to={`/lists/${l.id}`}
+                    isActive={false}
+                    isEditing={isEditing}
+                    isEditable={!system}
+                    setIsEditing={setIsEditing}
+                    onDelete={system ? undefined : () => handleDeleteList(l.id)}
+                    onToggleFavorite={system ? undefined : () => onToggleFavorite(l.id, !l.isFavorite)}
+                  />
+                )})}
+              </VStack>
+            ) : (
+              <Text>No lists available. Create a new list to get started.</Text>
+            )
+          ) : null}
 
           <>
             {!showAddListForm ? (
@@ -365,22 +362,24 @@ export const ListsPage = () => {
               />
             )}
           </>
+        </VStack>
+      </VStack>
+      {isEditing ? (
+        <EditListForm
+          list={selected}
+          draftName={draftListName}
+          setDraftName={setDraftListName}
+          draftDescription={draftListDescription}
+          setDraftDescription={setDraftListDescription}
+          saving={saving}
+          onSave={handleSave}
+          onCancel={() => handleCancel("edit")}
+        />
+      ) : (
+        <Box h="84vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
+          <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
         </Box>
-        <Box w="50%">
-          {isEditing &&
-            <EditListForm
-              list={selected}
-              draftName={draftListName}
-              setDraftName={setDraftListName}
-              draftDescription={draftListDescription}
-              setDraftDescription={setDraftListDescription}
-              saving={saving}
-              onSave={handleSave}
-              onCancel={() => handleCancel("edit")}
-            />
-          }
-        </Box>
-      </Flex>
-    </VStack>
+      )}
+    </Flex>
   );
 };
