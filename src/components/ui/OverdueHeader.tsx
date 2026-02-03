@@ -6,7 +6,7 @@ import { FcHighPriority } from "react-icons/fc";
 export const OverdueHeader = () => {
   return (
     <Flex align="center">
-      <Tooltip content="Tasks that are past their due date." bg="red.100" colorScheme="tomato" placement="right" p={1} rounded="2xl" showArrow>
+      <Tooltip content="Tasks that are past their due date." bg="red.400" colorScheme="tomato" placement="right" p={1} rounded="2xl" showArrow>
         <Box display="flex" alignItems="center">
           <Icon as={FcHighPriority} boxSize={6} mr={2} />
           <Heading size="xl" fontWeight={"700"} color={"red.600"}>Overdue</Heading>
