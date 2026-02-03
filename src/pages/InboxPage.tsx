@@ -72,8 +72,7 @@ export function InboxPage() {
   const [saving, setSaving] = useState(false);
 
   const { vm, lists, loading, err, refreshData } = useInboxPageData();
-
-  const { markViewedNow, dismiss } = useInboxActions();
+  const { dismiss, dismissMany } = useInboxActions();
 
   const { updateTask, deleteTask } = useTaskActions();
 
@@ -214,7 +213,17 @@ export function InboxPage() {
 
         <Button
           onClick={() => {
-            markViewedNow();
+            const ids = [...vm.overdueTasks, ...vm.dueSoonTasks].map((t) => t.id);
+            dismissMany(ids);
+
+            const count = ids.length;
+            fireToast(
+              "success",
+              "Done triaging",
+              count > 0
+                ? `Ignored ${count} ${count === 1 ? "notification" : "notifications"}.`
+                : "No overdue or due-soon notifications to ignore."
+            );
           }}
         >
           Done triaging
@@ -236,7 +245,7 @@ export function InboxPage() {
       {/* New tasks */}
       <Box w="100%" bg="gray.50" p="3" rounded="md" boxShadow="sm">
         <AppCollapsible
-          defaultOpen={vm.newTasks.length > 0}
+          defaultOpen={vm.inboxStagingTasks.length > 0}
           mt="0"
           mb="0"
           headerCenter={
@@ -248,19 +257,19 @@ export function InboxPage() {
             <HStack gap={2} alignItems="center">
               <Icon as={FcPlus} />
               <Heading size="lg" fontWeight={700} minW="86px">
-                New tasks
+                Inbox tasks
               </Heading>
-              <Badge rounded="md">{vm.newTasks.length}</Badge>
+              <Badge rounded="md">{vm.inboxStagingTasks.length}</Badge>
             </HStack>
           }
         >
-          {vm.newTasks.length === 0 ? (
+          {vm.inboxStagingTasks.length === 0 ? (
             <Text color="gray.600" mt={2}>
-              No new tasks since your last inbox pass. Nice. ✨
+              No tasks in your Inbox right now.
             </Text>
           ) : (
             <VStack align="stretch" gap={2} mt={2}>
-              {vm.newTasks.map((task) => {
+              {vm.inboxStagingTasks.map((task) => {
                 const listForTask = listById.get(task.listId);
                 if (!listForTask) return null;
                 return (
@@ -275,25 +284,27 @@ export function InboxPage() {
                         onDelete={() => handleDeleteTask(task.id)}
                       />
                     </Box>
-                    <Button
-                      size="2xl"
-                      bg="orange.200"
-                      variant="outline"
-                      height={"95px"}
-                      onClick={() => handleEditTask(task)}
-                      _hover={{
-                        bg: "orange.300",
-                        borderColor: "orange.400",
-                        color: "orange.700",
-                        fontWeight: "500",
-                        boxShadow: "lg",
-                      }}
-                    >
-                      <VStack>
-                        <Icon size={"sm"} as={FiEdit2} />
-                        Edit
-                      </VStack>
-                    </Button>
+                    <VStack gap={1} border={"sm"} borderColor={"blue.400"} borderRadius={"md"} padding={2}>
+                      <Button
+                        size="xl"
+                        bg="orange.200"
+                        variant="outline"
+                        height={"75px"}
+                        onClick={() => handleEditTask(task)}
+                        _hover={{
+                          bg: "orange.300",
+                          borderColor: "orange.400",
+                          color: "orange.700",
+                          fontWeight: "500",
+                          boxShadow: "lg",
+                        }}
+                      >
+                        <VStack>
+                          <Icon size={"sm"} as={FiEdit2} />
+                          Edit
+                        </VStack>
+                      </Button>
+                    </VStack>
                   </Flex>
                 );
               })}
@@ -356,22 +367,25 @@ export function InboxPage() {
                       >
                         Ignore
                       </Button>
-                      <Button
-                        size="sm"
-                        bg="orange.200"
-                        variant="outline"
-                        height={"36px"}
-                        onClick={() => handleEditTask(task)}
-                        _hover={{
-                          bg: "orange.300",
-                          borderColor: "orange.400",
-                          color: "orange.700",
-                          fontWeight: "500",
-                          boxShadow: "lg",
-                        }}
-                      >
-                        <Icon size={"sm"} as={FiEdit2} /> Edit
-                      </Button>
+                    <Button
+                      size="sm"
+                      bg="orange.200"
+                      variant="outline"
+                      height="36px"
+                      onClick={() => handleEditTask(task)}
+                      _hover={{
+                        bg: "orange.300",
+                        borderColor: "orange.400",
+                        color: "orange.700",
+                        fontWeight: "500",
+                        boxShadow: "lg",
+                      }}
+                    >
+                      <HStack>
+                        <Icon size={"sm"} as={FiEdit2} />
+                        Edit
+                      </HStack>
+                    </Button>
                     </VStack>
                   </Flex>
                 );
@@ -435,22 +449,25 @@ export function InboxPage() {
                       >
                         Ignore
                       </Button>
-                      <Button
-                        size="sm"
-                        bg="orange.200"
-                        variant="outline"
-                        height={"36px"}
-                        onClick={() => handleEditTask(task)}
-                        _hover={{
-                          bg: "orange.300",
-                          borderColor: "orange.400",
-                          color: "orange.700",
-                          fontWeight: "500",
-                          boxShadow: "lg",
-                        }}
-                      >
-                        <Icon size={"sm"} as={FiEdit2} /> Edit
-                      </Button>
+                    <Button
+                      size="sm"
+                      bg="orange.200"
+                      variant="outline"
+                      height="36px"
+                      onClick={() => handleEditTask(task)}
+                      _hover={{
+                        bg: "orange.300",
+                        borderColor: "orange.400",
+                        color: "orange.700",
+                        fontWeight: "500",
+                        boxShadow: "lg",
+                      }}
+                    >
+                      <HStack>
+                        <Icon size={"sm"} as={FiEdit2} />
+                        Edit
+                      </HStack>
+                    </Button>
                     </VStack>
                   </Flex>
                 );
@@ -460,15 +477,10 @@ export function InboxPage() {
         </AppCollapsible>
       </Box>
 
-      {vm.state.lastViewedAt ? (
-        <Text color="gray.500" fontSize="sm">
-          Last triage: {new Date(vm.state.lastViewedAt).toLocaleString()}
-        </Text>
-      ) : (
-        <Tip storageKey="tip:inbox-first-time" title="First time here!">
-          Everything counts as “new” once. After you triage your inbox, only new or updated items will appear here.
-        </Tip>
-      )}
+      <Tip storageKey="tip:inbox-staging" title="Tip">
+        Your Inbox is a staging area. Tasks that live in the system Inbox list stay visible here until you move them to a
+        real list (or complete/delete them).
+      </Tip>
       <DialogModal
         title="Add Task"
         body={

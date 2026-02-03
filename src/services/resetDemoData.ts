@@ -3,7 +3,6 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { taskmasterApi } from "../api/taskmasterApi";
 import { bootstrapUser } from "./userBootstrapService";
 import { getTaskStoreState } from "../store/taskStore";
-import { useInboxStore } from "../store/inboxStore";
 import { useUpdatesStore } from "../store/updatesStore";
 import { findInboxListIdByName, getInboxListId, setInboxListId } from "../config/inboxSettings";
 
@@ -66,13 +65,11 @@ export async function resetDemoData(): Promise<void> {
   await getCurrentUser();
 
   // Clear UX-only local state first to avoid stale UI while the reset runs.
-  useInboxStore.getState().resetAll?.();
   useUpdatesStore.getState().resetAll?.();
 
   // Clear persisted UX state for the current user scope.
   try {
     await Promise.all([
-      useInboxStore.persist.clearStorage(),
       useUpdatesStore.persist.clearStorage(),
     ]);
   } catch {

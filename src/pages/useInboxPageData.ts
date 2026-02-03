@@ -6,20 +6,16 @@ import { isDueSoonByKey, isOverdueByKey } from "../services/inboxTriage";
 import { msToDateInputValue } from "../services/dateTime";
 import { useDueSoonWindowDays } from "../store/localSettingsStore";
 
-function isNewTask(createdAt: string, lastViewedAt: string | null) {
-  if (!lastViewedAt) return true;
-  return new Date(createdAt).getTime() > new Date(lastViewedAt).getTime();
-}
-
 export function useInboxPageData() {
   const { lists, tasks, initialLoading, err, refresh: refreshData } = useTaskIndex();
 
   const inboxListId = getInboxListId();
-
-  const state = useInboxView();
   const dueSoonWindowDays = useDueSoonWindowDays();
-  const dismissed = useMemo(() => new Set(state.dismissedTaskIds), [state.dismissedTaskIds]);
-  const nowMs = state.lastComputedAtMs;
+
+  const inbox = useInboxView();
+  const dismissed = useMemo(() => new Set(inbox.dismissedTaskIds), [inbox.dismissedTaskIds]);
+
+  const nowMs = Date.now();
   const nowKey = msToDateInputValue(nowMs);
 
   // Only tasks that belong to the Inbox list
@@ -27,9 +23,10 @@ export function useInboxPageData() {
     ? tasks.filter((t) => t.listId === inboxListId)
     : [];
 
-  const newTasks = inboxTasks
-    .filter((t) => isNewTask(t.createdAt, state.lastViewedAt))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // System Inbox is a staging area: always show all tasks that live there.
+  const inboxStagingTasks = inboxTasks
+    .slice()
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Due soon should include tasks across ALL lists (not just Inbox)
   const dueSoonTasks = tasks
@@ -43,7 +40,7 @@ export function useInboxPageData() {
     .filter((t) => isOverdueByKey(t.dueAt ?? null, t.status, nowKey))
     .sort((a, b) => String(a.dueAt ?? "").localeCompare(String(b.dueAt ?? "")) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-  const vm = { state, newTasks, dueSoonTasks, overdueTasks };
+  const vm = { inboxStagingTasks, dueSoonTasks, overdueTasks };
 
   return {
     lists,

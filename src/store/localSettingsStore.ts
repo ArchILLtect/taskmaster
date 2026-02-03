@@ -68,7 +68,16 @@ function readLegacyDueSoonDays(): number | null {
     const envelope = parsed as { state?: unknown };
     const state = envelope.state as { dueSoonWindowDays?: unknown } | undefined;
     const n = state?.dueSoonWindowDays;
-    return typeof n === "number" && Number.isFinite(n) ? normalizeDueSoonDays(n) : null;
+    const migrated = typeof n === "number" && Number.isFinite(n) ? normalizeDueSoonDays(n) : null;
+
+    // Legacy inbox store also contained triage/dismiss state; clear it once we've migrated what we need.
+    try {
+      localStorage.removeItem("taskmaster:inbox");
+    } catch {
+      // ignore
+    }
+
+    return migrated;
   } catch {
     return null;
   }
