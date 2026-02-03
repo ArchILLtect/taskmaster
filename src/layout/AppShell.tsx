@@ -10,6 +10,7 @@ import { BottomBar } from "./BottomBar";
 import { PublicSidebar } from "./PublicSidebar.tsx";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { Toaster } from "../components/ui/Toaster";
+import { StorageDisclosureBanner } from "../components/ui/StorageDisclosureBanner";
 
 const TOPBAR_H = "64px";
 const BOTTOMBAR_H = "52px";
@@ -66,6 +67,9 @@ export function AppShell({
         </Box>
       </Flex>
 
+      <StorageDisclosureBanner />
+
+      {/* Bottom Bar stays fixed at the bottom */}
       <Box h={BOTTOMBAR_H} flexShrink={0}>
         <BottomBar signedIn={signedIn} onSignOut={onSignOut} />
       </Box>
