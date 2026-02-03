@@ -12,8 +12,12 @@ export type InboxPersistedStateV2 = {
 };
 
 type InboxStore = InboxPersistedStateV2 & {
+  // Non-persisted timestamp used to compute “today”/“now” without calling Date.now() during render.
+  lastComputedAtMs: number;
 
   resetAll: () => void;
+  clearDismissed: () => void;
+  touchNow: () => void;
 
   dismiss: (taskId: string) => void;
   dismissMany: (taskIds: string[]) => void;
@@ -64,11 +68,21 @@ export const useInboxStore = create<InboxStore>()(
   persist(
     (set, get) => ({
       ...DEFAULTS,
+      lastComputedAtMs: Date.now(),
 
       resetAll: () => {
         set({
           ...DEFAULTS,
+          lastComputedAtMs: Date.now(),
         });
+      },
+
+      clearDismissed: () => {
+        set({ dismissedTaskIds: [] });
+      },
+
+      touchNow: () => {
+        set({ lastComputedAtMs: Date.now() });
       },
 
       dismiss: (taskId) => {
@@ -111,32 +125,36 @@ export const useInboxStore = create<InboxStore>()(
       partialize: (s) => ({
         dismissedTaskIds: s.dismissedTaskIds,
       }),
-      onRehydrateStorage: () => {
-        return (_state, error) => {
+      onRehydrateStorage: (state) => {
+        return (_hydratedState, error) => {
           if (error) return;
-          // no-op
+          // Refresh the computed timestamp after hydration.
+          state?.touchNow();
         };
       },
     }
   )
 );
 
-type InboxView = InboxPersistedStateV2;
+type InboxView = InboxPersistedStateV2 & Pick<InboxStore, "lastComputedAtMs">;
 
 let cachedInboxView: InboxView | null = null;
 let cachedInboxViewInputs: {
   dismissedTaskIds: InboxView["dismissedTaskIds"];
+  lastComputedAtMs: InboxView["lastComputedAtMs"];
 } | null = null;
 
 function selectInboxView(s: InboxStore): InboxView {
   const inputs = {
     dismissedTaskIds: s.dismissedTaskIds,
+    lastComputedAtMs: s.lastComputedAtMs,
   };
 
   if (
     cachedInboxView &&
     cachedInboxViewInputs &&
-    cachedInboxViewInputs.dismissedTaskIds === inputs.dismissedTaskIds
+    cachedInboxViewInputs.dismissedTaskIds === inputs.dismissedTaskIds &&
+    cachedInboxViewInputs.lastComputedAtMs === inputs.lastComputedAtMs
   ) {
     return cachedInboxView;
   }
@@ -144,6 +162,7 @@ function selectInboxView(s: InboxStore): InboxView {
   cachedInboxViewInputs = inputs;
   cachedInboxView = {
     dismissedTaskIds: inputs.dismissedTaskIds,
+    lastComputedAtMs: inputs.lastComputedAtMs,
   };
 
   return cachedInboxView;
@@ -153,13 +172,14 @@ export function useInboxView(): InboxView {
   return useInboxStore(selectInboxView);
 }
 
-type InboxActions = Pick<InboxStore, "dismiss" | "dismissMany" | "undismiss">;
+type InboxActions = Pick<InboxStore, "dismiss" | "dismissMany" | "undismiss" | "clearDismissed">;
 
 let cachedInboxActions: InboxActions | null = null;
 let cachedInboxActionsInputs: {
   dismiss: InboxActions["dismiss"];
   dismissMany: InboxActions["dismissMany"];
   undismiss: InboxActions["undismiss"];
+  clearDismissed: InboxActions["clearDismissed"];
 } | null = null;
 
 function selectInboxActions(s: InboxStore): InboxActions {
@@ -167,6 +187,7 @@ function selectInboxActions(s: InboxStore): InboxActions {
     dismiss: s.dismiss,
     dismissMany: s.dismissMany,
     undismiss: s.undismiss,
+    clearDismissed: s.clearDismissed,
   };
 
   if (
@@ -174,7 +195,8 @@ function selectInboxActions(s: InboxStore): InboxActions {
     cachedInboxActionsInputs &&
     cachedInboxActionsInputs.dismiss === inputs.dismiss &&
     cachedInboxActionsInputs.dismissMany === inputs.dismissMany &&
-    cachedInboxActionsInputs.undismiss === inputs.undismiss
+    cachedInboxActionsInputs.undismiss === inputs.undismiss &&
+    cachedInboxActionsInputs.clearDismissed === inputs.clearDismissed
   ) {
     return cachedInboxActions;
   }
@@ -184,6 +206,7 @@ function selectInboxActions(s: InboxStore): InboxActions {
     dismiss: inputs.dismiss,
     dismissMany: inputs.dismissMany,
     undismiss: inputs.undismiss,
+    clearDismissed: inputs.clearDismissed,
   };
 
   return cachedInboxActions;

@@ -14,7 +14,7 @@ export function useInboxTriageIndicators(): {
   const dueSoonWindowDays = useDueSoonWindowDays();
 
   const dismissed = useMemo(() => new Set(inbox.dismissedTaskIds), [inbox.dismissedTaskIds]);
-  const nowKey = msToDateInputValue(Date.now());
+  const nowKey = msToDateInputValue(inbox.lastComputedAtMs);
 
   const hasOverdue = useMemo(() => {
     return tasks.some(

@@ -1,4 +1,5 @@
 import { Box, Button, Heading, HStack, NumberInput, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
 import { useSettingsPageData } from "./useSettingsPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import {
@@ -17,6 +18,9 @@ import {
 import { clearUserScopedKeysByPrefix } from "../services/userScopedStorage";
 import { Tip } from "../components/ui/Tip";
 import { FormSelect } from "../components/forms/FormSelect";
+import { useInboxActions } from "../store/inboxStore";
+import { fireToast } from "../hooks/useFireToast";
+import { DialogModal } from "../components/ui/DialogModal";
 
 export function SettingsPage() {
   
@@ -32,6 +36,10 @@ export function SettingsPage() {
 
   const defaultLandingRoute = useDefaultLandingRoute();
   const setDefaultLandingRoute = useSetDefaultLandingRoute();
+
+  const { clearDismissed } = useInboxActions();
+
+  const [isResetIgnoredOpen, setIsResetIgnoredOpen] = useState(false);
 
   if (loading) return <BasicSpinner />;
 
@@ -69,6 +77,47 @@ export function SettingsPage() {
             days
           </Text>
         </HStack>
+
+        <HStack gap={3} align="center" pt={3}>
+          <Text fontWeight={600}>Ignored notifications:</Text>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setIsResetIgnoredOpen(true);
+            }}
+          >
+            Reset ignored
+          </Button>
+        </HStack>
+
+        <DialogModal
+          title="Reset ignored notifications?"
+          body={
+            <VStack align="start" gap={2}>
+              <Text>
+                This will clear your ignored overdue/due-soon notifications. Tasks may show up in those sections again.
+              </Text>
+              <Text color="gray.600" fontSize="sm">
+                This does not delete tasks.
+              </Text>
+            </VStack>
+          }
+          open={isResetIgnoredOpen}
+          setOpen={setIsResetIgnoredOpen}
+          acceptLabel="Reset"
+          acceptColorPalette="red"
+          acceptVariant="solid"
+          cancelLabel="Cancel"
+          cancelVariant="outline"
+          onAccept={() => {
+            clearDismissed();
+            fireToast("success", "Ignored notifications reset", "Overdue/Due soon notices will show again.");
+          }}
+          onCancel={() => {
+            // no-op
+          }}
+        />
       </Box>
 
       <Box pt={6} w="100%">

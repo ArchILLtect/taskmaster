@@ -15,8 +15,7 @@ export function useInboxPageData() {
   const inbox = useInboxView();
   const dismissed = useMemo(() => new Set(inbox.dismissedTaskIds), [inbox.dismissedTaskIds]);
 
-  const nowMs = Date.now();
-  const nowKey = msToDateInputValue(nowMs);
+  const nowKey = msToDateInputValue(inbox.lastComputedAtMs);
 
   // Only tasks that belong to the Inbox list
   const inboxTasks = inboxListId
