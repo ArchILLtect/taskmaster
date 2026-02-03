@@ -29,7 +29,7 @@ export const SidebarItem = (
           bg={isActive ? "blackAlpha.100" : "transparent"}
           _hover={{ bg: "blackAlpha.100" }}
         >
-          <HStack w="100%" gap={2} minW={0}>
+          <HStack w="100%" gap={2} minW={0} justify="space-between">
             { to.startsWith("/lists/") && <Icon as={FiList } /> }
             { (to === "/today" || to === "/week" || to === "/month") && !main && <Icon as={FiCalendar } /> }
             <Text truncate>{label}</Text>
