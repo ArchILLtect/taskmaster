@@ -40,12 +40,13 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
     if (disabled) return children
 
     const tooltipBg = bg ?? colorScheme
+    const finalBg = (contentProps?.bg ?? tooltipBg ?? "gray.900") as unknown as string;
 
     const positioning = { ...(positioningProp ?? {}), placement };
 
     const mergedCss = {
       ...((contentProps?.css as Record<string, unknown> | undefined) ?? {}),
-      ...(tooltipBg ? { "--tooltip-bg": tooltipBg } : {}),
+      "--tooltip-bg": finalBg,
     } as unknown as ChakraTooltip.ContentProps["css"];
 
     return (
@@ -57,7 +58,8 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
               ref={ref}
               {...contentProps}
               css={mergedCss}
-              color={contentProps?.color ?? "black"}
+              bg={finalBg}
+              color={contentProps?.color ?? "white"}
               p={contentProps?.p ?? p}
               rounded={contentProps?.rounded ?? rounded}
             >
