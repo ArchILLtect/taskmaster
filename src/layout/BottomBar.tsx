@@ -5,6 +5,7 @@ import { resetDemoData } from "../services/resetDemoData";
 import { fireToast } from "../hooks/useFireToast";
 import { useDemoMode } from "../hooks/useDemoMode";
 import { DialogModal } from "../components/ui/DialogModal";
+import { useDemoTourStore } from "../store/demoTourStore";
 
 export function BottomBar({
   signedIn,
@@ -17,6 +18,8 @@ export function BottomBar({
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const { isDemo } = useDemoMode(signedIn);
+  const demoTourDisabled = useDemoTourStore((s) => s.disabled);
+  const openDemoTour = useDemoTourStore((s) => s.openTour);
 
   const showReset = useMemo(() => {
     if (!signedIn) return false;
@@ -51,18 +54,25 @@ export function BottomBar({
       </Text>
       <Spacer />
       {showReset ? (
-        <Button
-          size="sm"
-          variant="outline"
-          colorPalette="red"
-          onClick={() => {
-            setResetError(null);
-            setIsResetOpen(true);
-          }}
-          disabled={resetting}
-        >
-          Reset demo data
-        </Button>
+        <HStack gap={2}>
+          {demoTourDisabled ? null : (
+            <Button size="sm" variant="outline" onClick={() => openDemoTour()}>
+              Demo tour
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            colorPalette="red"
+            onClick={() => {
+              setResetError(null);
+              setIsResetOpen(true);
+            }}
+            disabled={resetting}
+          >
+            Reset demo data
+          </Button>
+        </HStack>
       ) : null}
       <Spacer />
       <HStack gap={3}>

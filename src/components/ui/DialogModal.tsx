@@ -12,6 +12,8 @@ type DialogModalProps = {
   isModal?: boolean;
 
   hideFooter?: boolean;
+  hideCancelButton?: boolean;
+  hideCloseButton?: boolean;
 
   acceptLabel?: string;
   cancelLabel?: string;
@@ -40,6 +42,8 @@ export const DialogModal = ({
   disableClose,
   closeOnAccept,
   hideFooter,
+  hideCancelButton,
+  hideCloseButton,
 } : DialogModalProps) => {
 
   const handleAccept = async () => {
@@ -73,7 +77,16 @@ export const DialogModal = ({
   };
 
   return (
-    <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
+    <Dialog.Root
+      lazyMount
+      open={open}
+      closeOnEscape={!disableClose}
+      closeOnInteractOutside={!disableClose}
+      onOpenChange={(e) => {
+        if (disableClose && !e.open) return;
+        setOpen(e.open);
+      }}
+    >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
@@ -86,15 +99,17 @@ export const DialogModal = ({
             </Dialog.Body>
             {hideFooter ? null : (
               <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                  <Button
-                    variant={cancelVariant ?? "outline"}
-                    onClick={handleCancel}
-                    disabled={Boolean(loading) || Boolean(disableClose)}
-                  >
-                    {cancelLabel ?? "Cancel"}
-                  </Button>
-                </Dialog.ActionTrigger>
+                {hideCancelButton ? null : (
+                  <Dialog.ActionTrigger asChild>
+                    <Button
+                      variant={cancelVariant ?? "outline"}
+                      onClick={handleCancel}
+                      disabled={Boolean(loading) || Boolean(disableClose)}
+                    >
+                      {cancelLabel ?? "Cancel"}
+                    </Button>
+                  </Dialog.ActionTrigger>
+                )}
                 <Button
                   onClick={handleAccept}
                   colorPalette={acceptColorPalette}
@@ -105,9 +120,11 @@ export const DialogModal = ({
                 </Button>
               </Dialog.Footer>
             )}
-            <Dialog.CloseTrigger asChild>
-              <CloseButton aria-label="Close" onClick={handleCancel} disabled={Boolean(loading) || Boolean(disableClose)} />
-            </Dialog.CloseTrigger>
+            {hideCloseButton ? null : (
+              <Dialog.CloseTrigger asChild>
+                <CloseButton aria-label="Close" onClick={handleCancel} disabled={Boolean(loading) || Boolean(disableClose)} />
+              </Dialog.CloseTrigger>
+            )}
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

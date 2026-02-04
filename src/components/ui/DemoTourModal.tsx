@@ -1,28 +1,42 @@
-import { Box, Button, HStack, Text, VStack } from "@chakra-ui/react";
-import { useMemo, useState } from "react";
+import { Box, Button, Checkbox, HStack, Text, VStack } from "@chakra-ui/react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { isDemoSessionActive } from "../../services/demoSession";
-import { userScopedGetItem, userScopedSetItem } from "../../services/userScopedStorage";
+import { useDemoTourStore } from "../../store/demoTourStore";
 import { DialogModal } from "./DialogModal";
-
-const DEMO_TOUR_SEEN_KEY = "demoTourSeen:v1" as const;
 
 export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
   const navigate = useNavigate();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissedThisSession, setDismissedThisSession] = useState(false);
+  const [dontShowAgainChecked, setDontShowAgainChecked] = useState(false);
+
+  const openRequested = useDemoTourStore((s) => s.open);
+  const setOpenRequested = useDemoTourStore((s) => s.setOpen);
+  const disabled = useDemoTourStore((s) => s.disabled);
+  const refreshDisabledFromStorage = useDemoTourStore((s) => s.refreshDisabledFromStorage);
+  const setDisabled = useDemoTourStore((s) => s.setDisabled);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    refreshDisabledFromStorage();
+  }, [refreshDisabledFromStorage, signedIn]);
 
   const shouldOffer = useMemo(() => {
     if (!signedIn) return false;
     if (!isDemoSessionActive()) return false;
-    return userScopedGetItem(DEMO_TOUR_SEEN_KEY) !== "1";
-  }, [signedIn]);
+    return !disabled;
+  }, [disabled, signedIn]);
 
-  const open = shouldOffer && !dismissed;
+  const open = (shouldOffer && !dismissedThisSession) || (shouldOffer && openRequested);
   const setOpen = (next: boolean) => {
-    if (!next) setDismissed(true);
+    // Only close from the explicit Accept action.
+    // Ignore overlay clicks / escape / close triggers.
+    if (!next) return;
+    setOpenRequested(true);
   };
 
   if (!signedIn) return null;
+  if (!shouldOffer) return null;
 
   return (
     <DialogModal
@@ -30,57 +44,127 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
       body={
         <VStack align="start" gap={3}>
           <Text color="gray.700">
-            Here’s a ~60 second walkthrough you can use for a showcase.
+            A short walkthrough you can use for a showcase. Demo accounts are throw-away: when you’re done,
+            sign out and create a regular account for real use.
           </Text>
+
+          <Box bg="orange.50" borderWidth="1px" borderColor="orange.200" rounded="md" p={3} w="100%">
+            <Text fontSize="sm" color="orange.900" fontWeight={700}>
+              Demo account note
+            </Text>
+            <Text fontSize="sm" color="orange.900">
+              This account is meant for temporary evaluation only. Use Settings → Demo Data to reset/clear demo items
+              anytime.
+            </Text>
+          </Box>
 
           <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" rounded="md" p={3} w="100%">
             <VStack align="start" gap={2}>
-              <Text fontWeight="700">Suggested script</Text>
-              <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.700">
-                  1) Inbox triage indicators + quick actions
-                </Text>
-                <Text fontSize="sm" color="gray.700">
-                  2) Lists → open a list and click tasks (pane-stack URL)
-                </Text>
-                <Text fontSize="sm" color="gray.700">
-                  3) Edit a task → change parent (manual reparent)
-                </Text>
-                <Text fontSize="sm" color="gray.700">
-                  4) Settings → demo data tools
-                </Text>
+              <Text fontWeight="700">Recommended steps</Text>
+
+              <VStack align="start" gap={3} w="100%">
+                <Box w="100%">
+                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                    1) Inbox = triage and quick actions
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    The Inbox is a staging area for new work. Today it’s tasks; later it can grow into collaboration
+                    items. “Triage” here means deciding what to do next: keep it, complete it, delete it, or move it
+                    into a list.
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    Try: look for overdue/due-soon indicators, then use row actions (complete/revive, delete, send to
+                    Inbox). Snooze is not implemented yet (ignore now → snooze later).
+                  </Text>
+                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/inbox")}>
+                    Go to Inbox
+                  </Button>
+                </Box>
+
+                <Box w="100%">
+                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                    2) Lists + pane-stack task details
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    Open a list, then click a task. The right side opens task details. Click another task to “stack”
+                    panes; the URL encodes the stack so refresh/share keeps context.
+                  </Text>
+                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/lists")}>
+                    Go to Lists
+                  </Button>
+                </Box>
+
+                <Box w="100%">
+                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                    3) Manual reparenting (subtasks)
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    Pick a task, click Edit, then change the Parent field to move it under another task (or clear the
+                    parent to make it top-level). This demonstrates hierarchy without drag-and-drop yet.
+                  </Text>
+                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/tasks")}>
+                    Go to Tasks
+                  </Button>
+                </Box>
+
+                <Box w="100%">
+                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                    4) Settings + demo tools
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    Settings includes general knobs (like the Inbox due-soon window) and demo-only tools.
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    Demo tools: Clear demo data (remove demo-marked items), Reset demo data (restore the seeded demo
+                    dataset), and “Add more demo data” for bigger lists.
+                  </Text>
+                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/settings")}>
+                    Go to Settings
+                  </Button>
+                </Box>
               </VStack>
             </VStack>
           </Box>
 
-          <HStack gap={2} flexWrap="wrap">
-            <Button size="sm" variant="outline" onClick={() => navigate("/inbox")}>
-              Go to Inbox
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate("/lists")}>
-              Go to Lists
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate("/settings")}>
-              Go to Settings
-            </Button>
+          <HStack gap={2} w="100%" justify="space-between" align="center">
+            <Checkbox.Root
+              checked={dontShowAgainChecked}
+              onCheckedChange={(details) => {
+                setDontShowAgainChecked(details.checked === true);
+              }}
+            >
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <Checkbox.Label>
+                <Text fontSize="sm">Don’t display again</Text>
+              </Checkbox.Label>
+            </Checkbox.Root>
+
+            <Text fontSize="xs" color="gray.600">
+              You can re-enable this in Settings.
+            </Text>
           </HStack>
         </VStack>
       }
       open={open}
       setOpen={setOpen}
-      acceptLabel="Got it"
+      acceptLabel="Close"
       acceptColorPalette="purple"
       acceptVariant="solid"
-      cancelLabel="Close"
-      cancelVariant="outline"
+      hideCancelButton
+      hideCloseButton
+      disableClose
       onAccept={() => {
-        userScopedSetItem(DEMO_TOUR_SEEN_KEY, "1");
-        setDismissed(true);
+        if (dontShowAgainChecked) {
+          setDisabled(true);
+        }
+        setOpenRequested(false);
+        setDismissedThisSession(true);
       }}
       onCancel={() => {
-        userScopedSetItem(DEMO_TOUR_SEEN_KEY, "1");
-        setDismissed(true);
+        // no-op (modal only closes via Accept)
       }}
+      closeOnAccept
     />
   );
 }

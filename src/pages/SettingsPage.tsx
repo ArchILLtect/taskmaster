@@ -21,6 +21,8 @@ import { FormSelect } from "../components/forms/FormSelect";
 import { useInboxActions } from "../store/inboxStore";
 import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
+import { useDemoMode } from "../hooks/useDemoMode";
+import { useDemoTourStore } from "../store/demoTourStore";
 import {
   clearDemoDataOnly,
   resetDemoDataPreservingNonDemo,
@@ -45,6 +47,9 @@ export function SettingsPage() {
   const setDefaultLandingRoute = useSetDefaultLandingRoute();
 
   const { clearDismissed } = useInboxActions();
+  const { isDemo } = useDemoMode(true);
+  const demoTourDisabled = useDemoTourStore((s) => s.disabled);
+  const resetDemoTourDisabled = useDemoTourStore((s) => s.resetDisabled);
 
   const [isResetIgnoredOpen, setIsResetIgnoredOpen] = useState(false);
 
@@ -193,6 +198,33 @@ export function SettingsPage() {
         <Text color="gray.600" fontSize="sm">
           Manage demo lists and tasks. These actions only affect items marked as demo.
         </Text>
+
+        {isDemo ? (
+          <Box pt={3}>
+            <Heading size="sm">Demo tour</Heading>
+            <Text color="gray.600" fontSize="sm">
+              If you hid the demo tour, you can re-enable it here.
+            </Text>
+            <HStack pt={2} gap={3} align="center" flexWrap="wrap">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  resetDemoTourDisabled();
+                  fireToast("success", "Demo tour reset", "The demo tour can be opened again from the Demo Mode badge.");
+                }}
+                disabled={demoActionLoading !== null || !demoTourDisabled}
+              >
+                Reset demo tour
+              </Button>
+              {!demoTourDisabled ? (
+                <Text fontSize="sm" color="gray.600">
+                  Demo tour is currently enabled.
+                </Text>
+              ) : null}
+            </HStack>
+          </Box>
+        ) : null}
 
         <HStack pt={3} gap={3} align="center" flexWrap="wrap">
           <Button

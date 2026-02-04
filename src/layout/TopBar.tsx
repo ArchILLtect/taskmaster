@@ -6,6 +6,8 @@ import { useUserUI } from "../hooks/useUserUI";
 import { useTaskStoreView } from "../store/taskStore";
 import { formatUsernameForDisplay } from "../services/userDisplay";
 import { useDemoMode } from "../hooks/useDemoMode";
+import { useDemoTourStore } from "../store/demoTourStore";
+import { Tooltip } from "../components/ui/Tooltip";
 
 type TopBarProps = {
   user?: AuthUserLike | null;
@@ -30,6 +32,8 @@ export function TopBar({ user, userUI }: TopBarProps) {
   const signedIn = Boolean(username);
   const isAdmin = role === "Admin";
   const { isDemo } = useDemoMode(signedIn);
+  const demoTourDisabled = useDemoTourStore((s) => s.disabled);
+  const openDemoTour = useDemoTourStore((s) => s.openTour);
 
   const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
 
@@ -73,9 +77,27 @@ export function TopBar({ user, userUI }: TopBarProps) {
             ) : null}
 
             {isDemo ? (
-              <Badge rounded="md" bg="orange.100" color="orange.800">
-                Demo Mode
-              </Badge>
+              demoTourDisabled ? (
+                <Badge rounded="md" bg="orange.100" color="orange.800">
+                  Demo Mode
+                </Badge>
+              ) : (
+                <Tooltip content="Open demo tour" showArrow>
+                  <Badge
+                    as="button"
+                    rounded="md"
+                    bg="orange.100"
+                    color="orange.800"
+                    cursor="pointer"
+                    _hover={{ bg: "orange.200" }}
+                    onClick={() => {
+                      openDemoTour();
+                    }}
+                  >
+                    Demo Mode
+                  </Badge>
+                </Tooltip>
+              )
             ) : null}
           </>
         ) : (
