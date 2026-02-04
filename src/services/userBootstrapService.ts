@@ -1,4 +1,4 @@
-import { fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
+import { fetchAuthSession, fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
 import {
   DefaultVisibility,
   ModelAttributeTypes,
@@ -8,6 +8,7 @@ import {
   type ModelUserProfileConditionInput,
 } from "../API";
 import { taskmasterApi } from "../api/taskmasterApi";
+import { isDemoIdentityUsername } from "./userDisplay";
 
 export const CURRENT_SEED_VERSION = 1 as const;
 
@@ -126,6 +127,34 @@ function buildIsoAtMidnightUtcFromNow(daysFromNow: number): string {
   return d.toISOString();
 }
 
+function payloadToGroups(payload?: Record<string, unknown>): string[] {
+  const raw = payload?.["cognito:groups"];
+  if (!Array.isArray(raw)) return [];
+  return raw.map(String);
+}
+
+function payloadToRole(payload?: Record<string, unknown>): string {
+  const raw = payload?.["custom:role"];
+  return typeof raw === "string" ? raw : "";
+}
+
+async function resolveDesiredPlanTier(username?: string | null): Promise<PlanTier> {
+  // Fast-path: demo identities are created with the demo+<uuid>@... username shape.
+  if (username && isDemoIdentityUsername(username)) return PlanTier.DEMO;
+
+  try {
+    const session = await fetchAuthSession();
+    const payload = session.tokens?.idToken?.payload as Record<string, unknown> | undefined;
+    const groups = payloadToGroups(payload);
+    const role = payloadToRole(payload);
+    if (groups.includes("Demo") || role === "Demo") return PlanTier.DEMO;
+  } catch {
+    // ignore
+  }
+
+  return PlanTier.FREE;
+}
+
 async function ensureUserProfile(profileId: string, seedDemo: boolean) {
   const current = await getCurrentUser();
   const owner = current.userId;
@@ -147,6 +176,20 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
 
   const existing = await taskmasterApi.getUserProfile(profileId);
   if (existing) {
+    // Self-heal plan tier to match identity.
+    // Seeding sample data is *not* the same as being a demo account.
+    const desired = await resolveDesiredPlanTier(current.username);
+    const existingTier = (existing as { planTier?: unknown } | null | undefined)?.planTier;
+
+    // Future-proof: avoid auto-downgrading PRO.
+    if (existingTier !== PlanTier.PRO && existingTier !== desired) {
+      try {
+        await taskmasterApi.updateUserProfile({ id: profileId, planTier: desired });
+      } catch {
+        // Best-effort only.
+      }
+    }
+
     // If the profile already exists, opportunistically fix legacy missing/null email.
     if (emailString) {
       await selfHealUserProfileEmail(profileId, emailString);
@@ -168,7 +211,7 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
   const base = {
     id: profileId,
     owner,
-    planTier: seedDemo ? PlanTier.DEMO : PlanTier.FREE,
+    planTier: await resolveDesiredPlanTier(current.username),
     defaultVisibility: DefaultVisibility.PRIVATE,
     seedVersion: 0,
     seededAt: null,
@@ -212,7 +255,6 @@ async function tryClaimDemoSeed(profileId: string) {
     {
       id: profileId,
       seedVersion: -1,
-      planTier: PlanTier.DEMO,
     },
     condition
   );
@@ -230,7 +272,6 @@ async function finalizeDemoSeed(profileId: string) {
       id: profileId,
       seedVersion: CURRENT_SEED_VERSION,
       seededAt: now,
-      planTier: PlanTier.DEMO,
     },
     condition
   );

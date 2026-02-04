@@ -20,6 +20,7 @@ type DialogModalProps = {
   acceptColorPalette?: string;
   acceptVariant?: React.ComponentProps<typeof Button>["variant"];
   cancelVariant?: React.ComponentProps<typeof Button>["variant"];
+  acceptDisabled?: boolean;
   loading?: boolean;
   disableClose?: boolean;
   closeOnAccept?: boolean;
@@ -38,6 +39,7 @@ export const DialogModal = ({
   acceptColorPalette,
   acceptVariant,
   cancelVariant,
+  acceptDisabled,
   loading,
   disableClose,
   closeOnAccept,
@@ -115,6 +117,7 @@ export const DialogModal = ({
                   colorPalette={acceptColorPalette}
                   variant={acceptVariant}
                   loading={loading}
+                  disabled={Boolean(acceptDisabled) || Boolean(loading)}
                 >
                   {acceptLabel ?? "Accept"}
                 </Button>

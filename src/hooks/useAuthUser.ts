@@ -9,6 +9,7 @@ import { useTaskStore } from "../store/taskStore";
 import { useInboxStore } from "../store/inboxStore";
 import { useUpdatesStore } from "../store/updatesStore";
 import { useUserUICacheStore } from "../services/userUICacheStore";
+import { clearDemoSessionActive } from "../services/demoSession";
 
 function isNotSignedInError(err: unknown): boolean {
   const name = typeof err === "object" && err !== null && "name" in err ? String((err as { name: unknown }).name) : "";
@@ -34,6 +35,12 @@ export function useAuthUser(): {
   const signedIn = useMemo(() => Boolean(user?.userId || user?.username), [user?.userId, user?.username]);
 
   const applyScope = useCallback((authKey: string | null) => {
+    // Demo sessions are global (not user-scoped). Clear them on sign-out so they can't
+    // accidentally affect the next user on a shared browser.
+    if (!authKey) {
+      clearDemoSessionActive();
+    }
+
     // Persist the last known signed-in identity so user-scoped storage reads are correct
     // even before auth resolves on the next page load.
     setUserStorageScopeKey(authKey);

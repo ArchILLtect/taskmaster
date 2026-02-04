@@ -1,5 +1,5 @@
-import { Box, Button, Heading, HStack, NumberInput, Text, VStack } from "@chakra-ui/react";
-import { useState } from "react";
+import { Box, Button, Heading, HStack, NumberInput, Text, VStack, Checkbox } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import { useSettingsPageData } from "./useSettingsPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import {
@@ -23,6 +23,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { DialogModal } from "../components/ui/DialogModal";
 import { useDemoMode } from "../hooks/useDemoMode";
 import { useDemoTourStore } from "../store/demoTourStore";
+import { isSeedDemoDisabled, setSeedDemoDisabled } from "../services/seedDemoPreference";
 import {
   clearDemoDataOnly,
   resetDemoDataPreservingNonDemo,
@@ -47,9 +48,11 @@ export function SettingsPage() {
   const setDefaultLandingRoute = useSetDefaultLandingRoute();
 
   const { clearDismissed } = useInboxActions();
-  const { isDemo } = useDemoMode(true);
+  const { isDemoIdentity } = useDemoMode(true);
   const demoTourDisabled = useDemoTourStore((s) => s.disabled);
   const resetDemoTourDisabled = useDemoTourStore((s) => s.resetDisabled);
+
+  const [seedOptedOut, setSeedOptedOut] = useState(() => isSeedDemoDisabled());
 
   const [isResetIgnoredOpen, setIsResetIgnoredOpen] = useState(false);
 
@@ -58,8 +61,18 @@ export function SettingsPage() {
   const [demoActionLoading, setDemoActionLoading] = useState<"clear" | "reset" | "addTasks" | "addLists" | "addBoth" | null>(null);
   const [demoActionError, setDemoActionError] = useState<string | null>(null);
 
+  const [isRemoveSampleOpen, setIsRemoveSampleOpen] = useState(false);
+  const [removeSampleChecked, setRemoveSampleChecked] = useState(false);
+  const [removeSampleLoading, setRemoveSampleLoading] = useState(false);
+  const [removeSampleError, setRemoveSampleError] = useState<string | null>(null);
+
   const [addDemoTaskCount, setAddDemoTaskCount] = useState(10);
   const [addDemoListCount, setAddDemoListCount] = useState(3);
+
+  useEffect(() => {
+    // Keep the UI in sync if some other screen changes the preference.
+    setSeedOptedOut(isSeedDemoDisabled());
+  }, []);
 
   if (loading) return <BasicSpinner />;
 
@@ -72,7 +85,7 @@ export function SettingsPage() {
         see onboarding tips again.
       </Tip>
 
-      <Box pt={2} w="100%">
+      <Box pt={2} w="100%"> {/* Inbox */}
         <Heading size="lg">Inbox</Heading>
         <Text color="gray.600" fontSize="sm">
           Configure which tasks appear in your Inbox’s “Due soon” section.
@@ -140,7 +153,7 @@ export function SettingsPage() {
         />
       </Box>
 
-      <Box pt={6} w="100%">
+      <Box pt={6} w="100%"> {/* Navigation */}
         <Heading size="lg">Navigation</Heading>
         <Text color="gray.600" fontSize="sm">
           Customize your sidebar and default “Views” landing destination.
@@ -193,13 +206,106 @@ export function SettingsPage() {
         </VStack>
       </Box>
 
-      <Box pt={6} w="100%">
-        <Heading size="lg">Demo Data</Heading>
+      <Box pt={6} w="100%"> {/* Demo */}
+        <Heading size="lg">{isDemoIdentity ? "Demo Data" : "Sample data"}</Heading>
         <Text color="gray.600" fontSize="sm">
-          Manage demo lists and tasks. These actions only affect items marked as demo.
+          {isDemoIdentity
+            ? "Manage demo lists and tasks. These actions only affect items marked as demo."
+            : "Your account can start with sample lists and tasks (marked as demo). You can remove them at any time."}
         </Text>
 
-        {isDemo ? (
+        {!isDemoIdentity ? (
+          <Box pt={3}>
+            <Heading size="sm">Remove sample data</Heading>
+            <Text color="gray.600" fontSize="sm">
+              This deletes demo-marked lists/tasks and permanently disables future sample-data seeding for this account
+              on this device.
+            </Text>
+
+            <HStack pt={2} gap={3} align="center" flexWrap="wrap">
+              <Button
+                size="sm"
+                variant="outline"
+                colorPalette="red"
+                onClick={() => {
+                  setRemoveSampleError(null);
+                  setRemoveSampleChecked(false);
+                  setIsRemoveSampleOpen(true);
+                }}
+                disabled={removeSampleLoading || seedOptedOut}
+              >
+                Remove sample data
+              </Button>
+
+              {seedOptedOut ? (
+                <Text fontSize="sm" color="gray.600">
+                  Sample-data seeding is disabled for this user.
+                </Text>
+              ) : null}
+            </HStack>
+
+            <DialogModal
+              title="Remove sample data and disable seeding?"
+              body={
+                <VStack align="start" gap={3}>
+                  <Text>
+                    This will delete all demo-marked lists and tasks in your account. It will also disable future
+                    sample-data seeding for this user in this browser.
+                  </Text>
+                  <Checkbox.Root
+                    checked={removeSampleChecked}
+                    onCheckedChange={(details) => setRemoveSampleChecked(details.checked === true)}
+                  >
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control />
+                    <Checkbox.Label>
+                      <Text fontSize="sm">I understand this action is not reversible.</Text>
+                    </Checkbox.Label>
+                  </Checkbox.Root>
+
+                  {removeSampleError ? (
+                    <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" w="100%">
+                      <Text fontSize="sm" color="red.800">
+                        {removeSampleError}
+                      </Text>
+                    </Box>
+                  ) : null}
+                </VStack>
+              }
+              open={isRemoveSampleOpen}
+              setOpen={setIsRemoveSampleOpen}
+              acceptLabel="Remove"
+              acceptColorPalette="red"
+              acceptVariant="solid"
+              acceptDisabled={!removeSampleChecked}
+              loading={removeSampleLoading}
+              cancelLabel="Cancel"
+              cancelVariant="outline"
+              onAccept={async () => {
+                if (removeSampleLoading) return;
+                setRemoveSampleLoading(true);
+                setRemoveSampleError(null);
+                try {
+                  await clearDemoDataOnly();
+                  setSeedDemoDisabled(true);
+                  setSeedOptedOut(true);
+                  fireToast("success", "Sample data removed", "Demo-marked items were deleted and future seeding is disabled.");
+                  setIsRemoveSampleOpen(false);
+                } catch (err) {
+                  const msg = typeof err === "object" && err !== null && "message" in err ? String((err as { message: unknown }).message) : "Failed to remove sample data.";
+                  setRemoveSampleError(msg);
+                } finally {
+                  setRemoveSampleLoading(false);
+                }
+              }}
+              onCancel={() => {
+                // no-op
+              }}
+            />
+          </Box>
+        ) : null}
+
+        {isDemoIdentity ? (
           <Box pt={3}>
             <Heading size="sm">Demo tour</Heading>
             <Text color="gray.600" fontSize="sm">
@@ -226,41 +332,44 @@ export function SettingsPage() {
           </Box>
         ) : null}
 
-        <HStack pt={3} gap={3} align="center" flexWrap="wrap">
-          <Button
-            size="sm"
-            variant="outline"
-            colorPalette="red"
-            onClick={() => {
-              setDemoActionError(null);
-              setIsClearDemoOpen(true);
-            }}
-            disabled={demoActionLoading !== null}
-          >
-            Clear demo data
-          </Button>
+        {isDemoIdentity ? (
+          <>
+            <HStack pt={3} gap={3} align="center" flexWrap="wrap">
+              <Button
+                size="sm"
+                variant="outline"
+                colorPalette="red"
+                onClick={() => {
+                  setDemoActionError(null);
+                  setIsClearDemoOpen(true);
+                }}
+                disabled={demoActionLoading !== null}
+              >
+                Clear demo data
+              </Button>
 
-          <Button
-            size="sm"
-            variant="outline"
-            colorPalette="orange"
-            onClick={() => {
-              setDemoActionError(null);
-              setIsResetDemoOpen(true);
-            }}
-            disabled={demoActionLoading !== null}
-          >
-            Reset demo data
-          </Button>
-        </HStack>
+              <Button
+                size="sm"
+                variant="outline"
+                colorPalette="orange"
+                onClick={() => {
+                  setDemoActionError(null);
+                  setIsResetDemoOpen(true);
+                }}
+                disabled={demoActionLoading !== null}
+              >
+                Reset demo data
+              </Button>
+            </HStack>
 
-        <Box pt={4}>
-          <Heading size="sm">Add more demo data</Heading>
-          <Text color="gray.600" fontSize="sm">
-            These actions only create items marked as demo.
-          </Text>
+            <Box pt={4}>
+              <Heading size="sm">Add more demo data</Heading>
+              <Text color="gray.600" fontSize="sm">
+                These actions only create items marked as demo.
+              </Text>
+            </Box>
 
-          <VStack align="start" gap={3} pt={3}>
+            <VStack align="start" gap={3} pt={3}>
             <HStack gap={3} align="center" flexWrap="wrap">
               <Text fontWeight={600}>Tasks:</Text>
               <NumberInput.Root
@@ -391,125 +500,125 @@ export function SettingsPage() {
               </Text>
             ) : null}
           </VStack>
-        </Box>
+            <DialogModal
+              title="Clear demo data?"
+              body={
+                <VStack align="start" gap={2}>
+                  <Text>
+                    This deletes demo-marked lists and tasks only. Non-demo items are preserved.
+                  </Text>
+                  <Text color="gray.600" fontSize="sm">
+                    If a demo list contains any non-demo tasks, those tasks will be moved to your Inbox first.
+                  </Text>
+                  {demoActionError ? (
+                    <Text color="red.600" fontSize="sm">
+                      {demoActionError}
+                    </Text>
+                  ) : null}
+                </VStack>
+              }
+              open={isClearDemoOpen}
+              setOpen={setIsClearDemoOpen}
+              acceptLabel="Clear"
+              acceptColorPalette="red"
+              acceptVariant="solid"
+              cancelLabel="Cancel"
+              cancelVariant="outline"
+              loading={demoActionLoading === "clear"}
+              disableClose={demoActionLoading !== null}
+              onAccept={async () => {
+                if (demoActionLoading) return;
+                setDemoActionLoading("clear");
+                setDemoActionError(null);
+                try {
+                  const res = await clearDemoDataOnly();
+                  fireToast(
+                    "success",
+                    "Demo data cleared",
+                    `Deleted ${res.deletedDemoTaskCount} demo tasks and ${res.deletedDemoListCount} demo lists.` +
+                      (res.movedNonDemoTaskCount > 0
+                        ? ` Moved ${res.movedNonDemoTaskCount} non-demo task(s) to Inbox.`
+                        : "")
+                  );
+                } catch (err) {
+                  const msg =
+                    typeof err === "object" && err !== null && "message" in err
+                      ? String((err as { message: unknown }).message)
+                      : "Failed to clear demo data.";
+                  setDemoActionError(msg);
+                  fireToast("error", "Clear failed", msg);
+                  throw err;
+                } finally {
+                  setDemoActionLoading(null);
+                }
+              }}
+              onCancel={() => {
+                if (demoActionLoading) return;
+                setDemoActionError(null);
+                setIsClearDemoOpen(false);
+              }}
+            />
 
-        <DialogModal
-          title="Clear demo data?"
-          body={
-            <VStack align="start" gap={2}>
-              <Text>
-                This deletes demo-marked lists and tasks only. Non-demo items are preserved.
-              </Text>
-              <Text color="gray.600" fontSize="sm">
-                If a demo list contains any non-demo tasks, those tasks will be moved to your Inbox first.
-              </Text>
-              {demoActionError ? (
-                <Text color="red.600" fontSize="sm">
-                  {demoActionError}
-                </Text>
-              ) : null}
-            </VStack>
-          }
-          open={isClearDemoOpen}
-          setOpen={setIsClearDemoOpen}
-          acceptLabel="Clear"
-          acceptColorPalette="red"
-          acceptVariant="solid"
-          cancelLabel="Cancel"
-          cancelVariant="outline"
-          loading={demoActionLoading === "clear"}
-          disableClose={demoActionLoading !== null}
-          onAccept={async () => {
-            if (demoActionLoading) return;
-            setDemoActionLoading("clear");
-            setDemoActionError(null);
-            try {
-              const res = await clearDemoDataOnly();
-              fireToast(
-                "success",
-                "Demo data cleared",
-                `Deleted ${res.deletedDemoTaskCount} demo tasks and ${res.deletedDemoListCount} demo lists.` +
-                  (res.movedNonDemoTaskCount > 0
-                    ? ` Moved ${res.movedNonDemoTaskCount} non-demo task(s) to Inbox.`
-                    : "")
-              );
-            } catch (err) {
-              const msg =
-                typeof err === "object" && err !== null && "message" in err
-                  ? String((err as { message: unknown }).message)
-                  : "Failed to clear demo data.";
-              setDemoActionError(msg);
-              fireToast("error", "Clear failed", msg);
-              throw err;
-            } finally {
-              setDemoActionLoading(null);
-            }
-          }}
-          onCancel={() => {
-            if (demoActionLoading) return;
-            setDemoActionError(null);
-            setIsClearDemoOpen(false);
-          }}
-        />
-
-        <DialogModal
-          title="Reset demo data?"
-          body={
-            <VStack align="start" gap={2}>
-              <Text>
-                This clears demo-marked items and re-seeds the original demo dataset. Non-demo items are preserved.
-              </Text>
-              {demoActionError ? (
-                <Text color="red.600" fontSize="sm">
-                  {demoActionError}
-                </Text>
-              ) : null}
-            </VStack>
-          }
-          open={isResetDemoOpen}
-          setOpen={setIsResetDemoOpen}
-          acceptLabel="Reset"
-          acceptColorPalette="orange"
-          acceptVariant="solid"
-          cancelLabel="Cancel"
-          cancelVariant="outline"
-          loading={demoActionLoading === "reset"}
-          disableClose={demoActionLoading !== null}
-          onAccept={async () => {
-            if (demoActionLoading) return;
-            setDemoActionLoading("reset");
-            setDemoActionError(null);
-            try {
-              const res = await resetDemoDataPreservingNonDemo();
-              fireToast(
-                "success",
-                "Demo data reset",
-                `Cleared ${res.deletedDemoTaskCount} demo task(s) and ${res.deletedDemoListCount} demo list(s), then re-seeded demo data.` +
-                  (res.movedNonDemoTaskCount > 0
-                    ? ` Moved ${res.movedNonDemoTaskCount} non-demo task(s) to Inbox.`
-                    : "")
-              );
-            } catch (err) {
-              const msg =
-                typeof err === "object" && err !== null && "message" in err
-                  ? String((err as { message: unknown }).message)
-                  : "Failed to reset demo data.";
-              setDemoActionError(msg);
-              fireToast("error", "Reset failed", msg);
-              throw err;
-            } finally {
-              setDemoActionLoading(null);
-            }
-          }}
-          onCancel={() => {
-            if (demoActionLoading) return;
-            setDemoActionError(null);
-            setIsResetDemoOpen(false);
-          }}
-        />
+            <DialogModal
+              title="Reset demo data?"
+              body={
+                <VStack align="start" gap={2}>
+                  <Text>
+                    This clears demo-marked items and re-seeds the original demo dataset. Non-demo items are preserved.
+                  </Text>
+                  {demoActionError ? (
+                    <Text color="red.600" fontSize="sm">
+                      {demoActionError}
+                    </Text>
+                  ) : null}
+                </VStack>
+              }
+              open={isResetDemoOpen}
+              setOpen={setIsResetDemoOpen}
+              acceptLabel="Reset"
+              acceptColorPalette="orange"
+              acceptVariant="solid"
+              cancelLabel="Cancel"
+              cancelVariant="outline"
+              loading={demoActionLoading === "reset"}
+              disableClose={demoActionLoading !== null}
+              onAccept={async () => {
+                if (demoActionLoading) return;
+                setDemoActionLoading("reset");
+                setDemoActionError(null);
+                try {
+                  const res = await resetDemoDataPreservingNonDemo();
+                  fireToast(
+                    "success",
+                    "Demo data reset",
+                    `Cleared ${res.deletedDemoTaskCount} demo task(s) and ${res.deletedDemoListCount} demo list(s), then re-seeded demo data.` +
+                      (res.movedNonDemoTaskCount > 0
+                        ? ` Moved ${res.movedNonDemoTaskCount} non-demo task(s) to Inbox.`
+                        : "")
+                  );
+                } catch (err) {
+                  const msg =
+                    typeof err === "object" && err !== null && "message" in err
+                      ? String((err as { message: unknown }).message)
+                      : "Failed to reset demo data.";
+                  setDemoActionError(msg);
+                  fireToast("error", "Reset failed", msg);
+                  throw err;
+                } finally {
+                  setDemoActionLoading(null);
+                }
+              }}
+              onCancel={() => {
+                if (demoActionLoading) return;
+                setDemoActionError(null);
+                setIsResetDemoOpen(false);
+              }}
+            />
+          </>
+        ) : null}
       </Box>
 
-      <Box pt={6} w="100%">
+      <Box pt={6} w="100%"> {/* Tips */}
         <Heading size="lg">Tips</Heading>
         <Text color="gray.600" fontSize="sm">
           Tips can be dismissed and are remembered per user.

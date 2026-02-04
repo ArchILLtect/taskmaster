@@ -1,7 +1,7 @@
 import { Box, Button, Checkbox, HStack, Text, VStack } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { isDemoSessionActive } from "../../services/demoSession";
+import { useDemoMode } from "../../hooks/useDemoMode";
 import { useDemoTourStore } from "../../store/demoTourStore";
 import { DialogModal } from "./DialogModal";
 
@@ -9,6 +9,8 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
   const navigate = useNavigate();
   const [dismissedThisSession, setDismissedThisSession] = useState(false);
   const [dontShowAgainChecked, setDontShowAgainChecked] = useState(false);
+
+  const { isDemo } = useDemoMode(signedIn);
 
   const openRequested = useDemoTourStore((s) => s.open);
   const setOpenRequested = useDemoTourStore((s) => s.setOpen);
@@ -23,9 +25,9 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
 
   const shouldOffer = useMemo(() => {
     if (!signedIn) return false;
-    if (!isDemoSessionActive()) return false;
+    if (!isDemo) return false;
     return !disabled;
-  }, [disabled, signedIn]);
+  }, [disabled, isDemo, signedIn]);
 
   const open = (shouldOffer && !dismissedThisSession) || (shouldOffer && openRequested);
   const setOpen = (next: boolean) => {

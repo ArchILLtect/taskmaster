@@ -3,6 +3,7 @@ import type { AuthUserLike } from "../types";
 import { bootstrapUser } from "../services/userBootstrapService";
 import { useTaskActions } from "../store/taskStore";
 import { userScopedGetItem } from "../services/userScopedStorage";
+import { isSeedDemoDisabled as isSeedDemoDisabledFromPref } from "../services/seedDemoPreference";
 
 function shouldSeedDemoFromLocation(): boolean {
   try {
@@ -31,11 +32,8 @@ function shouldDisableDemoFromLocation(): boolean {
 }
 
 function shouldDisableDemoFromStorage(): boolean {
-  try {
-    return userScopedGetItem("seedDemo") === "0";
-  } catch {
-    return false;
-  }
+  // Prefer the centralized helper; keep this wrapper for compatibility.
+  return isSeedDemoDisabledFromPref();
 }
 
 export function useBootstrapUserProfile(user?: AuthUserLike | null) {
