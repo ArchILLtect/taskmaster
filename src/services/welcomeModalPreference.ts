@@ -2,6 +2,7 @@ import { userScopedGetItem, userScopedRemoveItem, userScopedSetItem } from "./us
 
 export const WELCOME_MODAL_PREF_KEY = "welcomeModalSeenVersion" as const;
 export const WELCOME_MODAL_PREF_EVENT = "taskmaster:welcomeModalPrefChanged" as const;
+export const WELCOME_MODAL_OPEN_EVENT = "taskmaster:welcomeModalOpenRequested" as const;
 
 function emitChange(): void {
   try {
@@ -48,6 +49,31 @@ export function onWelcomeModalPrefChange(cb: () => void): () => void {
   return () => {
     try {
       window.removeEventListener(WELCOME_MODAL_PREF_EVENT, handler);
+    } catch {
+      // ignore
+    }
+  };
+}
+
+export function requestOpenWelcomeModal(): void {
+  try {
+    window.dispatchEvent(new Event(WELCOME_MODAL_OPEN_EVENT));
+  } catch {
+    // ignore
+  }
+}
+
+export function onWelcomeModalOpenRequest(cb: () => void): () => void {
+  const handler = () => cb();
+  try {
+    window.addEventListener(WELCOME_MODAL_OPEN_EVENT, handler);
+  } catch {
+    // ignore
+  }
+
+  return () => {
+    try {
+      window.removeEventListener(WELCOME_MODAL_OPEN_EVENT, handler);
     } catch {
       // ignore
     }

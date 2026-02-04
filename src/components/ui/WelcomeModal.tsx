@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { DialogModal } from "./DialogModal";
 import { useDemoMode } from "../../hooks/useDemoMode";
 import { useDemoTourStore } from "../../store/demoTourStore";
-import { getWelcomeModalSeenVersion, onWelcomeModalPrefChange, setWelcomeModalSeenVersion } from "../../services/welcomeModalPreference";
+import {
+  getWelcomeModalSeenVersion,
+  onWelcomeModalOpenRequest,
+  onWelcomeModalPrefChange,
+  setWelcomeModalSeenVersion,
+} from "../../services/welcomeModalPreference";
 import { setDemoModeOptIn } from "../../services/demoModeOptIn";
 
 const WELCOME_MODAL_VERSION = 1 as const;
@@ -33,6 +38,7 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
   const [dismissedThisSession, setDismissedThisSession] = useState(false);
   const [neverShowAgainChecked, setNeverShowAgainChecked] = useState(false);
   const [seenVersion, setSeenVersion] = useState(() => getWelcomeModalSeenVersion());
+  const [openRequested, setOpenRequested] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +50,7 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
         setDismissedThisSession(false);
         setNeverShowAgainChecked(false);
         setSeenVersion(0);
+        setOpenRequested(false);
         return;
       }
 
@@ -63,13 +70,20 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
     };
   }, [signedIn]);
 
+  useEffect(() => {
+    if (!signedIn) return;
+    return onWelcomeModalOpenRequest(() => {
+      setOpenRequested(true);
+    });
+  }, [signedIn]);
+
   const shouldOffer = useMemo(() => {
     if (!signedIn) return false;
     if (dismissedThisSession) return false;
     return seenVersion < WELCOME_MODAL_VERSION;
   }, [dismissedThisSession, seenVersion, signedIn]);
 
-  const open = shouldOffer;
+  const open = openRequested || shouldOffer;
 
   const startDemoTour = () => {
     if (demoTourDisabled) {
@@ -180,6 +194,7 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
           setWelcomeModalSeenVersion(WELCOME_MODAL_VERSION);
         }
         setDismissedThisSession(true);
+        setOpenRequested(false);
       }}
       onCancel={() => {
         // no-op (close is the only action)

@@ -25,7 +25,7 @@ import { useDemoMode } from "../hooks/useDemoMode";
 import { useDemoTourStore } from "../store/demoTourStore";
 import { isSeedDemoDisabled, setSeedDemoDisabled } from "../services/seedDemoPreference";
 import { setDemoModeOptIn } from "../services/demoModeOptIn";
-import { clearWelcomeModalSeenVersion } from "../services/welcomeModalPreference";
+import { clearWelcomeModalSeenVersion, requestOpenWelcomeModal } from "../services/welcomeModalPreference";
 import { clearDemoSessionActive } from "../services/demoSession";
 import {
   clearDemoDataOnly,
@@ -634,6 +634,15 @@ export function SettingsPage() {
             If you previously chose “Never show again”, you can re-enable the welcome modal here.
           </Text>
           <HStack pt={2} gap={3} align="center" flexWrap="wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                requestOpenWelcomeModal();
+              }}
+            >
+              Open welcome now
+            </Button>
             <Button
               size="sm"
               variant="outline"
