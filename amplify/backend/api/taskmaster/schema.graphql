@@ -8,8 +8,8 @@ type TaskList
   id: ID! @primaryKey
   owner: String!
     @auth(rules: [
-      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read] },
-      { allow: groups, groups: ["Admin"], operations: [read] }
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create] },
+      { allow: groups, groups: ["Admin"], operations: [read, create] }
     ])
 
   name: String!
@@ -30,8 +30,8 @@ type Task
   id: ID! @primaryKey
   owner: String!
     @auth(rules: [
-      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read] },
-      { allow: groups, groups: ["Admin"], operations: [read] }
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create] },
+      { allow: groups, groups: ["Admin"], operations: [read, create] }
     ])
 
   # Query tasks in a list ordered by sortOrder
@@ -71,8 +71,8 @@ type UserProfile
 
   owner: String!
     @auth(rules: [
-      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read] },
-      { allow: groups, groups: ["Admin"], operations: [read] }
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create] },
+      { allow: groups, groups: ["Admin"], operations: [read, create] }
     ])
 
   planTier: PlanTier!
