@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Box, Flex } from "@chakra-ui/react";
+import { Suspense } from "react";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
@@ -66,7 +67,9 @@ export function AppShell({
         {/* Main area is the primary scroll container */}
         <Box flex="1" minW={0} h="100%" overflow="auto" className="Main">
           <ErrorBoundary title="Page Crashed">
-            <Outlet />
+            <Suspense fallback={<BasicSpinner />}>
+              <Outlet />
+            </Suspense>
           </ErrorBoundary>
         </Box>
       </Flex>

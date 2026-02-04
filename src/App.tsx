@@ -2,20 +2,15 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import "@aws-amplify/ui-react/styles.css";
 
 import { AppShell } from "./layout/AppShell";
-import { InboxPage } from "./pages/InboxPage";
 import { TodayPage } from "./pages/TodayPage";
 import { WeekPage } from "./pages/WeekPage";
 import { MonthPage } from "./pages/MonthPage";
 import { ListsPage } from "./pages/ListsPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { TasksPage } from "./pages/TasksPage";
-import { UpdatesPage } from "./pages/UpdatesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
-import { ListDetailsPage } from "./pages/ListDetailsPage";
 import { AdminPage } from "./pages/AdminPage";
-import { lazy, Suspense, useLayoutEffect } from "react";
-import { BasicSpinner } from "./components/ui/BasicSpinner";
+import { lazy, useLayoutEffect } from "react";
 import { Hub } from "aws-amplify/utils";
 import { resetUserSessionState } from "./store/clearUserCaches";
 import { USER_UI_STORAGE_KEY } from "./services/userUICacheStore";
@@ -28,6 +23,10 @@ import { setUserStorageScopeKey } from "./services/userScopedStorage";
 
 
 const DevPage = lazy(() => import("./pages/DevPage").then(m => ({ default: m.DevPage })));
+const InboxPage = lazy(() => import("./pages/InboxPage").then((m) => ({ default: m.InboxPage })));
+const TasksPage = lazy(() => import("./pages/TasksPage").then((m) => ({ default: m.TasksPage })));
+const UpdatesPage = lazy(() => import("./pages/UpdatesPage").then((m) => ({ default: m.UpdatesPage })));
+const ListDetailsPage = lazy(() => import("./pages/ListDetailsPage").then((m) => ({ default: m.ListDetailsPage })));
 
 let didRegisterAuthHubListener = false;
 function ensureAuthLifecycleCacheGuards() {
@@ -142,14 +141,7 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage user={user} />} />
           <Route path="/settings" element={<SettingsPage />} />
           {import.meta.env.DEV ? (
-            <Route
-              path="/dev"
-              element={
-                <Suspense fallback={<BasicSpinner />}>
-                  <DevPage />
-                </Suspense>
-              }
-            />
+            <Route path="/dev" element={<DevPage />} />
           ) : null}
         </Route>
 
