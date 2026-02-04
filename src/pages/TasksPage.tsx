@@ -16,23 +16,16 @@ import { useTaskActions } from "../store/taskStore";
 import { getInboxListId } from "../config/inboxSettings";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
-import { getTodayDateInputValue } from "../services/dateTime";
+import { getTodayDateInputValue, isoToDateInputValue } from "../services/dateTime";
 import { Tip } from "../components/ui/Tip";
 import { FiEdit2 } from "react-icons/fi";
+import { isoToDayKey } from "../services/inboxTriage";
 import {
   normalizeDateInputToIso,
   normalizeOptionalSingleLineText,
   normalizeRequiredTitle,
 } from "../services/inputNormalization";
 import { FIELD_LIMITS } from "../config/fieldConstraints";
-
-// --- helpers (keep local, simple)
-function isoToDateInput(iso?: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10);
-}
 
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = getTodayDateInputValue();
@@ -98,10 +91,9 @@ export function TasksPage() {
     const openTasks = allTasks.filter((t) => t.status !== TaskStatus.Done);
     const scheduledOpenTasks = openTasks.filter((t) => Boolean(t.dueAt));
 
-    const toDueKey = (iso?: string | null) => (typeof iso === "string" && iso.length >= 10 ? iso.slice(0, 10) : null);
-    const dueToday = scheduledOpenTasks.filter((t) => toDueKey(t.dueAt) === todayDate).length;
+    const dueToday = scheduledOpenTasks.filter((t) => isoToDayKey(t.dueAt) === todayDate).length;
     const overdue = scheduledOpenTasks.filter((t) => {
-      const key = toDueKey(t.dueAt);
+      const key = isoToDayKey(t.dueAt);
       return key != null && key < todayDate;
     }).length;
 
@@ -157,9 +149,6 @@ export function TasksPage() {
 
     const filtered = allTasks.filter((t) => matchesStatus(t) && matchesList(t) && matchesSearch(t));
 
-    const toDueKey = (iso?: string | null) =>
-      typeof iso === "string" && iso.length >= 10 ? iso.slice(0, 10) : null;
-
     const decorated = filtered.map((t, idx) => ({ t, idx }));
 
     decorated.sort((a, b) => {
@@ -173,8 +162,8 @@ export function TasksPage() {
       }
 
       if (sortKey === "due") {
-        const ka = toDueKey(ta.dueAt) ?? "9999-12-31";
-        const kb = toDueKey(tb.dueAt) ?? "9999-12-31";
+        const ka = isoToDayKey(ta.dueAt) ?? "9999-12-31";
+        const kb = isoToDayKey(tb.dueAt) ?? "9999-12-31";
         return ka.localeCompare(kb) || (ta.sortOrder ?? 0) - (tb.sortOrder ?? 0) || stableTieBreak();
       }
 
@@ -215,7 +204,7 @@ export function TasksPage() {
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskListId(task.listId ?? "");
     setDraftTaskParentId(task.parentTaskId ?? null);
-    setDraftTaskDueDate(isoToDateInput(task.dueAt));
+    setDraftTaskDueDate(isoToDateInputValue(task.dueAt));
     setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
     setDraftTaskStatus(task.status ?? TaskStatus.Open);
     setSelectedTask(task);

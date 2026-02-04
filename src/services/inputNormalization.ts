@@ -28,8 +28,19 @@ export function normalizeDateInputToIso(dateInput: string): string | null {
   // Expect browser <input type="date"/> format.
   if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;
 
-  const date = new Date(`${normalized}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) return null;
+  const m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(normalized);
+  if (!m) return null;
 
-  return date.toISOString();
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
+
+  // Strict calendar validation (reject rollover dates like 2026-02-31).
+  const utc = new Date(Date.UTC(y, mo - 1, d));
+  if (Number.isNaN(utc.getTime())) return null;
+  if (utc.toISOString().slice(0, 10) !== normalized) return null;
+
+  // Store dueAt as a UTC-anchored datetime string so day-key extraction is stable.
+  return `${normalized}T00:00:00.000Z`;
 }

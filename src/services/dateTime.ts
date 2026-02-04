@@ -174,6 +174,17 @@ export function formatDueDate(
   return formatUtcDayKey(dueKey, { noneLabel, locale: opts?.locale, month: opts?.month });
 }
 
+/**
+ * Converts an ISO datetime string (our `dueAt`) into an `<input type="date" />` value.
+ *
+ * Important: we treat `dueAt` as a day-only “floating” value; extracting the ISO day key
+ * avoids timezone-dependent Date parsing.
+ */
+export function isoToDateInputValue(iso?: string | null): string {
+  const dayKey = isoToDayKey(iso);
+  return dayKey ?? "";
+}
+
 export function getNowUtcDayKey(nowMs: number = Date.now()): string {
   return toUtcDayKey(nowMs);
 }

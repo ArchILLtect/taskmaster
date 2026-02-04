@@ -16,7 +16,7 @@ import { useInboxActions } from "../store/inboxStore";
 import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
 import { FiEdit2 } from "react-icons/fi";
 import { Tip } from "../components/ui/Tip";
-import { getTodayDateInputValue } from "../services/dateTime";
+import { getTodayDateInputValue, isoToDateInputValue } from "../services/dateTime";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { FIELD_LIMITS } from "../config/fieldConstraints";
 import {
@@ -43,13 +43,6 @@ import {
 // - Mobile responsiveness testing and tweaks
 // - Accessibility review to ensure screen reader friendliness
 // - Performance optimizations for large inboxes
-
-function isoToDateInput(iso?: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10);
-}
 
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = getTodayDateInputValue();
@@ -113,7 +106,7 @@ export function InboxPage() {
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskListId(task.listId ?? "");
     setDraftTaskParentId(task.parentTaskId ?? null);
-    setDraftTaskDueDate(isoToDateInput(task.dueAt));
+    setDraftTaskDueDate(isoToDateInputValue(task.dueAt));
     setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
     setDraftTaskStatus(task.status ?? TaskStatus.Open);
     setSelectedTask(task);
