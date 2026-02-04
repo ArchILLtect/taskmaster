@@ -71,6 +71,13 @@ type TaskItem = NonNullable<NonNullable<TasksByListQuery["tasksByList"]>["items"
 type CreateTaskListInputClient = Omit<CreateTaskListInput, "owner"> & { owner?: string };
 type CreateTaskInputClient = Omit<CreateTaskInput, "owner"> & { owner?: string };
 
+function stripOwnerField<T extends Record<string, unknown>>(input: T): Omit<T, "owner"> {
+  // Defense-in-depth: never allow client code to send `owner` in *update* mutation inputs.
+  // Ownership should not be transferable via client payloads.
+  const { owner: _owner, ...rest } = input as T & { owner?: unknown };
+  return rest;
+}
+
 // The operation documents in `operationsMinimal.ts` are typed as branded strings.
 // Use those brands to infer variable + result types without any casts.
 type GenQuery<I, O> = string & { __generatedQueryInput: I; __generatedQueryOutput: O };
@@ -148,7 +155,10 @@ export const taskmasterApi = {
   },
 
   async updateUserProfile(input: UpdateUserProfileInput, condition?: ModelUserProfileConditionInput | null) {
-    const data = await runMutation(updateUserProfileMinimal, { input, condition: condition ?? null });
+    const data = await runMutation(updateUserProfileMinimal, {
+      input: stripOwnerField(input),
+      condition: condition ?? null,
+    });
     return data.updateUserProfile;
   },
 
@@ -285,7 +295,7 @@ export const taskmasterApi = {
   },
 
   async updateTaskList(input: UpdateTaskListInput) {
-    const data = await runMutation(updateTaskListMinimal, { input });
+    const data = await runMutation(updateTaskListMinimal, { input: stripOwnerField(input) });
     return data.updateTaskList;
   },
 
@@ -376,7 +386,7 @@ export const taskmasterApi = {
   },
 
   async updateTask(input: UpdateTaskInput) {
-    const data = await runMutation(updateTaskMinimal, { input });
+    const data = await runMutation(updateTaskMinimal, { input: stripOwnerField(input) });
     const updated = data.updateTask;
 
     if (updated?.id && updated?.listId) {
