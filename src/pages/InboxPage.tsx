@@ -222,18 +222,18 @@ export function InboxPage() {
 
   if (err) return <div>Failed to load inbox data.</div>;
 
-  // Optional: if inboxListId is missing, nothing to show
-  // (in your hook, inboxTasks becomes [])
-  // if (!vm.newTasks.length && !vm.dueSoonTasks.length) {
-  //   return <div>Your inbox is empty. Hooray!</div>;
-  // }
-
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
       <HStack w="100%" justify="space-between" align="start">
         <VStack align="start" gap={1}>
           <Heading size="2xl">Inbox</Heading>
-          <Text color="gray.600">Actionable triage: new tasks + overdue + due soon. Acknowledge overdue/due-soon to shrink the pile.</Text>
+          <Text color="gray.700">
+            Inbox is your staging area for anything that needs attention and a place to quickly drop new tasks.
+          </Text>
+          <Text color="gray.600" fontSize="sm">
+            Actionable triage: new tasks + overdue + due soon. In the future, items from teammates/collaborators will land
+            here too so you can decide what to do next.
+          </Text>
         </VStack>
 
         <Button
