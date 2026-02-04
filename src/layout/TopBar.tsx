@@ -1,4 +1,4 @@
-import { HStack, Heading, Spacer, Badge, Button, Box, Spinner, Text } from "@chakra-ui/react";
+import { HStack, Heading, Flex, Badge, Button, Box, Spinner, Text } from "@chakra-ui/react";
 import { RouterLink } from "../components/RouterLink";
 import type { AuthUserLike, UserUI } from "../types";
 import { IoSettingsSharp } from "react-icons/io5";
@@ -8,6 +8,7 @@ import { formatUsernameForDisplay } from "../services/userDisplay";
 import { useDemoMode } from "../hooks/useDemoMode";
 import { useDemoTourStore } from "../store/demoTourStore";
 import { Tooltip } from "../components/ui/Tooltip";
+import { requestOpenWelcomeModal } from "../services/welcomeModalPreference";
 
 type TopBarProps = {
   user?: AuthUserLike | null;
@@ -39,90 +40,106 @@ export function TopBar({ user, userUI }: TopBarProps) {
 
   return (
     <HStack px={4} py={3} borderBottomWidth="1px" bg="white" position={"sticky"} minW="400px">
-      <RouterLink to="/">{() => <Heading size="lg">{"< TaskMaster />"}</Heading>}</RouterLink>
-      <Spacer />
+      <Flex justifyContent="space-between" alignItems="center" width="100%">
+        <RouterLink to="/">{() => <Heading size="lg">{"< TaskMaster />"}</Heading>}</RouterLink>
 
-      <HStack gap={3}>
-        {refreshing ? (
-          <HStack gap={2} color="gray.600">
-            <Spinner size="sm" />
-            <Text fontSize="sm">Refreshing…</Text>
-          </HStack>
-        ) : null}
-        {signedIn ? (
-          <>
-            <RouterLink to="/profile">
-            {({ isActive }) => (
-                <Box
-                    px={3}
-                    py={1}
-                    rounded="md"
-                    fontWeight="600"
-                    bg={isActive ? "blackAlpha.100" : "transparent"}
-                    _hover={{ bg: "blackAlpha.100" }}
-                >
-                    {displayUsername}
-                </Box>
-            )}
-            </RouterLink>
+        <Tooltip content="What’s new" showArrow>
+          <Button
+            size="sm"
+            variant="ghost"
+            fontWeight="600"
+            color={"blue.600"}
+            onClick={() => {
+              requestOpenWelcomeModal();
+            }}
+          >
+            What’s new
+          </Button>
+        </Tooltip>
 
-            {isAdmin ? (
-              <RouterLink to="/admin">
-                {({ isActive }) => (
-                  <Badge rounded="md" bg={isActive ? "purple.100" : undefined}>
-                    Admin
-                  </Badge>
-                )}
-              </RouterLink>
-            ) : null}
 
-            {isDemo ? (
-              demoTourDisabled ? (
-                <Badge rounded="md" bg="orange.100" color="orange.800">
-                  Demo Mode
-                </Badge>
-              ) : (
-                <Tooltip content="Open demo tour" showArrow>
-                  <Badge
-                    as="button"
-                    rounded="md"
-                    bg="orange.100"
-                    color="orange.800"
-                    cursor="pointer"
-                    _hover={{ bg: "orange.200" }}
-                    onClick={() => {
-                      openDemoTour();
-                    }}
+        <HStack gap={3}>
+          {refreshing ? (
+            <HStack gap={2} color="gray.600">
+              <Spinner size="sm" />
+              <Text fontSize="sm">Refreshing…</Text>
+            </HStack>
+          ) : null}
+          {signedIn ? (
+            <>
+              <RouterLink to="/profile">
+              {({ isActive }) => (
+                  <Box
+                      px={3}
+                      py={1}
+                      rounded="md"
+                      fontWeight="600"
+                      bg={isActive ? "blackAlpha.100" : "transparent"}
+                      _hover={{ bg: "blackAlpha.100" }}
                   >
+                      {displayUsername}
+                  </Box>
+              )}
+              </RouterLink>
+
+              {isAdmin ? (
+                <RouterLink to="/admin">
+                  {({ isActive }) => (
+                    <Badge rounded="md" bg={isActive ? "purple.100" : undefined}>
+                      Admin
+                    </Badge>
+                  )}
+                </RouterLink>
+              ) : null}
+
+              {isDemo ? (
+                demoTourDisabled ? (
+                  <Badge rounded="md" bg="orange.100" color="orange.800">
                     Demo Mode
                   </Badge>
-                </Tooltip>
-              )
-            ) : null}
-          </>
-        ) : (
-          <RouterLink to="/login">{() => <Button as="span" size="sm" variant="solid">Sign in</Button>}</RouterLink>
-        )}
-        {signedIn ? (
-          <RouterLink to={"/settings"}>
-            {({ isActive }) => (
-              <Button
-                as="span"
-                variant="ghost"
-                justifyContent="flex-start"
-                width="100%"
-                paddingX={2}
-                fontWeight="700"
-                color="black"
-                bg={isActive ? "blackAlpha.100" : "transparent"}
-                _hover={{ bg: "blackAlpha.100" }}
-              >
-                <IoSettingsSharp />
-              </Button>
-            )}
-          </RouterLink>
-        ) : null}
-      </HStack>
+                ) : (
+                  <Tooltip content="Open demo tour" showArrow>
+                    <Badge
+                      as="button"
+                      rounded="md"
+                      bg="orange.100"
+                      color="orange.800"
+                      cursor="pointer"
+                      _hover={{ bg: "orange.200" }}
+                      onClick={() => {
+                        openDemoTour();
+                      }}
+                    >
+                      Demo Mode
+                    </Badge>
+                  </Tooltip>
+                )
+              ) : null}
+            </>
+          ) : (
+            <RouterLink to="/login">{() => <Button as="span" size="sm" variant="solid">Sign in</Button>}</RouterLink>
+          )}
+          {signedIn ? (
+            <RouterLink to={"/settings"}>
+              {({ isActive }) => (
+                <Button
+                  as="span"
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  width="100%"
+                  paddingX={2}
+                  fontWeight="700"
+                  color="black"
+                  bg={isActive ? "blackAlpha.100" : "transparent"}
+                  _hover={{ bg: "blackAlpha.100" }}
+                >
+                  <IoSettingsSharp />
+                </Button>
+              )}
+            </RouterLink>
+          ) : null}
+        </HStack>
+      </Flex>
     </HStack>
   );
 }
