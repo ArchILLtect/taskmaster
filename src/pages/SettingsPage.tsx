@@ -24,6 +24,9 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { useDemoMode } from "../hooks/useDemoMode";
 import { useDemoTourStore } from "../store/demoTourStore";
 import { isSeedDemoDisabled, setSeedDemoDisabled } from "../services/seedDemoPreference";
+import { setDemoModeOptIn } from "../services/demoModeOptIn";
+import { clearWelcomeModalSeenVersion } from "../services/welcomeModalPreference";
+import { clearDemoSessionActive } from "../services/demoSession";
 import {
   clearDemoDataOnly,
   resetDemoDataPreservingNonDemo,
@@ -48,9 +51,10 @@ export function SettingsPage() {
   const setDefaultLandingRoute = useSetDefaultLandingRoute();
 
   const { clearDismissed } = useInboxActions();
-  const { isDemoIdentity } = useDemoMode(true);
+  const { isDemo, isDemoIdentity, isDemoSession, isDemoOptIn } = useDemoMode(true);
   const demoTourDisabled = useDemoTourStore((s) => s.disabled);
   const resetDemoTourDisabled = useDemoTourStore((s) => s.resetDisabled);
+  const openDemoTour = useDemoTourStore((s) => s.openTour);
 
   const [seedOptedOut, setSeedOptedOut] = useState(() => isSeedDemoDisabled());
 
@@ -615,6 +619,104 @@ export function SettingsPage() {
               }}
             />
           </>
+        ) : null}
+      </Box>
+
+      <Box pt={6} w="100%"> {/* Onboarding */}
+        <Heading size="lg">Onboarding</Heading>
+        <Text color="gray.600" fontSize="sm">
+          Control the welcome modal and (optionally) enable Demo Mode for this account on this device.
+        </Text>
+
+        <Box pt={3}>
+          <Heading size="sm">Welcome modal</Heading>
+          <Text color="gray.600" fontSize="sm">
+            If you previously chose “Never show again”, you can re-enable the welcome modal here.
+          </Text>
+          <HStack pt={2} gap={3} align="center" flexWrap="wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                clearWelcomeModalSeenVersion();
+                fireToast("success", "Welcome re-enabled", "The welcome modal will show again on next login.");
+              }}
+            >
+              Show welcome again
+            </Button>
+          </HStack>
+        </Box>
+
+        {!isDemoIdentity ? (
+          <Box pt={4}>
+            <Heading size="sm">Demo Mode (optional)</Heading>
+            <Text color="gray.600" fontSize="sm">
+              {isDemoSession
+                ? "This is a demo session. Sign out to exit demo mode."
+                : isDemoOptIn
+                  ? "Demo Mode is enabled for this account on this device."
+                  : "Enable Demo Mode to show the Demo Mode badge and allow the guided tour."}
+            </Text>
+
+            <HStack pt={2} gap={3} align="center" flexWrap="wrap">
+              {!isDemoSession ? (
+                isDemoOptIn ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    colorPalette="gray"
+                    onClick={() => {
+                      setDemoModeOptIn(false);
+                      clearDemoSessionActive();
+                      fireToast("success", "Demo Mode disabled", "You’ve exited Demo Mode for this account on this device.");
+                    }}
+                  >
+                    Exit Demo Mode
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    colorPalette="purple"
+                    onClick={() => {
+                      setDemoModeOptIn(true);
+                      fireToast("success", "Demo Mode enabled", "Demo Mode is now enabled for this account on this device.");
+                    }}
+                  >
+                    Enable Demo Mode
+                  </Button>
+                )
+              ) : null}
+
+              {isDemo ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (demoTourDisabled) {
+                        resetDemoTourDisabled();
+                      }
+                      openDemoTour();
+                    }}
+                  >
+                    Start demo tour
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      resetDemoTourDisabled();
+                      fireToast("success", "Demo tour reset", "The demo tour can be opened again from the Demo Mode badge.");
+                    }}
+                    disabled={!demoTourDisabled}
+                  >
+                    Reset demo tour
+                  </Button>
+                </>
+              ) : null}
+            </HStack>
+          </Box>
         ) : null}
       </Box>
 

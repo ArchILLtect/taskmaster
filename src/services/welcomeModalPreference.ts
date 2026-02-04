@@ -1,0 +1,55 @@
+import { userScopedGetItem, userScopedRemoveItem, userScopedSetItem } from "./userScopedStorage";
+
+export const WELCOME_MODAL_PREF_KEY = "welcomeModalSeenVersion" as const;
+export const WELCOME_MODAL_PREF_EVENT = "taskmaster:welcomeModalPrefChanged" as const;
+
+function emitChange(): void {
+  try {
+    window.dispatchEvent(new Event(WELCOME_MODAL_PREF_EVENT));
+  } catch {
+    // ignore
+  }
+}
+
+export function getWelcomeModalSeenVersion(): number {
+  try {
+    const raw = userScopedGetItem(WELCOME_MODAL_PREF_KEY);
+    const n = raw != null ? Number(raw) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function setWelcomeModalSeenVersion(version: number): void {
+  try {
+    userScopedSetItem(WELCOME_MODAL_PREF_KEY, String(version));
+  } finally {
+    emitChange();
+  }
+}
+
+export function clearWelcomeModalSeenVersion(): void {
+  try {
+    userScopedRemoveItem(WELCOME_MODAL_PREF_KEY);
+  } finally {
+    emitChange();
+  }
+}
+
+export function onWelcomeModalPrefChange(cb: () => void): () => void {
+  const handler = () => cb();
+  try {
+    window.addEventListener(WELCOME_MODAL_PREF_EVENT, handler);
+  } catch {
+    // ignore
+  }
+
+  return () => {
+    try {
+      window.removeEventListener(WELCOME_MODAL_PREF_EVENT, handler);
+    } catch {
+      // ignore
+    }
+  };
+}

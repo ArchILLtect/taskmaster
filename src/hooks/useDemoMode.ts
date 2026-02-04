@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 
 import { isDemoSessionActive } from "../services/demoSession";
+import { isDemoModeOptedIn, onDemoModeOptInChange } from "../services/demoModeOptIn";
 
 function payloadToGroups(payload?: Record<string, unknown>): string[] {
   const raw = payload?.["cognito:groups"];
@@ -18,8 +19,10 @@ export function useDemoMode(signedIn: boolean): {
   isDemo: boolean;
   isDemoIdentity: boolean;
   isDemoSession: boolean;
+  isDemoOptIn: boolean;
 } {
   const [isDemoIdentity, setIsDemoIdentity] = useState(false);
+  const [isDemoOptIn, setIsDemoOptIn] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,12 +57,36 @@ export function useDemoMode(signedIn: boolean): {
     };
   }, [signedIn]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const refresh = () => {
+      if (cancelled) return;
+      setIsDemoOptIn(isDemoModeOptedIn());
+    };
+
+    const t = window.setTimeout(() => {
+      if (!signedIn) {
+        if (!cancelled) setIsDemoOptIn(false);
+        return;
+      }
+      refresh();
+    }, 0);
+
+    const unsub = signedIn ? onDemoModeOptInChange(refresh) : () => {};
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+      unsub();
+    };
+  }, [signedIn]);
+
   const isDemoSession = useMemo(() => {
     if (!signedIn) return false;
     return isDemoSessionActive();
   }, [signedIn]);
 
-  const isDemo = isDemoIdentity || isDemoSession;
+  const isDemo = isDemoIdentity || isDemoSession || isDemoOptIn;
 
-  return { isDemo, isDemoIdentity, isDemoSession };
+  return { isDemo, isDemoIdentity, isDemoSession, isDemoOptIn };
 }
