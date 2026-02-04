@@ -9,6 +9,13 @@ import { useTaskmasterData } from "../../hooks/useTaskmasterData";
 import { useTaskActions } from "../../store/taskStore";
 import { FormSelect } from "./FormSelect";
 import { getTodayDateInputValue } from "../../services/dateTime";
+import {
+  normalizeDateInputToIso,
+  normalizeOptionalSingleLineText,
+  normalizeRequiredTitle,
+} from "../../services/inputNormalization";
+import { fireToast } from "../../hooks/useFireToast";
+import { FIELD_LIMITS } from "../../config/fieldConstraints";
 
 export type AddTaskFormHandle = {
   submit: () => Promise<void>;
@@ -24,12 +31,6 @@ const isTaskStatus = (v: string): v is TaskStatus =>
   (Object.values(TaskStatus) as string[]).includes(v);
 
 const todayDate = getTodayDateInputValue();
-
-// --- helpers (keep local, simple)
-function dateInputToIso(date: string) {
-  if (!date) return null;
-  return new Date(`${date}T00:00:00.000Z`).toISOString();
-}
 
 const PRIORITY_OPTIONS: Option<TaskPriority>[] = [
   { label: "Low", value: TaskPriority.Low },
@@ -97,7 +98,15 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
 
     setSaving(true);
     try {
-      const dueAtIso = dateInputToIso(newTaskDueDate);
+      if (!selectedListId) {
+        fireToast("error", "Select a list", "Please choose a list before creating the task.");
+        return;
+      }
+
+      const title = normalizeRequiredTitle(newTaskTitle, "Untitled Task", { maxLen: FIELD_LIMITS.task.titleMax });
+      const description = normalizeOptionalSingleLineText(newTaskDescription, { maxLen: FIELD_LIMITS.task.descriptionMax });
+      const dueAtIso = normalizeDateInputToIso(newTaskDueDate);
+
       const parent = parentTaskId ?? null;
       const status = newTaskStatus ?? TaskStatus.Open;
       const completedAt = status === TaskStatus.Done ? new Date().toISOString() : null;
@@ -106,8 +115,8 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
         listId: selectedListId,
         sortOrder: tasksInList ? nextSortOrder(tasksInList, parent) : 1,
         parentTaskId: parent,
-        title: newTaskTitle.trim() || "Untitled Task",
-        description: newTaskDescription,
+        title,
+        description,
         status: status as unknown as TaskStatus,
         priority: newTaskPriority as unknown as TaskPriority,
         dueAt: dueAtIso,
@@ -136,6 +145,7 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
 
     } catch (error) {
       console.error("Error creating task:", error);
+      fireToast("error", "Task not created", "There was an issue creating the task. Please try again.");
       throw error;
     } finally {
       setSaving(false);
@@ -174,6 +184,7 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.task.titleMax}
             id="task-title"
             bg="white"
             placeholder="Task Title"
@@ -188,6 +199,7 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.task.descriptionMax}
             id="task-description"
             bg="white"
             placeholder="Task Description (optional)"

@@ -14,6 +14,12 @@ import { useTaskActions } from "../store/taskStore";
 import { formatDueDate, getTodayDateInputValue } from "../services/dateTime";
 import { DialogModal } from "./ui/DialogModal";
 import { FiEdit2 } from "react-icons/fi";
+import { FIELD_LIMITS } from "../config/fieldConstraints";
+import {
+  normalizeDateInputToIso,
+  normalizeOptionalSingleLineText,
+  normalizeRequiredTitle,
+} from "../services/inputNormalization";
 
 // --- animations
 const pulse = keyframes`
@@ -21,12 +27,6 @@ const pulse = keyframes`
   30%  { box-shadow: 0 0 0 4px rgba(66,153,225,0.35); transform: translateY(-1px); }
   100% { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(0); }
 `;
-
-// --- helpers (keep local, simple)
-function dateInputToIso(date: string) {
-  if (!date) return null;
-  return new Date(`${date}T00:00:00.000Z`).toISOString();
-}
 
 function isoToDateInput(iso?: string | null) {
   if (!iso) return "";
@@ -128,16 +128,21 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     let didSucceed = false;
     try {
       setSaving(true);
+
+      const title = normalizeRequiredTitle(draftTaskTitle, "Untitled Task", { maxLen: FIELD_LIMITS.task.titleMax });
+      const description = normalizeOptionalSingleLineText(draftTaskDescription, { maxLen: FIELD_LIMITS.task.descriptionMax });
+      const dueAt = normalizeDateInputToIso(draftTaskDueDate);
+
       await updateTask({
         id: selectedTask.id,
         listId: nextListId,
         ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
-        title: draftTaskTitle.trim() || "Untitled Task",
-        description: draftTaskDescription,
+        title,
+        description,
         // Cast to generated enums (type-level only) so TS stops screaming.
         priority: draftTaskPriority as unknown as TaskPriority,
         status: draftTaskStatus as unknown as TaskStatus,
-        dueAt: dateInputToIso(draftTaskDueDate),
+        dueAt,
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
       });

@@ -18,6 +18,8 @@ import { getTodayDateInputValue } from "../services/dateTime";
 import { Tip } from "../components/ui/Tip";
 import { DialogModal } from "../components/ui/DialogModal";
 import { FiEdit2 } from "react-icons/fi";
+import { normalizeOptionalSingleLineText, normalizeSingleLineText } from "../services/inputNormalization";
+import { FIELD_LIMITS } from "../config/fieldConstraints";
 
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = getTodayDateInputValue();
@@ -116,7 +118,8 @@ export function ListDetailsPage() {
   const handleSave = async () => {
     if (!currentList) return;
 
-    const trimmed = draftListName.trim();
+    const trimmed = normalizeSingleLineText(draftListName, { maxLen: FIELD_LIMITS.list.nameMax });
+    const description = normalizeOptionalSingleLineText(draftListDescription, { maxLen: FIELD_LIMITS.list.descriptionMax });
     const isInvalidName =
       !trimmed ||
       trimmed === SYSTEM_INBOX_NAME;
@@ -131,8 +134,8 @@ export function ListDetailsPage() {
     try {
       await updateTaskList({
         id: currentList.id,
-        name: draftListName.trim() || "Untitled List",
-        // description: draftDescription,
+        name: trimmed || "Untitled List",
+        description,
       });
       setIsEditing(false);
       fireToast("success", "List Saved", "Your changes have been saved successfully.");

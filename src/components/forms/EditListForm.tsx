@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditListFormProps } from "../../types/list";
+import { FIELD_LIMITS } from "../../config/fieldConstraints";
 
 export const EditListForm = ({
   list,
@@ -39,6 +40,7 @@ export const EditListForm = ({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.list.nameMax}
             id="list-title"
             bg="white"
             placeholder="List Title"
@@ -53,6 +55,7 @@ export const EditListForm = ({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.list.descriptionMax}
             id="list-description"
             bg="white"
             placeholder="List Description (optional)"

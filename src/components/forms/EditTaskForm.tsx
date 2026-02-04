@@ -4,6 +4,7 @@ import type { EditTaskFormProps } from "../../types/task";
 import { useMemo } from "react";
 import { TaskPriority, TaskStatus } from "../../API";
 import { getInboxListId } from "../../config/inboxSettings";
+import { FIELD_LIMITS } from "../../config/fieldConstraints";
 import { useTaskmasterData } from "../../hooks/useTaskmasterData";
 import { FormSelect } from "./FormSelect";
 import { getTodayDateInputValue } from "../../services/dateTime";
@@ -91,6 +92,7 @@ export const EditTaskForm = ({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.task.titleMax}
             id="task-title"
             bg="white"
             placeholder="Task Title"
@@ -105,6 +107,7 @@ export const EditTaskForm = ({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.task.descriptionMax}
             id="task-description"
             bg="white"
             placeholder="Task Description (optional)"

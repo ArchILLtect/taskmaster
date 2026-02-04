@@ -18,6 +18,12 @@ import { FiEdit2 } from "react-icons/fi";
 import { Tip } from "../components/ui/Tip";
 import { getTodayDateInputValue } from "../services/dateTime";
 import { AppCollapsible } from "../components/AppCollapsible";
+import { FIELD_LIMITS } from "../config/fieldConstraints";
+import {
+  normalizeDateInputToIso,
+  normalizeOptionalSingleLineText,
+  normalizeRequiredTitle,
+} from "../services/inputNormalization";
 
 
 // TODO: Give this page more thought re: UX/design
@@ -37,12 +43,6 @@ import { AppCollapsible } from "../components/AppCollapsible";
 // - Mobile responsiveness testing and tweaks
 // - Accessibility review to ensure screen reader friendliness
 // - Performance optimizations for large inboxes
-
-// --- helpers (keep local, simple)
-function dateInputToIso(date: string) {
-  if (!date) return null;
-  return new Date(`${date}T00:00:00.000Z`).toISOString();
-}
 
 function isoToDateInput(iso?: string | null) {
   if (!iso) return "";
@@ -135,18 +135,22 @@ export function InboxPage() {
     const nextListId = draftTaskListId || selectedTask.listId;
     const didMoveLists = nextListId !== selectedTask.listId;
 
+    const title = normalizeRequiredTitle(draftTaskTitle, "Untitled Task", { maxLen: FIELD_LIMITS.task.titleMax });
+    const description = normalizeOptionalSingleLineText(draftTaskDescription, { maxLen: FIELD_LIMITS.task.descriptionMax });
+    const dueAt = normalizeDateInputToIso(draftTaskDueDate);
+
     try {
       setSaving(true);
       await updateTask({
         id: selectedTask.id,
         listId: nextListId,
         ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
-        title: draftTaskTitle.trim() || "Untitled Task",
-        description: draftTaskDescription,
+        title,
+        description,
         // Cast to generated enums (type-level only) so TS stops screaming.
         priority: draftTaskPriority as unknown as TaskPriority,
         status: draftTaskStatus as unknown as TaskStatus,
-        dueAt: dateInputToIso(draftTaskDueDate),
+        dueAt,
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
       });

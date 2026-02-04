@@ -1,6 +1,7 @@
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { AddListFormProps } from "../../types/list";
+import { FIELD_LIMITS } from "../../config/fieldConstraints";
 
 export const AddListForm = ({
   newListName,
@@ -31,6 +32,7 @@ export const AddListForm = ({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.list.nameMax}
             id="list-name"
             bg="white"
             placeholder="List Name"
@@ -45,6 +47,7 @@ export const AddListForm = ({
           <Input
             minW="150px"
             maxW="200px"
+            maxLength={FIELD_LIMITS.list.descriptionMax}
             id="list-description"
             bg="white"
             placeholder="List Description (optional)"

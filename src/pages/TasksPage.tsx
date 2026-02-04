@@ -19,13 +19,14 @@ import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 import { getTodayDateInputValue } from "../services/dateTime";
 import { Tip } from "../components/ui/Tip";
 import { FiEdit2 } from "react-icons/fi";
+import {
+  normalizeDateInputToIso,
+  normalizeOptionalSingleLineText,
+  normalizeRequiredTitle,
+} from "../services/inputNormalization";
+import { FIELD_LIMITS } from "../config/fieldConstraints";
 
 // --- helpers (keep local, simple)
-function dateInputToIso(date: string) {
-  if (!date) return null;
-  return new Date(`${date}T00:00:00.000Z`).toISOString();
-}
-
 function isoToDateInput(iso?: string | null) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -253,14 +254,19 @@ export function TasksPage() {
 
     try {
       setSaving(true);
+
+      const title = normalizeRequiredTitle(draftTaskTitle, "Untitled Task", { maxLen: FIELD_LIMITS.task.titleMax });
+      const description = normalizeOptionalSingleLineText(draftTaskDescription, { maxLen: FIELD_LIMITS.task.descriptionMax });
+      const dueAt = normalizeDateInputToIso(draftTaskDueDate);
+
       await updateTask({
         id: selectedTask.id,
-        title: draftTaskTitle.trim() || "Untitled Task",
-        description: draftTaskDescription,
+        title,
+        description,
         // Cast to generated enums (type-level only) so TS stops screaming.
         priority: draftTaskPriority as unknown as TaskPriority,
         status: draftTaskStatus as unknown as TaskStatus,
-        dueAt: dateInputToIso(draftTaskDueDate),
+        dueAt,
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
         listId: nextListId,

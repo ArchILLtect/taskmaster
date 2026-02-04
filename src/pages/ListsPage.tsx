@@ -13,6 +13,8 @@ import { useTaskActions } from "../store/taskStore";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 import { Tip } from "../components/ui/Tip";
+import { normalizeOptionalSingleLineText, normalizeSingleLineText } from "../services/inputNormalization";
+import { FIELD_LIMITS } from "../config/fieldConstraints";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -116,7 +118,8 @@ export const ListsPage = () => {
 
   const handleCreate = async () => {
 
-    const trimmed = newListName.trim();
+    const trimmed = normalizeSingleLineText(newListName, { maxLen: FIELD_LIMITS.list.nameMax });
+    const description = normalizeOptionalSingleLineText(newListDescription, { maxLen: FIELD_LIMITS.list.descriptionMax });
     const isInvalidName =
       !trimmed ||
       trimmed === SYSTEM_INBOX_NAME;
@@ -134,7 +137,7 @@ export const ListsPage = () => {
         isFavorite: false,
         isDemo: false,
         sortOrder: nextSortOrder(visibleLists),
-        // description: newListDescription,
+        description,
       });
       setShowAddListForm(false);
 
@@ -153,7 +156,8 @@ export const ListsPage = () => {
   const handleSave = async () => {
     if (!selected) return;
 
-    const trimmed = draftListName.trim();
+    const trimmed = normalizeSingleLineText(draftListName, { maxLen: FIELD_LIMITS.list.nameMax });
+    const description = normalizeOptionalSingleLineText(draftListDescription, { maxLen: FIELD_LIMITS.list.descriptionMax });
     const isInvalidName =
       !trimmed ||
       trimmed === SYSTEM_INBOX_NAME
@@ -169,8 +173,8 @@ export const ListsPage = () => {
       setSaving(true);
       await updateTaskList({
         id: selected.id,
-        name: draftListName.trim() || "Untitled List",
-        // description: draftDescription,
+        name: trimmed || "Untitled List",
+        description,
       });
       setIsEditing(false);
       // Fire toast notification for unimplemented feature
