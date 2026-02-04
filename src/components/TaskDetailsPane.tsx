@@ -67,6 +67,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   const [draftTaskTitle, setDraftTaskTitle] = useState("");
   const [draftTaskDescription, setDraftTaskDescription] = useState("");
   const [draftTaskListId, setDraftTaskListId] = useState("");
+  const [draftTaskParentId, setDraftTaskParentId] = useState<string | null>(null);
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
   const [draftTaskDueDate, setDraftTaskDueDate] = useState(""); // YYYY-MM-DD
@@ -119,6 +120,11 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
     const nextListId = draftTaskListId || selectedTask.listId;
     const didMoveLists = nextListId !== selectedTask.listId;
+
+    const prevParentTaskId = selectedTask.parentTaskId ?? null;
+    const nextParentTaskId = didMoveLists ? null : (draftTaskParentId ?? null);
+    const didMoveParent = nextParentTaskId !== prevParentTaskId;
+
     const didMoveSubtask = didMoveLists ? selectedTask.parentTaskId != null : false;
     const didMoveLastTopLevelTask = didMoveLists
       ? tasksInList.some((t) => t.parentTaskId == null && t.id === selectedTask.id) &&
@@ -133,10 +139,32 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       const description = normalizeOptionalSingleLineText(draftTaskDescription, { maxLen: FIELD_LIMITS.task.descriptionMax });
       const dueAt = normalizeDateInputToIso(draftTaskDueDate);
 
+      const shouldUpdateMoveFields = didMoveLists || didMoveParent;
+
+      const moveFields = shouldUpdateMoveFields
+        ? didMoveLists
+          ? { parentTaskId: null as string | null, sortOrder: 0 }
+          : (() => {
+              // Guard: never allow self-parenting.
+              const safeParentId = nextParentTaskId === selectedTask.id ? null : nextParentTaskId;
+              const siblings = tasksInList.filter(
+                (t) =>
+                  t.id !== selectedTask.id &&
+                  t.listId === nextListId &&
+                  (t.parentTaskId ?? null) === safeParentId
+              );
+              const max = siblings.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
+              return {
+                parentTaskId: safeParentId,
+                sortOrder: max + 1,
+              };
+            })()
+        : null;
+
       await updateTask({
         id: selectedTask.id,
         listId: nextListId,
-        ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
+        ...(moveFields ?? null),
         title,
         description,
         // Cast to generated enums (type-level only) so TS stops screaming.
@@ -149,7 +177,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
 
       // If this move emptied the current list (from the user's POV), follow the task.
       // Also follow moved subtasks: staying on this stack would otherwise lead to a "task not found" pane.
-      if (didMoveLastTopLevelTask || didMoveSubtask) {
+      if (didMoveLastTopLevelTask || didMoveSubtask || didMoveParent) {
         navigate(buildTaskStackPath(nextListId, [selectedTask.id]));
       }
 
@@ -171,6 +199,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
     setDraftTaskTitle("");
     setDraftTaskDescription("");
     setDraftTaskListId("");
+    setDraftTaskParentId(null);
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
@@ -230,6 +259,7 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                       setDraftTaskTitle(selected.title ?? "");
                       setDraftTaskDescription(selected.description ?? "");
                       setDraftTaskListId(selected.listId ?? "");
+                      setDraftTaskParentId(selected.parentTaskId ?? null);
                       setDraftTaskPriority((selected.priority as TaskPriority) ?? TaskPriority.Medium);
                       setDraftTaskStatus((selected.status as TaskStatus) ?? TaskStatus.Open);
                       setDraftTaskDueDate(isoToDateInput(selected.dueAt));
@@ -254,6 +284,8 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
                 setDraftTaskDescription={setDraftTaskDescription}
                 draftTaskListId={draftTaskListId}
                 setDraftTaskListId={setDraftTaskListId}
+                draftTaskParentId={draftTaskParentId}
+                setDraftTaskParentId={setDraftTaskParentId}
                 draftTaskPriority={draftTaskPriority}
                 setDraftTaskPriority={setDraftTaskPriority}
                 draftTaskStatus={draftTaskStatus}

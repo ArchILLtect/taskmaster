@@ -39,33 +39,38 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
   if (authLoading) return <BasicSpinner />;
 
   return (
-    <VStack align="start" gap={4} minH="100%" p={4} bg="white" justify={"center"} alignItems={"center"} rounded="md" boxShadow="sm">
-      <Heading size="2xl">Login</Heading>
+    <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm" w="100%">
+      <VStack p={4} align="start" bg="gray.50" rounded="md" boxShadow="sm" w="100%" h="87.5vh" gap={3}>
+        <Heading size="2xl">Login</Heading>
 
-      <Tip storageKey="tip:login-redirect" title="Tip">
-        If you were sent here from a shared link, just sign in — you’ll be redirected back to the page you were trying
-        to open.
-      </Tip>
+        <Tip storageKey="tip:login-redirect" title="Tip">
+          If you were sent here from a shared link, just sign in — you’ll be redirected back to the page you were trying
+          to open.
+        </Tip>
 
-      {intent === "demo" ? (
-        <Box p={3} bg="purple.50" borderWidth="1px" borderColor="purple.200" rounded="md" w="100%">
-          <Text fontWeight="600">Try Demo</Text>
-          <Text color="gray.700" fontSize="sm">
-            Demo mode (one-click demo user creation) is planned next. For now, use the normal login flow.
-          </Text>
-        </Box>
-      ) : null}
 
-      {signedIn ? (
-        <VStack align="start" gap={2} w="100%">
-          <Text>You’re already signed in.</Text>
-          <Button colorPalette="green" onClick={() => navigate(redirectTarget)}>
-            Continue
-          </Button>
+        {intent === "demo" ? (
+          <Box p={3} bg="purple.50" borderWidth="1px" borderColor="purple.200" rounded="md" w="100%">
+            <Text fontWeight="600">Try Demo</Text>
+            <Text color="gray.700" fontSize="sm">
+              Demo mode (one-click demo user creation) is planned next. For now, use the normal login flow.
+            </Text>
+          </Box>
+        ) : null}
+
+        <VStack justifyContent="center" align="center" h="90%" w="100%">
+          {signedIn ? (
+            <VStack align="start" gap={2} w="100%">
+              <Text>You’re already signed in.</Text>
+              <Button colorPalette="green" onClick={() => navigate(redirectTarget)}>
+                Continue
+              </Button>
+            </VStack>
+          ) : (
+            <Authenticator />
+          )}
         </VStack>
-      ) : (
-        <Authenticator />
-      )}
+      </VStack>
     </VStack>
   );
 }

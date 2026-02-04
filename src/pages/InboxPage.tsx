@@ -11,7 +11,7 @@ import { DialogModal } from "../components/ui/DialogModal";
 import { EditTaskForm } from "../components/forms/EditTaskForm";
 import type { TaskUI } from "../types";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
-import { useTaskActions } from "../store/taskStore";
+import { useTaskActions, useTaskIndexView } from "../store/taskStore";
 import { useInboxActions } from "../store/inboxStore";
 import { FcPlus, FcHighPriority, FcExpired } from "react-icons/fc";
 import { FiEdit2 } from "react-icons/fi";
@@ -67,6 +67,7 @@ export function InboxPage() {
   const [draftTaskTitle, setDraftTaskTitle] = useState("");
   const [draftTaskDescription, setDraftTaskDescription] = useState("");
   const [draftTaskListId, setDraftTaskListId] = useState("");
+  const [draftTaskParentId, setDraftTaskParentId] = useState<string | null>(null);
   const [draftTaskDueDate, setDraftTaskDueDate] = useState("");
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
@@ -74,6 +75,8 @@ export function InboxPage() {
 
   const { vm, lists, loading, err, refreshData } = useInboxPageData();
   const { dismiss, dismissMany } = useInboxActions();
+
+  const { tasksByListId } = useTaskIndexView();
 
   const { updateTask, deleteTask } = useTaskActions();
 
@@ -109,6 +112,7 @@ export function InboxPage() {
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskListId(task.listId ?? "");
+    setDraftTaskParentId(task.parentTaskId ?? null);
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
     setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
     setDraftTaskStatus(task.status ?? TaskStatus.Open);
@@ -135,6 +139,13 @@ export function InboxPage() {
     const nextListId = draftTaskListId || selectedTask.listId;
     const didMoveLists = nextListId !== selectedTask.listId;
 
+    const nextParentTaskId = draftTaskParentId ?? null;
+    const prevParentTaskId = selectedTask.parentTaskId ?? null;
+    const didMoveParent = nextParentTaskId !== prevParentTaskId;
+    const shouldUpdateMoveFields = didMoveLists || didMoveParent;
+
+    const destTasks = tasksByListId[nextListId] ?? [];
+
     const title = normalizeRequiredTitle(draftTaskTitle, "Untitled Task", { maxLen: FIELD_LIMITS.task.titleMax });
     const description = normalizeOptionalSingleLineText(draftTaskDescription, { maxLen: FIELD_LIMITS.task.descriptionMax });
     const dueAt = normalizeDateInputToIso(draftTaskDueDate);
@@ -144,7 +155,18 @@ export function InboxPage() {
       await updateTask({
         id: selectedTask.id,
         listId: nextListId,
-        ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
+        ...(shouldUpdateMoveFields
+          ? (() => {
+              const siblings = destTasks.filter(
+                (t) => t.id !== selectedTask.id && (t.parentTaskId ?? null) === nextParentTaskId
+              );
+              const max = siblings.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
+              return {
+                parentTaskId: nextParentTaskId,
+                sortOrder: max + 1,
+              };
+            })()
+          : null),
         title,
         description,
         // Cast to generated enums (type-level only) so TS stops screaming.
@@ -196,6 +218,7 @@ export function InboxPage() {
     setDraftTaskTitle("");
     setDraftTaskDescription("");
     setDraftTaskListId("");
+    setDraftTaskParentId(null);
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
@@ -582,6 +605,8 @@ export function InboxPage() {
             setDraftTaskDescription={setDraftTaskDescription}
             draftTaskListId={draftTaskListId}
             setDraftTaskListId={setDraftTaskListId}
+            draftTaskParentId={draftTaskParentId}
+            setDraftTaskParentId={setDraftTaskParentId}
             draftTaskPriority={draftTaskPriority}
             setDraftTaskPriority={setDraftTaskPriority}
             draftTaskStatus={draftTaskStatus}

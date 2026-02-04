@@ -72,6 +72,7 @@ export function TasksPage() {
   const [draftTaskTitle, setDraftTaskTitle] = useState("");
   const [draftTaskDescription, setDraftTaskDescription] = useState("");
   const [draftTaskListId, setDraftTaskListId] = useState("");
+  const [draftTaskParentId, setDraftTaskParentId] = useState<string | null>(null);
   const [draftTaskDueDate, setDraftTaskDueDate] = useState("");
   const [draftTaskPriority, setDraftTaskPriority] = useState(TaskPriority.Medium);
   const [draftTaskStatus, setDraftTaskStatus] = useState(TaskStatus.Open);
@@ -213,6 +214,7 @@ export function TasksPage() {
     setDraftTaskTitle(task.title ?? "");
     setDraftTaskDescription(task.description ?? "");
     setDraftTaskListId(task.listId ?? "");
+    setDraftTaskParentId(task.parentTaskId ?? null);
     setDraftTaskDueDate(isoToDateInput(task.dueAt));
     setDraftTaskPriority(task.priority ?? TaskPriority.Medium);
     setDraftTaskStatus(task.status ?? TaskStatus.Open);
@@ -252,6 +254,11 @@ export function TasksPage() {
     const nextListId = draftTaskListId || selectedTask.listId;
     const didMoveLists = nextListId !== selectedTask.listId;
 
+    const nextParentTaskId = draftTaskParentId ?? null;
+    const prevParentTaskId = selectedTask.parentTaskId ?? null;
+    const didMoveParent = nextParentTaskId !== prevParentTaskId;
+    const shouldUpdateMoveFields = didMoveLists || didMoveParent;
+
     try {
       setSaving(true);
 
@@ -270,7 +277,21 @@ export function TasksPage() {
         completedAt:
           draftTaskStatus === TaskStatus.Done ? (selectedTask.completedAt ?? new Date().toISOString()) : null,
         listId: nextListId,
-        ...(didMoveLists ? { parentTaskId: null, sortOrder: 0 } : null),
+        ...(shouldUpdateMoveFields
+          ? (() => {
+              const siblings = allTasks.filter(
+                (t) =>
+                  t.id !== selectedTask.id &&
+                  t.listId === nextListId &&
+                  (t.parentTaskId ?? null) === nextParentTaskId
+              );
+              const max = siblings.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
+              return {
+                parentTaskId: nextParentTaskId,
+                sortOrder: max + 1,
+              };
+            })()
+          : null),
       });
       fireToast("success", "Task saved", "The task has been successfully updated.");
       return true;
@@ -314,6 +335,7 @@ export function TasksPage() {
     setDraftTaskTitle("");
     setDraftTaskDescription("");
     setDraftTaskListId("");
+    setDraftTaskParentId(null);
     setDraftTaskDueDate("");
     setDraftTaskPriority(TaskPriority.Medium);
     setDraftTaskStatus(TaskStatus.Open);
@@ -518,6 +540,8 @@ export function TasksPage() {
             setDraftTaskDescription={setDraftTaskDescription}
             draftTaskListId={draftTaskListId}
             setDraftTaskListId={setDraftTaskListId}
+            draftTaskParentId={draftTaskParentId}
+            setDraftTaskParentId={setDraftTaskParentId}
             draftTaskPriority={draftTaskPriority}
             setDraftTaskPriority={setDraftTaskPriority}
             draftTaskStatus={draftTaskStatus}
