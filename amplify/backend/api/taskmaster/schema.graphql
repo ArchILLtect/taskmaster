@@ -7,6 +7,10 @@ type TaskList
   ]) {
   id: ID! @primaryKey
   owner: String!
+    @auth(rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read] },
+      { allow: groups, groups: ["Admin"], operations: [read] }
+    ])
 
   name: String!
   description: String
@@ -25,6 +29,10 @@ type Task
   ]) {
   id: ID! @primaryKey
   owner: String!
+    @auth(rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read] },
+      { allow: groups, groups: ["Admin"], operations: [read] }
+    ])
 
   # Query tasks in a list ordered by sortOrder
   listId: ID! @index(name: "byList", sortKeyFields: ["sortOrder"], queryField: "tasksByList")
@@ -62,6 +70,10 @@ type UserProfile
   id: ID! @primaryKey
 
   owner: String!
+    @auth(rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read] },
+      { allow: groups, groups: ["Admin"], operations: [read] }
+    ])
 
   planTier: PlanTier!
   defaultVisibility: DefaultVisibility!
