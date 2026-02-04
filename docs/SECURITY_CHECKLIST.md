@@ -13,6 +13,15 @@ TaskMaster uses AWS Amplify (Gen 1) with Cognito Auth and AppSync GraphQL. This 
 	- `npm run lint`
 	- `npm run build`
 
+Audit notes (showcase-friendly):
+- As of Feb 2026, `npm audit --omit=dev` reports **20 high** vulnerabilities, all transitive through `aws-amplify` / AWS SDK dependencies (not dev-only).
+	- This is primarily driven by `fast-xml-parser` (RangeError DoS on crafted numeric entities) pulled by AWS SDK internals.
+	- Remediation from `npm audit` currently implies disruptive dependency moves (not a safe patch-level update), so the app documents the risk and tracks upstream updates.
+- The prior moderate `lodash` advisory is mitigated via an npm override in [package.json](../package.json).
+- Repro workflow:
+	- Generate reports: `npm audit --omit=dev --json > audit-prod.json` and `npm audit --json > audit-full.json`
+	- Summarize: `node scripts/summarize-audit.mjs`
+
 ---
 
 ## 2) Secrets & configuration

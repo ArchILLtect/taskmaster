@@ -74,6 +74,13 @@ npm run lint
 npm run build
 ```
 
+## 🔐 Security / known issues (MVP)
+
+- Dependency audit status and tracking plan live in [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md) (includes a reproducible `npm audit` + summarizer workflow).
+- As of Feb 2026, `npm audit --omit=dev` still reports high-severity advisories that are **transitive** through `aws-amplify` / AWS SDK internals (not direct app code).
+  - Fixing these cleanly appears to require disruptive dependency shifts (major-version changes), so the MVP documents the risk and waits for upstream-safe upgrades.
+- A previously reported `lodash` advisory is mitigated via an npm override in [package.json](package.json).
+
 ---
 
 ## 🧭 Key implementation locations
