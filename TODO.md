@@ -46,7 +46,7 @@ Actionable TODOs must use one of the following forms (do not include backticks):
 <a id="p2"></a>
 ### `TODO`(P2)
 
-- [ ] TODO(P2) Harden owner-based GraphQL auth rules
+- [x] TODO(P2) Harden owner-based GraphQL auth rules
   - Prevent clients from reassigning the `owner` field on @model types
   - Apply field-level auth or remove `owner` from client-writable inputs
   - Ensure:
