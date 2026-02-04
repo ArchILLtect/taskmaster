@@ -2,14 +2,14 @@
 type TaskList
   @model
   @auth(rules: [
-    { allow: owner, ownerField: "owner", identityClaim: "sub" },
-    { allow: groups, groups: ["Admin"] }
+    { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [create, read, update, delete] },
+    { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] }
   ]) {
   id: ID! @primaryKey
   owner: String!
     @auth(rules: [
-      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create] },
-      { allow: groups, groups: ["Admin"], operations: [read, create] }
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create, delete] },
+      { allow: groups, groups: ["Admin"], operations: [read, create, delete] }
     ])
 
   name: String!
@@ -24,14 +24,14 @@ type TaskList
 type Task
   @model
   @auth(rules: [
-    { allow: owner, ownerField: "owner", identityClaim: "sub" },
-    { allow: groups, groups: ["Admin"] }
+    { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [create, read, update, delete] },
+    { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] }
   ]) {
   id: ID! @primaryKey
   owner: String!
     @auth(rules: [
-      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create] },
-      { allow: groups, groups: ["Admin"], operations: [read, create] }
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create, delete] },
+      { allow: groups, groups: ["Admin"], operations: [read, create, delete] }
     ])
 
   # Query tasks in a list ordered by sortOrder
@@ -63,16 +63,16 @@ type Task
 type UserProfile
   @model
   @auth(rules: [
-    { allow: owner, ownerField: "owner", identityClaim: "sub" },
-    { allow: groups, groups: ["Admin"] }
+    { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [create, read, update, delete] },
+    { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] }
   ]) {
   # Use the Cognito sub as the record id
   id: ID! @primaryKey
 
   owner: String!
     @auth(rules: [
-      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create] },
-      { allow: groups, groups: ["Admin"], operations: [read, create] }
+      { allow: owner, ownerField: "owner", identityClaim: "sub", operations: [read, create, delete] },
+      { allow: groups, groups: ["Admin"], operations: [read, create, delete] }
     ])
 
   planTier: PlanTier!
