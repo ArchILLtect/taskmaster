@@ -8,76 +8,122 @@ This file is a running backlog of ideas, cleanups, and future improvements.
 
 Actionable TODOs must use one of the following forms (do not include backticks):
 - `TODO` + `(P1)` through `TODO` + `(P5)`   — prioritized work
-- `TODO` + `(stretch)`                      — optional / stretch work
-- `TODO` + `(postmvp)`                      — post-MVP work
-- `TODO`␠                                  — unprioritized work (`TODO` followed by whitespace)
-- `TODO` + `?`                              — questionable work / decision needed
 
-These tags are surfaced automatically via the Todo Tree VS Code extension
-using the project’s workspace settings.
+## Index
 
-When referring to `TODO` tags in documentation or prose, wrap them in backticks
-to prevent them from being treated as actionable items (does not work with priorities):
-- `TODO`
-- `NOTE`
-- `BUG`
+- [Open Backlog (prioritized)](#open-backlog)
+  - [P1](#p1)
+  - [P2](#p2)
+  - [P3](#p3)
+  - [P4](#p4)
+  - [P5](#p5)
+  - [stretch](#stretch)
+  - [postmvp](#postmvp)
+- [Archive (implemented / completed)](#archive)
 
-The following keywords are only treated as actionable when followed by whitespace:
-- NOTE
-- FIXME
-- BUG
-- HACK
-- REVIEW
+<a id="open-backlog"></a>
+## Open Backlog (prioritized)
 
-Examples:
-- `NOTE` something important     → actionable
-- NOTE: something important   → not actionable
+<a id="p1"></a>
+### `TODO`(P1)
 
-Filenames and identifiers such as TODO.md are not treated as `TODO` items.
+- [ ] TODO(P1) Keep `/docs/README.md` up to date as new design docs are added
+
+- [ ] TODO(P1) Manual QA regression sweep (pre-showcase)
+  - Auth + redirects:
+    - Deep link to a protected page → confirm redirect to `/login?redirect=...` works and sanitization prevents external redirects
+    - Sign out from a deep-linked page → confirm app returns to a safe public route (and no loops)
+  - Multi-tab:
+    - Sign out in Tab A → Tab B should not show stale private data after navigation/refresh
+  - Persistence hygiene:
+    - Switch accounts without a hard reload → confirm no cross-user flash (tasks, inbox indicators, favorites, user UI)
+    - Use DevPage "Clear all user caches" → confirm stores rehydrate cleanly on next refresh
+  - Demo-only UX:
+    - Start demo mode → confirm confirmation dialog + one-time tour appear
+    - Fail demo request (simulate by turning off network) → confirm demo session flag is cleared and error is visible
 
 
-Last refreshed: Feb 2 2026
+<a id="p2"></a>
+### `TODO`(P2)
 
----
+- [ ] TODO(P2) Harden owner-based GraphQL auth rules
+  - Prevent clients from reassigning the `owner` field on @model types
+  - Apply field-level auth or remove `owner` from client-writable inputs
+  - Ensure:
+    - owners can CRUD only their own records
+    - Admin group can read/write across users
+    - ownership cannot be transferred via mutation payloads
+  - Context:
+    - Amplify warning: “owners may reassign ownership”
+    - Deferred intentionally for MVP speed
 
-## Recently Completed (highlights)
-- [x] `TODO`(P1) Zustand is the source of truth for tasks/lists (GraphQL-backed) with TTL + persistence.
-- [x] `TODO`(P1) Cross-user cache hygiene: user-scoped persistence + auth lifecycle guards to prevent cross-user flashes/leakage.
-- [x] `TODO`(P2) Dev tools: add a one-click "Clear all user caches" button.
-- [x] `TODO`(P2) Docs overhaul: bring docs/README in sync with current architecture and remove any references to deleted local dev-only data/files.
-- [x] `TODO`(P1) Demo seeding: UserProfile bootstrap + versioned, idempotent demo seed (multi-tab safe).
-- [x] TO`DO(P1) MVP decision: seed demo data for all accounts by default (opt-out supported).
-- [x] `TODO`(P1) Demo marking: ensure `isDemo` is available in normal UI queries (with safe fallback for legacy records).
-- [x] `TODO`(P1) Task actions: restore “Send to Inbox” wiring across ListDetails/Tasks/Updates views.
-- [x] `TODO`(P1) Remove legacy task overlay bridge (Zustand is sole source of truth).
-- [x] `TODO`(P2) Fix SubtaskRow truncation (badges no longer pushed off-screen).
-- [x] `TODO`(P3) Cleanup: removed `console.log(user)` debug logging in App.tsx.
+- [ ] TODO(P2) Performance: investigate bundle size + add route-level code splitting
+  - Vite warning: main JS chunk > 500 kB
+  - Likely contributors: Chakra UI, AWS Amplify (Auth + API), large route components
+  - Route-level `React.lazy()` (highest impact first):
+    - ListDetailsPage / list task stack route
+    - UpdatesPage
+    - TasksPage
+    - InboxPage
+  - Lazy-load later (lower impact / smaller):
+    - ListsPage
+    - FavoritesPage
+    - ProfilePage / SettingsPage / MonthPage
+    - DevPage (already lazy-loaded)
+  - Suspense fallback:
+    - Place the primary `<Suspense fallback={...}>` in AppShell’s main content area wrapping the `<Outlet />` region
+    - Keep the sidebar/topbar always-rendered so navigation remains responsive while a page chunk loads
+  - Error handling / boundaries:
+    - Preserve existing ErrorBoundary behavior for route renders (don’t move the boundary inside a lazy-loaded component)
+    - Ensure the ErrorBoundary still wraps whatever renders the lazy route element so dynamic import failures and render errors surface consistently
+  - Optional: consider `manualChunks` in `vite.config.ts` if needed
 
----
+- [ ] TODO(P2) Basic UX polish passes: keyboard navigation + focus states (accessibility), mobile/responsive review, and loading/error empty-state consistency across pages.
 
-## Platform / Foundations
-- [ ] TODO(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times
+
+- [ ] TODO(P2) Minimal automated smoke coverage: even 1–2 Playwright tests (“sign in → seed → see Today/Inbox/Tasks render”) gives huge confidence for a showcase.
+
+- [ ] TODO(P2) Talk about how the demo-mode "script" works, and:
+  - [ ] Is there still more work that needs to be done?
+  - [ ] How are you supposed to open it after closing to do a step?
+  - [ ] We either need to add more info about how to use demo mode including:
+    - [ ] How to clear demo-mode when done, etc.
+    - [ ] Use modal or create a demo page for this?
+
+- [x] `TODO`(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times
   - [x] (foundation): `src/services/dateTime.ts` centralizes timezone detection (`getUserTimeZone`) + day-key helpers for comparisons/labels.
   - [x] (comparisons): overdue/due-soon logic uses day-key semantics in triage/views.
-  - [ ] (consistency): remove remaining ad-hoc ISO/date conversions in UI (some still assume UTC via `toISOString().slice(0, 10)`), and standardize how `dueAt` is encoded/decoded for date inputs.
+  - [x] (consistency): removed remaining ad-hoc ISO/date conversions in UI and standardized due-date encoding/decoding.
+    - Added `isoToDateInputValue()` and used day-key extraction (no timezone-dependent `Date` parsing for `dueAt`).
+    - Made `normalizeDateInputToIso()` strict (reject invalid rollover dates) and consistently store `YYYY-MM-DDT00:00:00.000Z`.
+  - [ ] TODO(P2) Manual sanity (demo-visible):
+    - Create 3 tasks: due yesterday, due today, due tomorrow → confirm Today badges/sections match expectations.
+    - Change a task’s due date via Edit Task → confirm it moves between Overdue/Due today immediately.
+    - Timezone drift check (Chrome DevTools → More tools → Sensors → Timezone override):
+      - Override to a negative offset (e.g. `Pacific/Honolulu`) then a positive offset (e.g. `Pacific/Kiritimati`) and refresh.
+      - Confirm the same task stays classified as overdue vs due-today vs future (no day shifting).
+    - Confirm “Someday/Anytime” tasks never appear in overdue/due-today counts.
 
-- [x] TODO(P3) Architecture guardrail: forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`
-  - Enforced in `eslint.config.js` via `no-restricted-imports` for `src/pages/**`, `src/components/**`, and `src/hooks/**`.
-  - Keeps UI-layer data access going through store/hooks.
+- [x] `TODO`(P2) CI: enforce `npm run lint` + `npm run build` on PRs
+  - Goal: keep the UI-layer API import restrictions enforced and prevent accidental regressions
 
----
-
-## UI / Frontend
+<a id="p3"></a>
+### `TODO`(P3)
 
 - [ ] TODO(P3) AdminPage: refactor filter controls to use shared UI patterns (tooltip labels + FormSelect) and remove raw HTML selects
 
-- [ ] TODO(stretch) Add more contextual Tips across the app (including reusable component-level tips)
-  - Audit existing Tips for relevance and remove any that feel redundant
-  - Candidate components: task/list headers, empty states, filter bars
-
-- [x] TODO(P2) Add date formatting helper for task due dates
-  - Implemented in `src/services/dateTime.ts` as `formatDueDate`.
-  - Used by `TaskRow` and `TaskDetailsPane` so we no longer print raw ISO strings.
+- [ ] TODO(P3) Settings persistence: versioned blob + migrations + validation
+  - Candidate home: `UserProfile.settings/settingsVersion` (preferred) vs a separate Settings model
+  - Migration path: bring existing local settings (e.g. dueSoonWindowDays) + tip dismissals into the settings blob
+  - Persisted settings helper:
+    - a single place to read/write user settings (local-first now, UserProfile-backed later)
+    - versioned settings schema + forward-only migrations
+    - safe defaults + normalization
+    - easy to add new settings without scattering localStorage keys
+  - Runtime validators + normalizers for `settings` and `onboarding` blobs
+    - validate shape aggressively before using values in UI
+    - default-fill + version migrations (forward-only)
+  - Stretch: persist settings + tips in GraphQL (AppSync) instead of localStorage once migrations + UX are stable
 
 - [ ] TODO(P3) Add “Snooze” for overdue (and due-soon) tasks
   - Goal: temporarily hide tasks from overdue/due-soon indicators and sections without losing them
@@ -95,6 +141,76 @@ Last refreshed: Feb 2 2026
     - Should snooze apply only to open tasks, and should it clear automatically when a task is completed?
     - Do we want “bump due date” as a distinct action (explicitly edits dueAt) vs treating it as one Snooze strategy?
 
+- [ ] TODO(P3) Replace the tick/refresh() pattern everywhere (after migration)
+  - [x] (prereq): Zustand store actions already call `refreshAll()` after mutations.
+  - [ ] (refactor): remove remaining `refresh` prop threading and redundant `refresh()` calls in pages/components.
+
+- [ ] TODO(P3) Replace `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type
+  - Goal: better editor help + safer mapping in `toTaskUI`
+
+- [x] `TODO`(P3) Add a manual QA checklist for auth/cache hygiene
+  - Sign in as User A → verify tasks + user metadata
+  - Sign out → sign in as User B → verify no cross-user flashes
+  - Verify DevPage "Clear all user caches" produces a clean, correct state
+  - Status: validated Feb 2026
+
+<a id="p4"></a>
+### `TODO`(P4)
+
+- [ ] TODO(P4) ESLint guardrail: if we introduce additional Amplify enums used by UI (beyond TaskStatus/TaskPriority), expand the allowlist
+  - Update `eslint.config.js` (`no-restricted-imports` → allowImportNames) so UI can import enums from `../API` without importing generated models
+
+<a id="p5"></a>
+### `TODO`(P5)
+
+- [ ] TODO(P5) Offline mode (follow `/docs/offline-mode-design.md`)
+  - Introduce IndexedDB-backed cache
+  - Add offline mutation queue + replay logic
+  - Add sync status UI (offline / syncing / error states)
+
+⚠️ Offline mode is intentionally deferred until:
+- GraphQL CRUD is stable
+- Zustand is the primary client cache
+- MVP UX is complete
+
+<a id="stretch"></a>
+### `TODO`(stretch)
+
+- [ ] TODO(stretch) Inbox triage: decide whether “dismiss” should exist long-term and how it fits in with future features and how it differs from UpdatesPage.
+  - [x] Inbox triage supports “dismiss”.
+  - [ ] define long-term intent (dismiss vs snooze), and ensure dismissed tasks remain discoverable (show dismissed and/or add a system inbox list route).
+
+- [ ] TODO(stretch) Add deploy-time CSP + baseline security headers
+  - Goal: make XSS impact much smaller even if a bug slips in
+  - Add via hosting config:
+    - Amplify Hosting: custom headers (recommended) or a CloudFront response headers policy
+    - Netlify: `_headers` file in `public/` (or `netlify.toml`)
+  - Safe starter CSP (works for most SPAs; validate against Amplify UI + Vite build output and iterate as needed):
+    - `default-src 'self'`
+    - `base-uri 'self'`
+    - `object-src 'none'`
+    - `frame-ancestors 'none'`
+    - `img-src 'self' data: https:`
+    - `font-src 'self' data: https:`
+    - `style-src 'self' 'unsafe-inline' https:`
+    - `script-src 'self'`
+    - `connect-src 'self' https:`
+  - Notes / iteration knobs:
+    - If auth or API calls fail, extend `connect-src` with the specific Amplify/AppSync/Cognito endpoints your deployed app uses.
+    - If you introduce analytics or third-party widgets, whitelist only their specific origins.
+    - Keep `script-src` strict (avoid `'unsafe-inline'` / `'unsafe-eval'` unless you have a proven need).
+  - Also consider: `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`
+  - Document final headers in `docs/SECURITY_CHECKLIST.md`
+
+- [ ] TODO(stretch) Backend validation for field constraints (don’t rely on client)
+  - GraphQL schema enforces type/required fields, but not max string lengths
+  - Enforce title/name/description max length + date semantics in AppSync resolvers (VTL/JS) or a Lambda wrapper
+  - Reject invalid inputs with clear errors; keep client normalization for UX only
+
+- [ ] TODO(stretch) Add more contextual Tips across the app (including reusable component-level tips)
+  - Audit existing Tips for relevance and remove any that feel redundant
+  - Candidate components: task/list headers, empty states, filter bars
+
 - [ ] TODO(stretch) Admin: add “Select all across pagination” for list selection
   - In Admin flow, Lists tab currently supports “Select all loaded”
   - Stretch: load remaining list pages for the selected account, then select all
@@ -107,131 +223,12 @@ Last refreshed: Feb 2 2026
   - Consider safe-mode behavior for legacy records (required fields / partial rows)
   - Intentionally deferred for now so the new Admin UX ships without risky write paths
 
-- [x] `TODO`(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
-  - Uses `useUserUI` via the profile page data hook.
-
-- [x] TODO(P2) Ensure user metadata always updates on account switch
-  - Implemented via auth lifecycle hooks + Hub listeners (`useAuthUser` + `useUserUI`) and cache guards.
-  - Validation still belongs in the manual QA checklist item (fast account switches without reload).
-
-- [x] `TODO`(P3) Add an app footer
-  - [x] Link to the showcase site
-  - [x] Move the Sign Out button into the footer
-  - [x] Add an email link: `mailto:nick@nickhanson.me`
-
-- [ ] TODO(P3) Replace the tick/refresh() pattern everywhere (after migration)
-  - [x] (prereq): Zustand store actions already call `refreshAll()` after mutations.
-  - [ ] (refactor): remove remaining `refresh` prop threading and redundant `refresh()` calls in pages/components.
-
-- [ ] TODO(P1) Find a way to ensure refreshing of favorites sidebar section upon starring/un-starring lists for favorites.
-- [ ] TODO(P1) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage.
-  - [x] `Toaster` is present in ListDetailsPage, so the basic toast plumbing exists.
-  - [ ] audit the edit/add/cancel flows for incorrect or unconditional toasts (e.g., success toasts firing on error) and ensure close/cancel always leaves UI in a consistent state.
-- [ ] TODO(P1) Add Tooltip/Toast for "already in inbox"
-
----
-
-## Data & Services
-
 - [ ] TODO(stretch) Make Updates logging “perfect” by comparing before/after task status
   - Today: `taskmasterApi.updateTask()` infers completed/reopened vs updated based on which fields are present in the payload
   - Ideal: compare previous task state vs next task state (e.g., status transition) before emitting `task_completed` / `task_reopened`
   - Options:
     - Pass `prevStatus` (or a snapshot) from UI to the API wrapper as metadata
     - Fetch the task before update (extra round-trip; be careful about latency)
-
-- [ ] TODO(P3) Replace `any[]` pagination in `fetchAllTasksForList` with a structural “API-like” type
-  - Goal: better editor help + safer mapping in `toTaskUI`
-
----
-
-## Demo Mode + UserProfile seeding (MVP-critical)
-
-- [x] `TODO`(P1) Add `UserProfile` GraphQL model (owned by sub)
-  - Implemented in [amplify/backend/api/taskmaster/schema.graphql](amplify/backend/api/taskmaster/schema.graphql)
-  - Key fields: `id (sub)`, `owner (sub)`, `email`, `seedVersion`, `seededAt`, `settingsVersion/settings`, `onboardingVersion/onboarding`
-
-- [x] `TODO`(P1) Implement bootstrap: fetch/create `UserProfile` on login
-  - Centralized in the app shell; runs once per authenticated session.
-  - Version gate: if missing or `seedVersion < CURRENT_SEED_VERSION`, run the seed flow.
-
-- [x] `TODO`(P1) Implement seed flow (idempotent + race-safe)
-  - Seed creates example lists + tasks (including subtasks) and marks them `isDemo: true`.
-  - Multi-tab safety uses conditional updates on `UserProfile.seedVersion` with an in-progress lock value (`-1`).
-  - Finalizes by setting `seedVersion = CURRENT_SEED_VERSION` and `seededAt = now`.
-
-- [x] `TODO`(P1) Add “Demo seed” UX (minimal)
-  - MVP behavior: always seed for all accounts by default.
-  - Temporary opt-out supported (e.g. `?demo=0` or per-user `localStorage.taskmaster:u:<scope>:seedDemo = "0"`).
-
-- [x] `TODO`(P1) Account-switch cleanup for user-scoped caches + bootstrap
-  - [x] On sign out: clear `taskStore` persisted cache + user UI cache (and other user-scoped caches)
-  - [x] On sign in: bootstrap runs after auth restore and cache guards prevent cross-user flashes
-
-- [ ] TODO(P1) Add a Demo data section within SettingsPage that contains these features:
-  - [ ] A button to clear all demo data.
-  - [ ] A button to re-seed all demo data ('reset demo data').
-    - Note: Demo users already have a footer "Reset demo data" action. This Settings version is for non-demo accounts and must NOT remove non-demo data (implement later with stricter filtering/guardrails).
-  - [ ] A section for adding more demo data with:
-    - [ ] A button to add more tasks with multiplier. "Add [ x ] tasks."
-    - [ ] A button to add more lists with multiplier. "Add [ x ] lists."
-    - [ ] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
-
----
-
-## Settings + onboarding blob strategy (light MVP)
-
-- [ ] TODO(stretch) Persist user settings + tips in GraphQL (AppSync) instead of localStorage
-  - Bump `settingsVersion` once the full settings set is ready
-  - Keep local-first behavior until migrations + UX are stable
-
-- [ ] TODO(P2) Add a real Settings model + migration path for existing local settings (dueSoonWindowDays) and tip dismissals
-  - Candidate home: `UserProfile.settings/settingsVersion` (preferred) vs a separate Settings model
-
-- [ ] TODO(P2) Build a persisted settings helper (JSON blob + migrations)
-  - Goal: a single place to read/write user settings (local-first now, UserProfile-backed later)
-  - Requirements:
-    - versioned settings schema + forward-only migrations
-    - runtime validation/normalization + safe defaults
-    - easy to add new settings without scattering localStorage keys everywhere
-  - Proposed shape (example):
-    - `UserProfile.settingsVersion`
-    - `UserProfile.settings` (JSON)
-
-- [ ] TODO(P2) Add runtime validators + normalizers for `settings` and `onboarding` blobs
-  - Default-fill + version migrations (forward-only)
-  - Validate shape aggressively before using any values in UI
-
-- [ ] TODO(P1) Add user-configurable default post-login landing route
-  - Behavior:
-    - If `?redirect=` is present (from RequireAuth), always respect it (after sanitization)
-    - Otherwise navigate to `settings.defaultLandingRoute` (sanitized), defaulting to `/today`
-  - Storage: add to the settings blob once the persisted settings helper exists
-
-- [ ] TODO(P1) Decide Pattern B → Pattern A timeline
-  - During iteration: local-first + optional sync
-  - Final MVP: server-authoritative in `UserProfile`
-
-- [x] `TODO`(P1) Zustand state (MVP shipped)
-  - [x] tasks + taskLists (GraphQL-backed, cached client-side)
-  - [x] updates feed (persisted event feed)
-  - [x] updates read-state (lastReadAt / clearedBeforeAt)
-  - [x] inbox UX state (dismissals, lastViewedAt, dueSoonWindowDays)
-
-- [x] `TODO`(P1) Migrate page reads/writes → store hooks/actions
-  - [x] InboxPage
-  - [x] ListDetailsPage
-  - [x] UpdatesPage
-  - [x] TasksPage
-
-- [x] `TODO`(P2) Persist client-side state (localStorage)
-  - Implemented:
-    - tasks/lists cache (versioned + TTL)
-    - inbox local state (dismissed ids, lastViewedAt, dueSoonWindowDays)
-    - updates feed + read markers
-    - userUI cache (username/email/role with TTL)
-  - Note: persisted keys are now user-scoped (to prevent cross-user mixing on shared browsers) with safe legacy migrations.
-  - Future: consider moving persistence to IndexedDB for offline mode.
 
 - [ ] TODO(stretch) Persist Inbox + Updates in DynamoDB per user
   - Goal: Make Inbox “dismissed/new/due-soon” state + Updates feed/read markers follow the user across devices.
@@ -255,15 +252,60 @@ Last refreshed: Feb 2 2026
     - Prefer capped events to avoid unbounded growth.
     - Consider idempotent seeds / deterministic ids for update events.
 
-- [x] `TODO`(P3) Scope inbox/updates localStorage keys by user sub (optional polish)
-  - Implemented via `taskmaster:u:<scope>:...` key prefixing (see `taskmaster:authScope`)
-  - Inbox/Updates/TaskStore/UserUI/LocalSettings are stored under per-user `zustand:` keys
-  - Legacy unscoped keys (`taskmaster:inbox`, `taskmaster:updates`, etc.) are migrated only when a signed-in scope is known
+- [ ] TODO(stretch) Admin: delete Cognito user accounts from the app
+  - Would require a backend function (Lambda) with Cognito admin permissions (e.g. `AdminDeleteUser`).
+  - UI alone can’t securely delete Cognito identities.
+  - Consider coupling with an app-data cleanup flow (delete UserProfile + tasks/lists) for a full deprovision.
 
+- [ ] TODO(stretch) Post-MVP: Add AWS WAF rate limiting for `POST /auth/demo`
+  - [ ] Create a Web ACL in `us-east-2` and attach it to the API Gateway stage for `taskmasterAuth`
+  - [ ] Add a rate-based rule keyed by source IP (start with 5 requests / 5 minutes)
+  - [ ] Validate behavior (normal demo works; burst requests get blocked)
+  - [ ] Remove the in-Lambda `ipBuckets` limiter (or keep as a fallback with a higher threshold, but don’t double-punish users)
 
----
+- [ ] TODO(stretch) Consider adding an "Overdue" View (conditional)
+  - Option: keep overdue sections inside Today/Week for visibility (MVP), but also add a dedicated `/overdue` view.
+  - UX: only show the Overdue view link when there are overdue tasks; style it as high-salience (red + icon).
 
-## GraphQL & Data Modeling (Future Hardening / Improvements)
+<a id="postmvp"></a>
+### `TODO`(postmvp)
+
+- [ ] TODO(postmvp) Switch from Pattern B → Pattern A
+  - During iteration: local-first + optional sync
+  - Final MVP: server-authoritative in `UserProfile`
+  - See definition: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) → “Pattern A / Pattern B”.
+
+- [ ] TODO(postmvp) Demo entry: unify flow via `/login?intent=demo`
+  - Goal: make demo entry a single, shareable, route-driven flow instead of duplicating logic across pages.
+  - UX:
+    - Home “Try Demo” navigates to `/login?intent=demo&redirect=...`
+    - LoginPage uses `intent=demo` to auto-open (or prominently highlight) the demo confirmation dialog
+  - Code health:
+    - Centralize demo-start logic in one place (a hook/service), so Home/Login don’t maintain parallel versions
+    - Keep `redirect` behavior consistent with normal auth flows
+
+- [ ] TODO(postmvp) Demo tools: make “Clear demo data” safe for real users
+  - Problem: current behavior moves non-demo tasks *that are inside demo lists* into the system `__Inbox`.
+  - Risk: if a user has real work living under demo lists (incl. subtasks), this becomes a cleanup burden.
+  - Desired behavior (safer defaults):
+    - Never mass-move non-demo tasks into `__Inbox` by default (even when they’re inside demo lists).
+    - Prefer: convert the containing demo list(s) to non-demo (set `isDemo=false`, rename with a “Recovered” prefix), OR prompt for a destination list, OR create a dedicated “Recovered” list and preserve hierarchy.
+    - Add stronger UX guardrails: explicit confirmation copy + counts (lists/tasks/subtasks), and a clear “this is destructive” warning.
+  - MVP note: intentionally deferred, but tracked for post-MVP hardening.
+
+- [ ] TODO(postmvp) Demo tools: allow converting demo tasks to “real” tasks
+  - Goal: let users keep a demo task without recreating/copying it.
+  - UX: add a “Keep this task” / “Convert to real” action (best surface: TaskDetailsPane; optional in Edit Task).
+  - Behavior:
+    - Convert the selected Task (and optionally its subtask subtree) to `isDemo=false`.
+    - If the task currently lives in a demo list:
+      - Prompt for destination list (default: Inbox), OR
+      - Auto-create a non-demo “Recovered” list and move it there, OR
+      - Offer “Convert this list to real” (set list `isDemo=false`) as an alternative.
+  - Guardrails:
+    - Clear confirmation copy (explain how “Clear demo data” interacts with items living inside demo lists).
+    - Preserve hierarchy + ordering where possible.
+    - Ensure the conversion is resilient if some legacy rows are missing required fields.
 
 - [ ] TODO(postmvp) Audit & remove legacy non-null violations (starting with `isDemo`)
   - See: [docs/LEGACY_DATA_CLEANUP.md](docs/LEGACY_DATA_CLEANUP.md)
@@ -287,66 +329,206 @@ Last refreshed: Feb 2 2026
     - Document exact steps (Cognito user deletion + DynamoDB/AppSync model table purge) and verify they’re run against the correct Amplify env.
     - After reset: disable safe-fallbacks and keep `isDemo` selected everywhere.
 
-- [ ] TODO(P1) Review GraphQL mutation selection sets for minimal ops
-  - Some minimal mutations are typed using full Amplify-generated output types
-  - This is intentional for MVP speed
-  - If TypeScript inference becomes misleading (e.g. assuming nested relations exist),
-    consider defining custom output types for minimal ops
+- [ ] TODO(postmvp) Hardening: align minimal GraphQL selection sets with TypeScript types
+  - Decision (Feb 2026): defer. Current MVP flow maps GraphQL → UI types via `toTaskUI` / `toListUI` and does not rely on relation payloads.
+  - Current state: `src/api/operationsMinimal.ts` uses minimal selection sets but is typed with full Amplify-generated operation output types.
+  - Risk: TypeScript can become misleading (it may appear that nested relations / extra fields exist when the selection set didn’t request them).
+  - Revisit when:
+    - you add features that read nested relation data from mutation results, or
+    - you adopt normalized caching / entity identity patterns (Apollo/urql-style), or
+    - you start seeing bugs caused by assumed-but-unselected fields.
+  - Options:
+    - Define custom minimal output types for the minimal ops (preferred for correctness), or
+    - Expand minimal selection sets to match the generated types you’re using.
 
-- [ ] TODO(P1) Evaluate adding `__typename` to GraphQL minimal queries/mutations
-  - Not required for MVP
-  - May help later if Zustand, memoization, or derived caches rely on entity identity
+- [ ] TODO(postmvp) Consider adding `__typename` to minimal queries/mutations
+  - Decision (Feb 2026): defer. Zustand indexing/memoization currently keys off explicit ids and doesn’t need `__typename`.
+  - Notes:
+    - Generated codegen ops already include `__typename`; the minimal ops intentionally omit it.
+    - Add `__typename` later if you want stronger runtime discrimination (interfaces/unions) or to support normalized cache keys.
+
+- [ ] TODO(postmvp) Support time-of-day due times (datetime) for tasks
+  - Today: the UI treats `dueAt` as a “floating day” (date-only) value and formats/compares by day key to avoid timezone drift.
+  - Upgrade path:
+    - Add UX for optional time (e.g. `datetime-local`) and/or a separate `dueTime` field
+    - Decide storage semantics (instant vs floating local time) and migration strategy
+    - Update triage/views bucketing + formatting helpers to respect time-of-day where enabled
+
+- [ ] TODO(postmvp) Task move: allow "move under another task" (reparent)
+  - Ideal UX (A): drag/drop to change nesting + order
+    - Best surface: ListDetailsPage + TaskDetailsPane stack (where the tree/context is visible)
+    - Support: drop onto a task to make it a child, and drop between siblings to reorder
+  - Fallback UX (B): manual reparent in the edit flow (ship this first)
+    - Surface: add a "Parent" section to Edit Task (used by TasksPage edit dialog + TaskDetailsPane edit inline)
+    - Step 1: choose target list
+      - Use existing list selector UX (FormSelect)
+      - Important: allow reparenting even when the user keeps the same list (don’t hide the parent controls)
+    - Step 2: choose parent path (nested picker, but not confusing)
+      - Default parent = "No parent (top-level)"
+      - Recommended UI: a small, progressive "parent path" chooser
+        - Level 1: "Parent (top-level)" select → shows *top-level* tasks in the chosen list
+        - If a parent is selected and it has children, reveal Level 2: "…under" select → shows that parent’s subtasks
+        - Repeat until the selected parent has no children, or the user stops (leaves next level blank)
+      - Show a 1-line preview so users understand the result:
+        - "Will move under: A ▸ B ▸ C" (or "Top-level")
+      - UX guardrails:
+        - Exclude the current task from all options
+        - Disable (or hide) any descendant tasks as valid parents (cycle prevention)
+        - Provide a quick "Clear parent" action to jump back to top-level
+    - Optional (nice): "Move under another task" checkbox/toggle
+      - Off: parent controls collapsed (keeps edit form compact)
+      - On: reveals the parent path chooser (default still top-level until user picks)
+    - Save behavior (minimum viable)
+      - Persist: `listId`, `parentTaskId` (nullable)
+      - Compute `sortOrder` at destination as end-of-siblings:
+        - siblings = tasks with same `listId` AND same `parentTaskId`
+        - `sortOrder = max(siblings.sortOrder) + 1`
+      - If list changes, allow optionally choosing a parent in the destination list; otherwise force `parentTaskId=null`
+    - Validation + error messaging
+      - If selected parent is invalid (self/descendant/missing), block save + show a toast
+      - If API rejects the update, keep the draft selections so the user can fix and retry
+    - URL/pane-stack behavior
+      - If the task is currently open in the pane stack and gets moved:
+        - If it remains in the same list: keep the stack open (safe)
+        - If it moves lists: navigate to the new stack root for that task to avoid "Task not found"
+
+  - Staged rollout plan (do B first, then A)
+    - Stage 1 (fastest): manual reparent within the same list only
+      - Enable selecting parent path for tasks in ListDetailsPage/TaskDetailsPane edit
+      - Save updates `parentTaskId` + `sortOrder` only
+    - Stage 2: manual reparent across lists
+      - Allow list change + parent selection in destination list
+      - Ensure move clears/updates parent consistently and handles pane-stack navigation
+    - Stage 3: ordering strategy upgrade (enables future drag/drop reorder)
+      - Introduce sparse sortOrder spacing or occasional sibling renumbering
+      - (Optional) batch update API/resolver support for reordering without N sequential mutations
+    - Stage 4: drag/drop UI (A) on the stack view
+      - Start with reparent-only (drop onto task changes parent, keep end-of-siblings ordering)
+      - Then add between-sibling reorder once sortOrder strategy is proven stable
+
+  - Save payload should support: `listId`, `parentTaskId` (nullable), and a reasonable `sortOrder` among new siblings
+  - Guardrails:
+    - Prevent cycles: disallow selecting self or any descendant as parent
+    - Ensure the selected parent is in the same target list (or auto-fix/clear parent if list changes)
+    - Decide: allow parenting under subtasks (deep nesting) vs only under top-level tasks
+    - If a task is currently open in the pane stack, decide how URL + selection should respond after reparent
+
+- [ ] TODO(postmvp) Task move: improve ordering when moving/reparenting
+  - Today: moving lists resets `sortOrder` to `0` (good enough for MVP, but crude)
+  - Better: compute next `sortOrder` for end-of-list among siblings (same list + same parentTaskId)
+  - Drag/drop note: true “reorder within siblings” requires either (a) sparse sortOrder spacing, or (b) occasional renumbering of many siblings (batch updates)
+  - Optional UX polish: "Move to top" vs "Move to bottom" vs "Keep relative order"
 
 ---
 
-## Offline Mode (Post-MVP)
+<a id="archive"></a>
+## Archive (implemented / completed)
 
-- [ ] TODO(P5) Implement offline support following:
-  - `/docs/offline-mode-design.md`
+### Platform / Foundations
 
-- [ ] TODO(P5) Introduce IndexedDB-backed cache
+- [x] `TODO`(P3) Architecture guardrail: forbid direct imports from `src/api/**` inside `src/pages/**` and `src/components/**`
+  - Enforced in `eslint.config.js` via `no-restricted-imports` for `src/pages/**`, `src/components/**`, and `src/hooks/**`.
+  - Keeps UI-layer data access going through store/hooks.
 
-- [ ] TODO(P5) Add offline mutation queue + replay logic
+- [x] `TODO`(P1) Create a disclosure/notification that "the app uses cookies/local storage" and that closes and persists acknowledgement so it does not reopen again later.
 
-- [ ] TODO(P5) Add sync status UI
-  - offline
-  - syncing
-  - error states
+### UI / Frontend
 
-⚠️ Offline mode is intentionally deferred until:
-- GraphQL CRUD is stable
-- Zustand is the primary client cache
-- MVP UX is complete
+- [x] `TODO`(P2) Add date formatting helper for task due dates
+  - Implemented in `src/services/dateTime.ts` as `formatDueDate`.
+  - Used by `TaskRow` and `TaskDetailsPane` so we no longer print raw ISO strings.
 
----
+- [x] `TODO`(P2) Update ProfilePage to use real auth/user data (Cognito / Amplify)
+  - Uses `useUserUI` via the profile page data hook.
 
-## Security & Auth (Post-MVP Hardening)
+- [x] `TODO`(P2) Ensure user metadata always updates on account switch
+  - Implemented via auth lifecycle hooks + Hub listeners (`useAuthUser` + `useUserUI`) and cache guards.
+  - Validation still belongs in the manual QA checklist item (fast account switches without reload).
 
-- [ ] TODO(P4) Harden owner-based GraphQL auth rules
-  - Prevent clients from reassigning the `owner` field on @model types
-  - Apply field-level auth or remove `owner` from client-writable inputs
-  - Ensure:
-    - owners can CRUD only their own records
-    - Admin group can read/write across users
-    - ownership cannot be transferred via mutation payloads
-  - Context:
-    - Amplify warning: “owners may reassign ownership”
-    - Deferred intentionally for MVP speed
+- [x] `TODO`(P3) Add an app footer
+  - [x] Link to the showcase site
+  - [x] Move the Sign Out button into the footer
+  - [x] Add an email link: `mailto:nick@nickhanson.me`
 
-- [ ] TODO(stretch) Admin: delete Cognito user accounts from the app
-  - Would require a backend function (Lambda) with Cognito admin permissions (e.g. `AdminDeleteUser`).
-  - UI alone can’t securely delete Cognito identities.
-  - Consider coupling with an app-data cleanup flow (delete UserProfile + tasks/lists) for a full deprovision.
+- [x] `TODO`(P1) Find a way to ensure refreshing of favorites sidebar section upon starring/un-starring lists for favorites.
 
-- [ ] TODO(stretch) Post-MVP: Add AWS WAF rate limiting for `POST /auth/demo`
-  - [ ] Create a Web ACL in `us-east-2` and attach it to the API Gateway stage for `taskmasterAuth`
-  - [ ] Add a rate-based rule keyed by source IP (start with 5 requests / 5 minutes)
-  - [ ] Validate behavior (normal demo works; burst requests get blocked)
-  - [ ] Remove the in-Lambda `ipBuckets` limiter (or keep as a fallback with a higher threshold, but don’t double-punish users)
+- [x] `TODO`(P1) Fix failing toasts from editing _and_ adding tasks and closing/canceling both windows on ListDetailsPage.
+  - [x] Centralized a single global `Toaster` mount in the app shell (removed per-page mounts).
+  - [x] Normalized toast calls: `fireToast(...)` is synchronous and no longer awaited.
 
----
+- [x] `TODO`(P1) Add Tooltip/Toast for "already in inbox"
 
-## Testing & Quality
+### Demo Mode + UserProfile seeding (MVP-critical)
+
+- [x] `TODO`(P1) Add `UserProfile` GraphQL model (owned by sub)
+  - Implemented in [amplify/backend/api/taskmaster/schema.graphql](amplify/backend/api/taskmaster/schema.graphql)
+  - Key fields: `id (sub)`, `owner (sub)`, `email`, `seedVersion`, `seededAt`, `settingsVersion/settings`, `onboardingVersion/onboarding`
+
+- [x] `TODO`(P1) Implement bootstrap: fetch/create `UserProfile` on login
+  - Centralized in the app shell; runs once per authenticated session.
+  - Version gate: if missing or `seedVersion < CURRENT_SEED_VERSION`, run the seed flow.
+
+- [x] `TODO`(P1) Implement seed flow (idempotent + race-safe)
+  - Seed creates example lists + tasks (including subtasks) and marks them `isDemo: true`.
+  - Multi-tab safety uses conditional updates on `UserProfile.seedVersion` with an in-progress lock value (`-1`).
+  - Finalizes by setting `seedVersion = CURRENT_SEED_VERSION` and `seededAt = now`.
+
+- [x] `TODO`(P1) Add “Demo seed” UX (minimal)
+  - MVP behavior: always seed for all accounts by default.
+  - Temporary opt-out supported (e.g. `?demo=0` or per-user `localStorage.taskmaster:u:<scope>:seedDemo = "0"`).
+
+- [x] `TODO`(P2) Demo onboarding polish (confirmation + quick tour)
+  - Home/Login: show a confirmation + explanation step before creating a demo user + signing in.
+  - Demo sessions: show a one-time “Demo quick tour” checklist (dismissed via user-scoped key `demoTourSeen:v1`).
+
+- [x] `TODO`(P1) Account-switch cleanup for user-scoped caches + bootstrap
+  - [x] On sign out: clear `taskStore` persisted cache + user UI cache (and other user-scoped caches)
+  - [x] On sign in: bootstrap runs after auth restore and cache guards prevent cross-user flashes
+
+- [x] `TODO`(P1) Add a Demo data section within SettingsPage that contains these features:
+  - [x] A button to clear all demo data.
+  - [x] A button to re-seed all demo data ('reset demo data').
+    - Note: Demo users already have a footer "Reset demo data" action. This Settings version is for non-demo accounts and must NOT remove non-demo data (implement later with stricter filtering/guardrails).
+  - [x] A section for adding more demo data with:
+    - [x] A button to add more tasks with multiplier. "Add [ x ] tasks."
+    - [x] A button to add more lists with multiplier. "Add [ x ] lists."
+    - [x] A button to add both with separate multipliers. "Add [ x ] tasks and [ x ] lists."."
+
+### Settings + onboarding blob strategy (light MVP)
+
+- [x] `TODO`(P1) Add user-configurable default post-login landing route
+  - Implemented (local-only): Settings selector persists per-user in `localSettingsStore`.
+  - Behavior:
+    - If `?redirect=` is present (from `RequireAuth`), respect it (after sanitization)
+    - Otherwise navigate to the configured landing route, defaulting to `/today`
+
+- [x] `TODO`(P1) Zustand state (MVP shipped)
+  - [x] tasks + taskLists (GraphQL-backed, cached client-side)
+  - [x] updates feed (persisted event feed)
+  - [x] updates read-state (lastReadAt / clearedBeforeAt)
+  - [x] inbox UX state (dismissals, lastViewedAt, dueSoonWindowDays)
+
+- [x] `TODO`(P1) Migrate page reads/writes → store hooks/actions
+  - [x] InboxPage
+  - [x] ListDetailsPage
+  - [x] UpdatesPage
+  - [x] TasksPage
+
+- [x] `TODO`(P2) Persist client-side state (localStorage)
+  - Implemented:
+    - tasks/lists cache (versioned + TTL)
+    - inbox local state (dismissed ids, lastViewedAt, dueSoonWindowDays)
+    - updates feed + read markers
+    - userUI cache (username/email/role with TTL)
+  - Note: persisted keys are now user-scoped (to prevent cross-user mixing on shared browsers) with safe legacy migrations.
+  - Future: consider moving persistence to IndexedDB for offline mode.
+
+- [x] `TODO`(P3) Scope inbox/updates localStorage keys by user sub (optional polish)
+  - Implemented via `taskmaster:u:<scope>:...` key prefixing (see `taskmaster:authScope`)
+  - Inbox/Updates/TaskStore/UserUI/LocalSettings are stored under per-user `zustand:` keys
+  - Legacy unscoped keys (`taskmaster:inbox`, `taskmaster:updates`, etc.) are migrated only when a signed-in scope is known
+
+### Testing & Quality
 
 - [x] `TODO`(P3) Add a tiny “dev reset local state” helper
   - Implemented via DevPage: "Clear all user caches".
@@ -358,93 +540,13 @@ Last refreshed: Feb 2 2026
     - `<scope>` is the value of `taskmaster:authScope`
     - Legacy unscoped keys are handled separately and should not be relied on going forward
 
-- [ ] TODO(P2) CI: enforce `npm run lint` + `npm run build` on PRs
-  - Goal: keep the UI-layer API import restrictions enforced and prevent accidental regressions
+### Routing & Navigation
 
-- [ ] TODO(P4) ESLint guardrail: if we introduce additional Amplify enums used by UI (beyond TaskStatus/TaskPriority), expand the allowlist
-  - Update `eslint.config.js` (`no-restricted-imports` → allowImportNames) so UI can import enums from `../API` without importing generated models
+- [x] `TODO`(stretch) Improve navigation for system Inbox tasks
+  Prefer navigation to InboxPage for task in __Inbox instead of disabled navigation.
 
-- [ ] TODO(P3) Add a manual QA checklist for auth/cache hygiene
-  - Sign in as User A → verify tasks + user metadata
-  - Sign out → sign in as User B → verify no cross-user flashes
-  - Verify DevPage "Clear all user caches" produces a clean, correct state
-
----
-
-## Docs
-
-- [ ] TODO(P1) Keep `/docs/README.md` up to date as new design docs are added
-
----
-
-## Routing & Navigation
-- [ ] TODO(P1) Improve navigation for system Inbox list
+- [x] `TODO`(P1) Improve navigation for system Inbox list
   - [x] system Inbox is treated as special (hidden from normal list visibility/favorites; edit/favorite/delete disabled when detected).
-  - [ ] decide whether the system Inbox should be directly navigable (e.g., a read-only list route) vs staying exclusively behind `/inbox` triage.
-
-- [ ] TODO(P3) Inbox triage: decide whether “dismiss” should exist long-term
-  - [x] Inbox triage supports “dismiss”.
-  - [ ] define long-term intent (dismiss vs snooze), and ensure dismissed tasks remain discoverable (show dismissed and/or add a system inbox list route).
-
-- [ ] TODO(stretch) Consider adding an "Overdue" View (conditional)
-  - Option: keep overdue sections inside Today/Week for visibility (MVP), but also add a dedicated `/overdue` view.
-  - UX: only show the Overdue view link when there are overdue tasks; style it as high-salience (red + icon).
-
-- [ ] TODO(postmvp) Support time-of-day due times (datetime) for tasks
-  - Today: the UI treats `dueAt` as a “floating day” (date-only) value and formats/compares by day key to avoid timezone drift.
-  - Upgrade path:
-    - Add UX for optional time (e.g. `datetime-local`) and/or a separate `dueTime` field
-    - Decide storage semantics (instant vs floating local time) and migration strategy
-    - Update triage/views bucketing + formatting helpers to respect time-of-day where enabled
-
-- [ ] TODO(postmvp) Task move: allow "move under another task" (reparent)
-  - Add an optional "Parent task" field to the task edit flow (alongside "List")
-  - Behavior: user selects a target list, then optionally selects a parent task within that list
-  - Save payload should support: `listId`, `parentTaskId` (nullable), and a reasonable `sortOrder` among new siblings
-  - Guardrails:
-    - Prevent cycles: disallow selecting self or any descendant as parent
-    - Ensure the selected parent is in the same target list (or auto-fix/clear parent if list changes)
-    - Decide: allow parenting under subtasks (deep nesting) vs only under top-level tasks
-
-- [ ] TODO(postmvp) Task move: improve ordering when moving/reparenting
-  - Today: moving lists resets `sortOrder` to `0` (good enough for MVP, but crude)
-  - Better: compute next `sortOrder` for end-of-list among siblings (same list + same parentTaskId)
-  - Optional UX polish: "Move to top" vs "Move to bottom" vs "Keep relative order"
-
-## Performance / Bundling
-
-- [ ] TODO(P4) Investigate production bundle size & route-level code splitting
-  - Vite warning: main JS chunk > 500 kB
-  - Likely contributors:
-    - Chakra UI
-    - AWS Amplify (Auth + API)
-    - Large route components
-  - Notes:
-    - Zustand migration + caching is complete; bundle work is now purely perf polish
-  - Possible actions (later):
-    - Route-level `React.lazy()` for heavy pages:
-      - TasksPage, UpdatesPage, Lists/ListDetails pages
-    - Consider `manualChunks` in `vite.config.ts` if needed
-    - Re-evaluate after MVP polish
-  - Status:
-    - Non-blocking for MVP
-    - Safe to defer until performance tuning phase
-
-
-- [ ] TODO(P4) Route-level code splitting (React.lazy + Suspense)
-  - Lazy-load routes first (highest impact):
-    - ListDetailsPage / list task stack route
-    - UpdatesPage
-    - TasksPage
-    - InboxPage
-  - Lazy-load later (lower impact / smaller):
-    - ListsPage
-    - FavoritesPage
-    - ProfilePage / SettingsPage / MonthPage
-    - DevPage (already lazy-loaded)
-  - Suspense fallback:
-    - Place the primary `<Suspense fallback={...}>` in AppShell’s main content area wrapping the `<Outlet />` region
-    - Keep the sidebar/topbar always-rendered so navigation remains responsive while a page chunk loads
-  - Error handling / boundaries:
-    - Preserve existing ErrorBoundary behavior for route renders (don’t move the boundary inside a lazy-loaded component)
-    - Ensure the ErrorBoundary still wraps whatever renders the lazy route element so dynamic import failures and render errors surface consistently
+  - [x] Decision (Feb 2026): keep it exclusively behind `/inbox` triage.
+    - The “system Inbox list” is an implementation detail (a staging bucket), not a user-facing List.
+    - Do not add a dedicated page for it and do not special-case `ListDetailsPage` to display it.
