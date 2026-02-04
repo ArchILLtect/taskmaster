@@ -11,6 +11,7 @@ import { PublicSidebar } from "./PublicSidebar.tsx";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { Toaster } from "../components/ui/Toaster";
 import { StorageDisclosureBanner } from "../components/ui/StorageDisclosureBanner";
+import { DemoTourModal } from "../components/ui/DemoTourModal";
 
 const TOPBAR_H = "64px";
 const BOTTOMBAR_H = "52px";
@@ -33,6 +34,7 @@ export function AppShell({
   return (
     <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell">
       <Toaster />
+      <DemoTourModal signedIn={signedIn && !authLoading} />
 
       {/* Top Bar stays fixed at the top */}
       <Box h={TOPBAR_H} flexShrink={0}>

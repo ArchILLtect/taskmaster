@@ -5,6 +5,7 @@ import { signIn } from "aws-amplify/auth";
 import { createDemoCredentials } from "../services/demoAuthService";
 import { clearDemoSessionActive, setDemoSessionActive } from "../services/demoSession";
 import { Tip } from "../components/ui/Tip";
+import { DemoConfirmDialog } from "../components/ui/DemoConfirmDialog";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/today";
@@ -25,6 +26,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
 
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [demoDialogOpen, setDemoDialogOpen] = useState(false);
 
   const onTryDemo = async () => {
     if (demoLoading) return;
@@ -89,7 +91,10 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
               <Button
                 size="lg"
                 colorPalette="purple"
-                onClick={onTryDemo}
+                onClick={() => {
+                  setDemoError(null);
+                  setDemoDialogOpen(true);
+                }}
                 loading={demoLoading}
                 disabled={demoLoading}
               >
@@ -138,6 +143,18 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
           ) : null}
         </VStack>
       </Box>
+
+      {!signedIn ? (
+        <DemoConfirmDialog
+          open={demoDialogOpen}
+          setOpen={setDemoDialogOpen}
+          loading={demoLoading}
+          error={demoError}
+          onConfirm={async () => {
+            await onTryDemo();
+          }}
+        />
+      ) : null}
 
       <HStack gap={4} align="stretch" flexWrap="wrap">
         <Box flex="1" minW="280px" p={5} bg="white" rounded="md" boxShadow="sm">
