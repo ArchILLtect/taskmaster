@@ -1,7 +1,7 @@
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex, HStack, Text, Switch } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditTaskFormProps } from "../../types/task";
-import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type JSX } from "react";
 import { TaskPriority, TaskStatus } from "../../API";
 import { getInboxListId } from "../../config/inboxSettings";
 import { FIELD_LIMITS } from "../../config/fieldConstraints";
@@ -63,6 +63,12 @@ export const EditTaskForm = ({
   const { visibleLists: allLists } = useTaskmasterData();
   const { tasksByListId } = useTaskIndexView();
   const hideButtons = skipModal !== true;
+
+  const reactId = useId();
+  const titleInputId = `task-title-${reactId}`;
+  const descriptionInputId = `task-description-${reactId}`;
+  const dueDateInputId = `task-due-date-${reactId}`;
+  const parentToggleInputId = `task-parent-toggle-${reactId}`;
 
   const selectedListId = draftTaskListId || task.listId;
   const tasksInSelectedList = useMemo(() => {
@@ -271,12 +277,13 @@ export const EditTaskForm = ({
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="task-title">Title</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={titleInputId}>Title</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.task.titleMax}
-            id="task-title"
+            id={titleInputId}
+            name="title"
             bg="white"
             placeholder="Task Title"
             value={draftTaskTitle}
@@ -286,12 +293,13 @@ export const EditTaskForm = ({
       </FormControl>
       <FormControl w="100%">
         <Flex display="flex" justify="space-between" align="center" width="100%">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="task-description">Description</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={descriptionInputId}>Description</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.task.descriptionMax}
-            id="task-description"
+            id={descriptionInputId}
+            name="description"
             bg="white"
             placeholder="Task Description (optional)"
             value={draftTaskDescription}
@@ -302,6 +310,7 @@ export const EditTaskForm = ({
 
       <FormSelect
         title="List"
+        name="listId"
         items={listItems}
         value={draftTaskListId}
         onChange={onListChange}
@@ -326,11 +335,14 @@ export const EditTaskForm = ({
               });
             }}
           >
-            <Switch.HiddenInput />
+            <Switch.HiddenInput
+              id={parentToggleInputId}
+              name="enableParentPicker"
+              aria-label="Choose a parent task"
+            />
             <Switch.Control>
               <Switch.Thumb />
             </Switch.Control>
-            <Switch.Label />
           </Switch.Root>
         </HStack>
 
@@ -354,13 +366,14 @@ export const EditTaskForm = ({
       </Box>
       <FormControl w="100%">
         <Flex justify="space-between" align="center" width="100%">
-          <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor="task-due-date">Due Date</FormLabel>
+          <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor={dueDateInputId}>Due Date</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             type="date"
             min={todayDate}
-            id="task-due-date"
+            id={dueDateInputId}
+            name="dueDate"
             bg="white"
             placeholder="Due Date (optional)"
             value={draftTaskDueDate}
@@ -371,6 +384,7 @@ export const EditTaskForm = ({
 
       <FormSelect
         title="Priority"
+        name="priority"
         items={PRIORITY_OPTIONS}
         value={draftTaskPriority}
         onChange={(v) => setDraftTaskPriority(v && isTaskPriority(v) ? v : TaskPriority.Medium)}
@@ -383,6 +397,7 @@ export const EditTaskForm = ({
 
       <FormSelect
         title="Status"
+        name="status"
         items={STATUS_OPTIONS}
         value={draftTaskStatus}
         onChange={(v) => setDraftTaskStatus(v && isTaskStatus(v) ? v : TaskStatus.Open)}

@@ -1,5 +1,5 @@
 import { Box, Flex, HStack, Select, Text, useListCollection } from "@chakra-ui/react";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { FiInfo } from "react-icons/fi";
 import { Tooltip } from "../ui/Tooltip";
 
@@ -7,6 +7,7 @@ type SelectItem = { label: string; value: string };
 
 type FormSelectProps = {
   title: string;
+  name?: string;
   items: SelectItem[];
   value: string;
   onChange: (nextValue: string) => void;
@@ -23,6 +24,7 @@ type FormSelectProps = {
 
 export function FormSelect({
   title,
+  name,
   items,
   value,
   onChange,
@@ -36,6 +38,16 @@ export function FormSelect({
   labelFontWeight,
   labelColor,
 }: FormSelectProps) {
+  const reactId = useId();
+
+  const computedName =
+    name ??
+    title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
   const { collection, set: setCollection } = useListCollection<SelectItem>({
     initialItems: items,
     itemToValue: (item) => item.value,
@@ -68,6 +80,9 @@ export function FormSelect({
       value={[value]}
       onValueChange={(e) => onChange(e.value[0] ?? "")}
     >
+      {/* Render the real (hidden) form field so labels/autofill have a target. */}
+      <Select.HiddenSelect name={computedName} id={`${computedName}-${reactId}`} />
+
       {layout === "row" ? (
         <Flex justify="space-between" align="center" width="100%">
           <HStack gap={1} align="center">

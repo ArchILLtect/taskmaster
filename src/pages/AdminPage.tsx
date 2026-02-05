@@ -577,6 +577,7 @@ export function AdminPage() {
                   onChange={(e) => setEmailSearch(e.target.value)}
                   size="sm"
                   w="260px"
+                  name="emailSearch"
                 />
                 <Button size="sm" variant="outline" onClick={() => loadEmailsPage({ reset: true })} loading={emailsLoading}>
                   Refresh
@@ -1008,12 +1009,14 @@ export function AdminPage() {
                       value={taskSearch}
                       onChange={(e) => setTaskSearch(e.target.value)}
                       maxW="260px"
+                      name="taskSearch"
                     />
                   </Box>
                   <Box borderWidth="1px" rounded="md" px={2} py={1}>
                     <select
                       value={taskStatusFilter}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setTaskStatusFilter(parseStatusFilter(e.target.value))}
+                      name="taskStatusFilter"
                       style={{ background: "transparent", fontSize: "0.875rem" }}
                     >
                       <option value="all">All statuses</option>
@@ -1025,6 +1028,7 @@ export function AdminPage() {
                     <select
                       value={taskPriorityFilter}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setTaskPriorityFilter(parsePriorityFilter(e.target.value))}
+                      name="taskPriorityFilter"
                       style={{ background: "transparent", fontSize: "0.875rem" }}
                     >
                       <option value="all">All priorities</option>
@@ -1037,6 +1041,7 @@ export function AdminPage() {
                     <select
                       value={taskDemoFilter}
                       onChange={(e: ChangeEvent<HTMLSelectElement>) => setTaskDemoFilter(parseDemoFilter(e.target.value))}
+                      name="taskDemoFilter"
                       style={{ background: "transparent", fontSize: "0.875rem" }}
                     >
                       <option value="all">All</option>

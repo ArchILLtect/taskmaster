@@ -3,7 +3,7 @@ import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { buildTaskStackPath } from "../../routes/taskStack";
 import { TaskStatus, TaskPriority } from "../../API";
 import type { TaskUI, AddTaskFormProps } from "../../types/task";
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useState } from "react";
 import { getInboxListId } from "../../config/inboxSettings";
 import { useTaskmasterData } from "../../hooks/useTaskmasterData";
 import { useTaskActions } from "../../store/taskStore";
@@ -174,18 +174,24 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
     onSavingChange?.(saving);
   }, [onSavingChange, saving]);
 
+  const reactId = useId();
+  const titleInputId = `task-title-${reactId}`;
+  const descriptionInputId = `task-description-${reactId}`;
+  const dueDateInputId = `task-due-date-${reactId}`;
+
   return (
     <Box w="100%" mt={2} p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
       <VStack align="start" gap={2}>
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="task-title">Title</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={titleInputId}>Title</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.task.titleMax}
-            id="task-title"
+            id={titleInputId}
+            name="title"
             bg="white"
             placeholder="Task Title"
             value={newTaskTitle}
@@ -195,12 +201,13 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
       </FormControl>
       <FormControl w="100%">
         <Flex display="flex" justify="space-between" align="center" width="100%">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="task-description">Description</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={descriptionInputId}>Description</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.task.descriptionMax}
-            id="task-description"
+            id={descriptionInputId}
+            name="description"
             bg="white"
             placeholder="Task Description (optional)"
             value={newTaskDescription}
@@ -211,6 +218,7 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
 
       <FormSelect
         title="List"
+        name="listId"
         items={listItems}
         value={selectedListId}
         onChange={(v) => setSelectedListId(v || "")}
@@ -222,13 +230,14 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
 
       <FormControl w="100%">
         <Flex justify="space-between" align="center" width="100%">
-          <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor="task-due-date">Due Date</FormLabel>
+          <FormLabel flex="none" fontSize="small" fontWeight="bold" htmlFor={dueDateInputId}>Due Date</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             type="date"
             min={todayDate}
-            id="task-due-date"
+            id={dueDateInputId}
+            name="dueDate"
             bg="white"
             placeholder="Due Date (optional)"
             value={newTaskDueDate}
@@ -239,6 +248,7 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
 
       <FormSelect
         title="Priority"
+        name="priority"
         items={PRIORITY_OPTIONS}
         value={newTaskPriority}
         onChange={(v) => setNewTaskPriority(v && isTaskPriority(v) ? v : TaskPriority.Medium)}
@@ -250,6 +260,7 @@ export const AddTaskForm = forwardRef<AddTaskFormHandle, AddTaskFormProps>(({
 
       <FormSelect
         title="Status"
+        name="status"
         items={STATUS_OPTIONS}
         value={newTaskStatus}
         onChange={(v) => setNewTaskStatus(v && isTaskStatus(v) ? v : TaskStatus.Open)}

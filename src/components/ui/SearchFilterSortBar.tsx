@@ -1,5 +1,6 @@
 import { Box, Button, HStack, Input, Text } from "@chakra-ui/react";
 import { FiInfo } from "react-icons/fi";
+import { useId } from "react";
 
 import { FormSelect } from "../forms/FormSelect";
 import { Tooltip } from "./Tooltip";
@@ -39,6 +40,8 @@ export function SearchFilterSortBar({
   onClear,
   resultsCount,
 }: SearchFilterSortBarProps) {
+  const reactId = useId();
+
   return (
     <HStack
       w="100%"
@@ -71,12 +74,15 @@ export function SearchFilterSortBar({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             maxW="320px"
+            id={`search-${reactId}`}
+            name="search"
           />
         </Box>
 
         {filter ? (
           <FormSelect
             title={filter.title}
+            name="filter"
             items={filter.items}
             value={filter.value}
             onChange={filter.onChange}
@@ -88,6 +94,7 @@ export function SearchFilterSortBar({
         {sort ? (
           <FormSelect
             title={sort.title}
+            name="sort"
             items={sort.items}
             value={sort.value}
             onChange={sort.onChange}

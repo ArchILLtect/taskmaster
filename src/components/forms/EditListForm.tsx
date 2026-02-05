@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { EditListFormProps } from "../../types/list";
@@ -14,6 +14,10 @@ export const EditListForm = ({
   onSave,
   onCancel,
 }: EditListFormProps) => {
+
+  const reactId = useId();
+  const titleInputId = `list-title-${reactId}`;
+  const descriptionInputId = `list-description-${reactId}`;
 
   useEffect(() => {
     if (!list) return;
@@ -36,12 +40,13 @@ export const EditListForm = ({
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="list-title">Title</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={titleInputId}>Title</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.list.nameMax}
-            id="list-title"
+            id={titleInputId}
+            name="name"
             bg="white"
             placeholder="List Title"
             value={draftName}
@@ -51,12 +56,13 @@ export const EditListForm = ({
       </FormControl>
       <FormControl w="100%">
         <Flex display="flex" justify="space-between" align="center" width="100%">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="list-description">Description</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={descriptionInputId}>Description</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.list.descriptionMax}
-            id="list-description"
+            id={descriptionInputId}
+            name="description"
             bg="white"
             placeholder="List Description (optional)"
             value={draftDescription}

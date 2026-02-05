@@ -2,6 +2,7 @@ import { Box, Heading, VStack, CloseButton, Input, Button, Flex } from "@chakra-
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import type { AddListFormProps } from "../../types/list";
 import { FIELD_LIMITS } from "../../config/fieldConstraints";
+import { useId } from "react";
 
 export const AddListForm = ({
   newListName,
@@ -12,6 +13,10 @@ export const AddListForm = ({
   onCreate,
   onCancel,
 }: AddListFormProps) => {
+
+  const reactId = useId();
+  const nameInputId = `list-name-${reactId}`;
+  const descriptionInputId = `list-description-${reactId}`;
 
   return (
   <Box w="100%" mt={2} p={2} bg="gray.200" rounded="md" boxShadow="inset 0 0 5px rgba(0,0,0,0.1)">
@@ -28,12 +33,13 @@ export const AddListForm = ({
 
       <FormControl isRequired width="100%">
         <Flex justify="space-between" align="center">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="list-name">Name</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={nameInputId}>Name</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.list.nameMax}
-            id="list-name"
+            id={nameInputId}
+            name="name"
             bg="white"
             placeholder="List Name"
             value={newListName}
@@ -43,12 +49,13 @@ export const AddListForm = ({
       </FormControl>
       <FormControl w="100%">
         <Flex justify="space-between" align="center" width="100%">
-          <FormLabel fontSize="small" fontWeight="bold" htmlFor="list-description">Description</FormLabel>
+          <FormLabel fontSize="small" fontWeight="bold" htmlFor={descriptionInputId}>Description</FormLabel>
           <Input
             minW="150px"
             maxW="200px"
             maxLength={FIELD_LIMITS.list.descriptionMax}
-            id="list-description"
+            id={descriptionInputId}
+            name="description"
             bg="white"
             placeholder="List Description (optional)"
             value={newListDescription}
