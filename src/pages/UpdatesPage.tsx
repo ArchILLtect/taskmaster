@@ -11,10 +11,11 @@ import { useTaskActions } from "../store/taskStore";
 import { useUpdatesActions, useUpdatesView } from "../store/updatesStore";
 import { getInboxListId } from "../config/inboxSettings";
 import { Tip } from "../components/ui/Tip";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 export function UpdatesPage() {
 
-  const { allTasks, lists, loading } = useUpdatesPageData();
+  const { allTasks, lists, loading, err, refreshData } = useUpdatesPageData();
   const vm = useUpdatesView();
   const { clearAll, clearRead, markAllReadNow } = useUpdatesActions();
 
@@ -122,6 +123,16 @@ export function UpdatesPage() {
         Updates are stored locally in this browser. Use “Clear read” to prune noise and “Mark all read” to reset your
         unread badge.
       </Tip>
+
+      {err ? (
+        <InlineErrorBanner
+          title="Failed to load tasks"
+          message={err}
+          onRetry={() => {
+            void refreshData();
+          }}
+        />
+      ) : null}
 
       {vm.events.length === 0 ? (
         <Text color="gray.600">No updates yet.</Text>

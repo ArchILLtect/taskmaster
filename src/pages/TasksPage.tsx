@@ -26,6 +26,7 @@ import {
   normalizeRequiredTitle,
 } from "../services/inputNormalization";
 import { FIELD_LIMITS } from "../config/fieldConstraints";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 // Set today's date as default due date in YYYY-MM-DD format
 const todayDate = getTodayDateInputValue();
@@ -75,7 +76,7 @@ export function TasksPage() {
   const [selectedListFilter, setSelectedListFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("sortOrder");
 
-  const { allTasks, lists, loading, refreshData } = useTasksPageData();
+  const { allTasks, lists, loading, err, refreshData } = useTasksPageData();
   const navigate = useNavigate();
 
   const { updateTask, deleteTask, sendTaskToInbox } = useTaskActions();
@@ -348,6 +349,16 @@ export function TasksPage() {
           Use “Filters & Sorting” to quickly find tasks. “Someday” tasks are the ones without a due date.
         </Tip>
 
+        {err ? (
+          <InlineErrorBanner
+            title="Failed to load tasks"
+            message={err}
+            onRetry={() => {
+              void refreshData();
+            }}
+          />
+        ) : null}
+
         <HStack gap={2} flexWrap="wrap" justifyContent={"center"} w={"100%"}>
           <Badge variant="outline">Total: {taskCounts.total}</Badge>
           <Badge variant="outline" colorPalette="green">
@@ -423,7 +434,9 @@ export function TasksPage() {
       </VStack>
 
       {allTasks.length === 0 ? (
-        <Text>No tasks available.</Text>
+        err ? null : (
+          <Text>No tasks available.</Text>
+        )
       ) : visibleTasks.length === 0 ? (
         <Text>No tasks match your filters.</Text>
       ) : (

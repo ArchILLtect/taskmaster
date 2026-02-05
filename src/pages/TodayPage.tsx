@@ -4,9 +4,10 @@ import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { TaskRow } from "../components/TaskRow";
 import { OverdueHeader } from "../components/ui/OverdueHeader";
 import { Tip } from "../components/ui/Tip";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 export function TodayPage() {
-  const { loading, overdueTasks, dueTodayTasks, listsById } = useTodayPageData();
+  const { loading, err, refreshData, overdueTasks, dueTodayTasks, listsById } = useTodayPageData();
 
   if (loading) return <BasicSpinner />;
 
@@ -28,7 +29,17 @@ export function TodayPage() {
         Tasks are considered overdue once their due date is before today (based on your local date).
       </Tip>
 
-      {overdueTasks.length === 0 && dueTodayTasks.length === 0 ? (
+      {err ? (
+        <InlineErrorBanner
+          title="Failed to load tasks"
+          message={err}
+          onRetry={() => {
+            void refreshData();
+          }}
+        />
+      ) : null}
+
+      {overdueTasks.length === 0 && dueTodayTasks.length === 0 && !err ? (
         <Text color="gray.600">No tasks due today. Nice.</Text>
       ) : null}
 

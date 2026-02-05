@@ -6,9 +6,10 @@ import { TaskRow } from "../components/TaskRow";
 import { formatUtcDayKeyWithWeekday, formatUtcMonthYear } from "../services/dateTime";
 import { OverdueHeader } from "../components/ui/OverdueHeader";
 import { Tip } from "../components/ui/Tip";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 export function MonthPage() {
-  const { loading, monthStartKey, monthEndKey, overdueTasks, tasksInMonth, weeks, listsById } = useMonthPageData();
+  const { loading, err, refreshData, monthStartKey, monthEndKey, overdueTasks, tasksInMonth, weeks, listsById } = useMonthPageData();
 
   if (loading) return <BasicSpinner />;
 
@@ -32,7 +33,17 @@ export function MonthPage() {
         Weeks and days are collapsible. Tasks without a due date won’t appear here — they’re still available in Tasks.
       </Tip>
 
-      {overdueTasks.length === 0 && tasksInMonth.length === 0 ? (
+      {err ? (
+        <InlineErrorBanner
+          title="Failed to load tasks"
+          message={err}
+          onRetry={() => {
+            void refreshData();
+          }}
+        />
+      ) : null}
+
+      {overdueTasks.length === 0 && tasksInMonth.length === 0 && !err ? (
         <Text color="gray.600">Nothing scheduled for this month.</Text>
       ) : null}
 

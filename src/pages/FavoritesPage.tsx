@@ -8,11 +8,12 @@ import { useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { useTaskActions } from "../store/taskStore";
 import { Tip } from "../components/ui/Tip";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 export function FavoritesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [favorite, setFavorite] = useState<{ id: string; isFavorite: boolean }>({ id: "", isFavorite: true });
-  const { visibleFavorites, loading } = useListsPageData();
+  const { visibleFavorites, loading, err, refresh } = useListsPageData();
   const inboxListId = getInboxListId();
 
   const { deleteTaskListSafeById, updateTaskList } = useTaskActions();
@@ -77,6 +78,16 @@ export function FavoritesPage() {
       <Tip storageKey="tip:favorites-source" title="Tip">
         Favorites are just lists with “favorite” enabled. You can add/remove favorites from the Lists page anytime.
       </Tip>
+
+      {err ? (
+        <InlineErrorBanner
+          title="Failed to load lists"
+          message={err}
+          onRetry={() => {
+            void refresh();
+          }}
+        />
+      ) : null}
       <Box w="100%" mb={4}>
         <HStack justify="space-between" width="100%">
           <VStack align="start">
@@ -89,7 +100,9 @@ export function FavoritesPage() {
       <Flex gap={4} w="100%">
         <Box w="50%">
         {visibleFavorites.length === 0 ? (
+          err ? null : (
           <Text>No favorite items found.</Text>
+          )
         ) : (
           <VStack align="stretch" gap={2} width={"100%"}>
             {visibleFavorites.map((favorite) => {

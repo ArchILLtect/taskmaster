@@ -27,6 +27,7 @@ import { isSeedDemoDisabled, setSeedDemoDisabled } from "../services/seedDemoPre
 import { setDemoModeOptIn } from "../services/demoModeOptIn";
 import { clearWelcomeModalSeenVersion, requestOpenWelcomeModal } from "../services/welcomeModalPreference";
 import { clearDemoSessionActive } from "../services/demoSession";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 import {
   clearDemoDataOnly,
   resetDemoDataPreservingNonDemo,
@@ -37,7 +38,7 @@ import {
 
 export function SettingsPage() {
   
-  const { loading } = useSettingsPageData();
+  const { loading, err, refreshData } = useSettingsPageData();
   const dueSoonWindowDays = useDueSoonWindowDays();
   const setDueSoonWindowDays = useSetDueSoonWindowDays();
 
@@ -88,6 +89,16 @@ export function SettingsPage() {
         Settings and dismissed tips are stored per user in this browser. If you switch devices or clear storage, you’ll
         see onboarding tips again.
       </Tip>
+
+      {err ? (
+        <InlineErrorBanner
+          title="Failed to load lists/tasks"
+          message={err}
+          onRetry={() => {
+            void refreshData();
+          }}
+        />
+      ) : null}
 
       <Box pt={2} w="100%"> {/* Inbox */}
         <Heading size="lg">Inbox</Heading>

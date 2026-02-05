@@ -15,6 +15,7 @@ import { SearchFilterSortBar } from "../components/ui/SearchFilterSortBar";
 import { Tip } from "../components/ui/Tip";
 import { normalizeOptionalSingleLineText, normalizeSingleLineText } from "../services/inputNormalization";
 import { FIELD_LIMITS } from "../config/fieldConstraints";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 function nextSortOrder(lists: ListUI[]) {
   const max = lists.reduce((acc, t) => Math.max(acc, t.sortOrder ?? 0), 0);
@@ -269,6 +270,17 @@ export const ListsPage = () => {
               <Tip storageKey="tip:lists-system-inbox" title="Tip">
                 The Inbox is a system list — it can’t be deleted or renamed. Favorite lists to pin them in the sidebar.
               </Tip>
+
+              {err ? (
+                <InlineErrorBanner
+                  title="Failed to load lists"
+                  message={err}
+                  onRetry={() => {
+                    void refresh();
+                  }}
+                />
+              ) : null}
+
               <HStack gap={2} flexWrap="wrap" justifyContent={"center"} w={"100%"}>
                 <Badge variant="outline">Total: {listCounts.total}</Badge>
                 <Badge variant="outline" colorPalette="yellow">
@@ -313,14 +325,9 @@ export const ListsPage = () => {
             />
           </AppCollapsible>
 
-          {loading ? <Text>Loading…</Text> : null}
-          {err ? <Text>Failed to load lists.</Text> : null}
-
-          {!loading && !err ? (
-            visibleLists.length > 0 ? (
-
-              <VStack align="stretch" gap={2} width={"100%"}>
-                {visibleListItems.map((l) => {
+          {visibleListItems.length > 0 ? (
+            <VStack align="stretch" gap={2} width={"100%"}>
+              {visibleListItems.map((l) => {
                 const system = isInboxList(l, inboxListId);
 
                 return (
@@ -336,12 +343,12 @@ export const ListsPage = () => {
                     onDelete={system ? undefined : () => handleDeleteList(l.id)}
                     onToggleFavorite={system ? undefined : () => onToggleFavorite(l.id, !l.isFavorite)}
                   />
-                )})}
-              </VStack>
-            ) : (
-              <Text>No lists available. Create a new list to get started.</Text>
-            )
-          ) : null}
+                );
+              })}
+            </VStack>
+          ) : err ? null : (
+            <Text>No lists available. Create a new list to get started.</Text>
+          )}
 
           <>
             {!showAddListForm ? (

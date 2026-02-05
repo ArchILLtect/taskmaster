@@ -68,7 +68,6 @@ export const EditTaskForm = ({
   const titleInputId = `task-title-${reactId}`;
   const descriptionInputId = `task-description-${reactId}`;
   const dueDateInputId = `task-due-date-${reactId}`;
-  const parentToggleInputId = `task-parent-toggle-${reactId}`;
 
   const selectedListId = draftTaskListId || task.listId;
   const tasksInSelectedList = useMemo(() => {
@@ -336,7 +335,6 @@ export const EditTaskForm = ({
             }}
           >
             <Switch.HiddenInput
-              id={parentToggleInputId}
               name="enableParentPicker"
               aria-label="Choose a parent task"
             />

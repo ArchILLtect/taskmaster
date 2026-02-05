@@ -6,9 +6,10 @@ import { formatUtcDayKeyWithWeekday } from "../services/dateTime";
 import { AppCollapsible } from "../components/AppCollapsible";
 import { OverdueHeader } from "../components/ui/OverdueHeader";
 import { Tip } from "../components/ui/Tip";
+import { InlineErrorBanner } from "../components/ui/InlineErrorBanner";
 
 export function WeekPage() {
-  const { loading, overdueTasks, dueThisWeekTasks, days, listsById } = useWeekPageData();
+  const { loading, err, refreshData, overdueTasks, dueThisWeekTasks, days, listsById } = useWeekPageData();
 
   if (loading) return <BasicSpinner />;
 
@@ -37,7 +38,17 @@ export function WeekPage() {
         Each day is collapsible. If you’re looking for an unscheduled task, check the Tasks page.
       </Tip>
 
-      {overdueTasks.length === 0 && dueThisWeekTasks.length === 0 ? (
+      {err ? (
+        <InlineErrorBanner
+          title="Failed to load tasks"
+          message={err}
+          onRetry={() => {
+            void refreshData();
+          }}
+        />
+      ) : null}
+
+      {overdueTasks.length === 0 && dueThisWeekTasks.length === 0 && !err ? (
         <Text color="gray.600">Nothing scheduled for the next 7 days.</Text>
       ) : null}
 
