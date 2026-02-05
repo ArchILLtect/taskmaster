@@ -25,6 +25,7 @@
     "chakra",
     "cleangeneratedmodelsdirectory",
     "codegen",
+    "collapsibles",
     "conditionalcheckfailed",
     "CRDT",
     "createdemouser",
@@ -79,6 +80,7 @@
     "taskma",
     "TOPBAR",
     "transformerversion",
+    "treemap",
     "triaging",
     "undismiss",
     "unfavoriting",
@@ -99,6 +101,7 @@
     "usetypesgeneratorplugin",
     "validatetypenamereservedwords",
     "Vite",
+    "vulns",
     "xcconfig",
     "Zustand"
   ],
@@ -112,7 +115,7 @@
     "**/amplify/**",
   ],
   "todo-tree.tree.scanMode": "workspace",
-  "todo-tree.regex.regex": "(TODO\\(P[1-5]\\)|TODO\\(stretch\\)|TODO\\(postmvp\\)|TODO\\?|TODO[ \\t]|FIXME[ \\t]|BUG[ \\t]|HACK[ \\t]|NOTE[ \\t]|REVIEW[ \\t])",
+  "todo-tree.regex.regex": "(TODO\\(P[1-5]\\)|TODO\\(continual\\)|TODO\\(stretch\\)|TODO\\(postmvp\\)|TODO\\?|TODO[ \\t]|FIXME[ \\t]|BUG[ \\t]|HACK[ \\t]|NOTE[ \\t]|REVIEW[ \\t])",
   "todo-tree.general.tagGroups": {},
   "todo-tree.general.tags": [
     "TODO(P1)",
@@ -120,6 +123,7 @@
     "TODO(P3)",
     "TODO(P4)",
     "TODO(P5)",
+    "TODO(continual)",
     "TODO(stretch)",
     "TODO(postmvp)",
     "TODO?",
@@ -160,6 +164,12 @@
         "type": "line",
         "foreground": "#BF5AF2",
         "background": "#1C0B2A"
+    },
+    "TODO(continual)": {
+        "icon": "infinity",
+        "type": "line",
+        "foreground": "#FF9F0A",
+        "background": "#2A1600"
     },
     "TODO(stretch)": {
         "icon": "star",
