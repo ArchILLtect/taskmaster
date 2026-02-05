@@ -22,20 +22,39 @@ export function AboutPage() {
       </Box>
 
       <Box>
+        <Heading size="xl" mb={2}>
+          App features
+        </Heading>
+        <VStack align="start" gap={2} color="gray.700">
+          <Text>• Inbox triage with overdue / due-soon attention across lists.</Text>
+          <Text>• Deep-linkable task navigation via URL-encoded “pane stack” in list details.</Text>
+          <Text>• Store-driven task + list CRUD backed by AppSync GraphQL.</Text>
+          <Text>• Updates feed with read markers (intentionally local-first UX state for MVP).</Text>
+          <Text>• Demo mode and demo data controls for fast, repeatable showcasing.</Text>
+          <Text>• Admin-only console for cross-user inspection (read-only by design for MVP).</Text>
+          <Text>• User-scoped persistence + TTL cache for fast reloads and less cross-account state leakage on shared devices.</Text>
+          <Text>• Consistent loading/error states with friendly inline errors and a Retry path on primary routes.</Text>
+        </VStack>
+      </Box>
+
+      <Box>
         <Heading size="xl" mb={3}>
           Tech stack
         </Heading>
         <HStack gap={2} flexWrap="wrap">
           <Badge variant="solid" colorPalette="blue">React 19</Badge>
-          <Badge variant="solid" colorPalette="blue">TypeScript</Badge>
-          <Badge variant="solid" colorPalette="purple">Chakra UI</Badge>
+          <Badge variant="solid" colorPalette="blue">TypeScript 5</Badge>
+          <Badge variant="solid" colorPalette="purple">Chakra UI 3</Badge>
           <Badge variant="solid" colorPalette="orange">AWS Amplify (Gen 1)</Badge>
           <Badge variant="solid" colorPalette="orange">Cognito</Badge>
           <Badge variant="solid" colorPalette="orange">AppSync GraphQL</Badge>
           <Badge variant="solid" colorPalette="orange">DynamoDB</Badge>
           <Badge variant="solid" colorPalette="green">Zustand</Badge>
           <Badge variant="outline">React Router v7</Badge>
-          <Badge variant="outline">Vite</Badge>
+          <Badge variant="outline">Vite 7</Badge>
+          <Badge variant="outline">Playwright</Badge>
+          <Badge variant="outline">axe-core</Badge>
+          <Badge variant="outline">ESLint</Badge>
         </HStack>
 
         <Box mt={3} color="gray.700">
@@ -142,7 +161,7 @@ export function AboutPage() {
         </Heading>
         <VStack align="start" gap={2} color="gray.700">
           <Text>
-            Demo mode is complete and shipped. Next work focuses on polish, long-term persistence, and performance.
+            MVP is shipped. Next work focuses on hardening and expanding capability without changing the core architecture.
           </Text>
 
           <Text>
@@ -150,9 +169,7 @@ export function AboutPage() {
           </Text>
 
           <Box pl={4}>
-            <Text>• Move user settings + tip dismissals from local-first storage into `UserProfile.settings` (with migrations).</Text>
-            <Text>• Performance tuning: route-level code splitting and bundle size reduction.</Text>
-            <Text>• Updates feed quality: more accurate event typing (before/after status comparisons).</Text>
+            <Text>• Deploy-time CSP + baseline security headers (hosting hardening).</Text>
             <Text>• Offline groundwork: IndexedDB cache + an offline mutation queue (post-MVP).</Text>
           </Box>
         </VStack>
