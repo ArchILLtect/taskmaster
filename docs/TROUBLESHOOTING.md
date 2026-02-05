@@ -6,6 +6,12 @@ TaskMaster uses persisted Zustand stores for fast reloads, and a TTL-based cache
 - You’re seeing cached task data (it will refresh automatically when stale).
 - A local persisted UX setting is hiding content (e.g., Inbox dismissals).
 
+## I clicked “Remove sample data” — can I undo it?
+Not from within the app.
+
+“Remove sample data” deletes demo-marked lists/tasks and disables future auto-seeding in the current browser/profile.
+If you still want data that *behaves like demo data*, the recommended approach is to create your own temporary lists/tasks and prefix them with a clear tag like `Demo:` (for example, `Demo: Fake task`).
+
 ## React “Maximum update depth exceeded” / `getSnapshot` warning (Zustand)
 If the app loads and then immediately freezes or white-screens, and the console shows something like:
 

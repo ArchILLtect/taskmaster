@@ -225,6 +225,13 @@ export function SettingsPage() {
               This deletes demo-marked lists/tasks and permanently disables future sample-data seeding for this account
               on this device.
             </Text>
+            <Text color="gray.600" fontSize="sm">
+              This cannot be undone from within the app. If you want “temporary demo” items later, create your own and
+              prefix them with something like “Demo:” (for example, “Demo: Fake task”).
+            </Text>
+            <Text color="gray.600" fontSize="sm">
+              Note: this also hides the Demo Mode onboarding controls (since sample-data seeding is disabled).
+            </Text>
 
             <HStack pt={2} gap={3} align="center" flexWrap="wrap">
               <Button
@@ -293,6 +300,10 @@ export function SettingsPage() {
                   await clearDemoDataOnly();
                   setSeedDemoDisabled(true);
                   setSeedOptedOut(true);
+                  // If the user has explicitly disabled sample-data seeding, Demo Mode becomes confusing (no data to drive it).
+                  // Ensure it's also disabled so the badge/tour controls don't appear in a no-op state.
+                  setDemoModeOptIn(false);
+                  clearDemoSessionActive();
                   fireToast("success", "Sample data removed", "Demo-marked items were deleted and future seeding is disabled.");
                   setIsRemoveSampleOpen(false);
                 } catch (err) {
@@ -656,7 +667,7 @@ export function SettingsPage() {
           </HStack>
         </Box>
 
-        {!isDemoIdentity ? (
+        {!isDemoIdentity && !seedOptedOut ? (
           <Box pt={4}>
             <Heading size="sm">Demo Mode (optional)</Heading>
             <Text color="gray.600" fontSize="sm">
