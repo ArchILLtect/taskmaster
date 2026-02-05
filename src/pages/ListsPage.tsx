@@ -282,7 +282,7 @@ export const ListsPage = () => {
           </Box>
 
           {/* Collapsible for search, filter, sort options */}
-          <AppCollapsible title="Search, Filter, and Sort Options">
+          <AppCollapsible title="Search, Filter, and Sort Options" ariaLabel="Toggle list filters and sorting">
             <SearchFilterSortBar
               search={listSearch}
               setSearch={setListSearch}

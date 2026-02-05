@@ -97,6 +97,7 @@ export function MonthPage() {
             >
               <AppCollapsible
                 title={`Week of ${formatUtcDayKeyWithWeekday(w.weekStartKey)}`}
+                ariaLabel={`Toggle week of ${formatUtcDayKeyWithWeekday(w.weekStartKey)}`}
                 defaultOpen={hasAnyInWeek}
                 fontSize="xl"
                 fontWeight="600"
@@ -119,6 +120,7 @@ export function MonthPage() {
                       <Box key={d.dayKey} w="100%">
                         <AppCollapsible
                           title={formatUtcDayKeyWithWeekday(d.dayKey)}
+                          ariaLabel={`Toggle ${formatUtcDayKeyWithWeekday(d.dayKey)}`}
                           defaultOpen={d.tasks.length > 0}
                           mt="0"
                           mb="0"

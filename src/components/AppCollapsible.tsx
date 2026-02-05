@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 
 type AppCollapsibleProps = {
   title: ReactNode;
+  ariaLabel?: string;
   headerCenter?: ReactNode;
   fontSize?: string;
   fontWeight?: string;
@@ -15,7 +16,7 @@ type AppCollapsibleProps = {
   mb?: string;
 };
 
-export function AppCollapsible({ title, headerCenter, fontSize = "lg", fontWeight = "600", fontColor = "black", children, defaultOpen = false, width = "100%", mt = "5", mb = "5" }: AppCollapsibleProps) {
+export function AppCollapsible({ title, ariaLabel, headerCenter, fontSize = "lg", fontWeight = "600", fontColor = "black", children, defaultOpen = false, width = "100%", mt = "5", mb = "5" }: AppCollapsibleProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
     <Collapsible.Root
@@ -32,7 +33,7 @@ export function AppCollapsible({ title, headerCenter, fontSize = "lg", fontWeigh
           bg="transparent"
           border="0"
           cursor="pointer"
-          aria-label="Toggle section"
+          aria-label={ariaLabel ?? "Toggle section"}
           _focusVisible={{ outline: "2px solid", outlineColor: "blue.400", outlineOffset: "2px", borderRadius: "md" }}
         >
           <Grid

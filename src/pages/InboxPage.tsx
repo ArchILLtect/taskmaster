@@ -317,6 +317,7 @@ export function InboxPage() {
           defaultOpen={vm.inboxStagingTasks.length > 0}
           mt="0"
           mb="0"
+          ariaLabel="Toggle Inbox tasks section"
           title={
             <HStack gap={2} alignItems="center">
               <Icon as={FcPlus} />
@@ -327,12 +328,17 @@ export function InboxPage() {
             </HStack>
           }
         >
+          <HStack justify="end" mt={2}>
+            <Button size="sm" variant="outline" bg="green.200" onClick={openAddTaskDialog}>
+              Add New Task
+            </Button>
+          </HStack>
           {vm.inboxStagingTasks.length === 0 ? (
-            <Text color="gray.600">
+            <Text color="gray.600" mt={2}>
               No tasks in your Inbox right now.
             </Text>
           ) : (
-            <VStack align="stretch" gap={2}>
+            <VStack align="stretch" gap={2} mt={2}>
               {vm.inboxStagingTasks.map((task) => {
                 const listForTask = listById.get(task.listId);
                 if (!listForTask) return null;
@@ -383,6 +389,7 @@ export function InboxPage() {
           defaultOpen={vm.overdueTasks.length > 0}
           mt="0"
           mb="0"
+          ariaLabel="Toggle overdue tasks section"
           title={
             <HStack gap={2} alignItems="center">
               <Icon as={FcExpired} />
@@ -465,6 +472,7 @@ export function InboxPage() {
           defaultOpen={vm.dueSoonTasks.length > 0}
           mt="0"
           mb="0"
+          ariaLabel="Toggle due soon tasks section"
           title={
             <HStack gap={2} alignItems="center">
               <Icon as={FcHighPriority} />

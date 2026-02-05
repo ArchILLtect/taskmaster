@@ -373,7 +373,7 @@ export function TasksPage() {
           </Badge>
         </HStack>
 
-        <AppCollapsible title="Filters & Sorting" width="100%">
+        <AppCollapsible title="Filters & Sorting" ariaLabel="Toggle Filters & Sorting" width="100%">
           <SearchFilterSortBar
             search={taskSearch}
             setSearch={setTaskSearch}

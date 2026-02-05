@@ -166,6 +166,7 @@ export function SettingsPage() {
         <VStack align="stretch" gap={4} pt={3}>
           <FormSelect
             title="Sidebar width"
+            name="sidebarWidthPreset"
             items={[
               { label: "Small", value: "small" },
               { label: "Medium", value: "medium" },
@@ -179,6 +180,7 @@ export function SettingsPage() {
 
           <FormSelect
             title="Default View"
+            name="defaultViewRoute"
             items={[
               { label: "Today", value: "/today" },
               { label: "Week", value: "/week" },
@@ -192,6 +194,7 @@ export function SettingsPage() {
 
           <FormSelect
             title="Post-login landing page"
+            name="defaultLandingRoute"
             items={[
               { label: "Today", value: "/today" },
               { label: "Inbox", value: "/inbox" },

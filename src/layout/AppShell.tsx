@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Flex, Link } from "@chakra-ui/react";
 import { Suspense } from "react";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar.tsx";
@@ -34,7 +34,25 @@ export function AppShell({
   useBootstrapTaskStore({ enabled: signedIn, authKey: user?.username || user?.userId || null });
 
   return (
-    <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell">
+    <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell" position="relative">
+      <Link
+        href="#main-content"
+        position="absolute"
+        left={2}
+        top={2}
+        px={3}
+        py={2}
+        bg="white"
+        borderWidth="1px"
+        borderColor="blue.200"
+        rounded="md"
+        boxShadow="sm"
+        zIndex={9999}
+        transform="translateY(-200%)"
+        _focusVisible={{ transform: "translateY(0)", outline: "2px solid", outlineColor: "blue.400" }}
+      >
+        Skip to content
+      </Link>
       <Toaster />
       <WelcomeModal signedIn={signedIn && !authLoading} />
       <DemoTourModal signedIn={signedIn && !authLoading} />
@@ -65,7 +83,7 @@ export function AppShell({
         </Box>
 
         {/* Main area is the primary scroll container */}
-        <Box flex="1" minW={0} h="100%" overflow="auto" className="Main">
+        <Box flex="1" minW={0} h="100%" overflow="auto" className="Main" id="main-content" tabIndex={-1}>
           <ErrorBoundary title="Page Crashed">
             <Suspense fallback={<BasicSpinner />}>
               <Outlet />

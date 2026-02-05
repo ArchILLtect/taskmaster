@@ -84,6 +84,7 @@ export function WeekPage() {
             <Box w="100%">
               <AppCollapsible
                 title={formatUtcDayKeyWithWeekday(d.dayKey)}
+                ariaLabel={`Toggle ${formatUtcDayKeyWithWeekday(d.dayKey)}`}
                 defaultOpen={d.tasks.length > 0}
                 mt="0"
                 mb="0"

@@ -106,6 +106,7 @@ export function TopBar({ user, userUI }: TopBarProps) {
                       color="orange.800"
                       cursor="pointer"
                       _hover={{ bg: "orange.200" }}
+                      _focusVisible={{ outline: "2px solid", outlineColor: "blue.400", outlineOffset: "2px" }}
                       onClick={() => {
                         openDemoTour();
                       }}
