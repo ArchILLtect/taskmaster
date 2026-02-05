@@ -92,6 +92,18 @@ User display info (email/role) is fetched client-side via:
 - [src/services/authService.ts](../src/services/authService.ts)
 - [src/hooks/useUserUI.ts](../src/hooks/useUserUI.ts)
 
+## E2E smoke testing (implemented)
+
+Minimal automated smoke coverage uses Playwright (plus axe scans) to validate that key routes render and basic accessibility regressions are caught.
+
+To keep tests stable and avoid requiring live AWS connectivity, the E2E web server enables a test-only auth bypass via `VITE_E2E_BYPASS_AUTH=1`.
+
+Implementation:
+- Auth gate: [src/routes/RequireAuth.tsx](../src/routes/RequireAuth.tsx)
+- Playwright web server env: [playwright.config.ts](../playwright.config.ts)
+
+This flag must never be enabled in production deployments.
+
 ## Admin console (current)
 The app includes an admin-only route:
 - Route: `/admin`
@@ -242,7 +254,7 @@ Temporary opt-out is supported via `?demo=0` or `localStorage.taskmaster:seedDem
 
 ### Stretch goals (post-MVP)
 - Persist inbox/updates per user in DynamoDB
-- Route-level code splitting to reduce bundle size
+- Route-level code splitting to reduce bundle size (implemented Feb 2026)
 
 ### Notes / Intentional tradeoffs
 - Inbox/Updates are browser-local (no backend sync yet) but are scoped per signed-in user in localStorage.

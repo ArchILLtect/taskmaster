@@ -23,6 +23,26 @@ npm run lint
 npm run build
 ```
 
+## E2E smoke tests (Playwright)
+
+The repo includes minimal automated smoke coverage (desktop + mobile) and an axe-based a11y scan.
+
+```bash
+# first time only
+npm run test:e2e:install
+
+# run tests (terminal output; exits when complete)
+npm run test:e2e
+
+# optional: HTML report
+npm run test:e2e:html
+npm run test:e2e:report
+```
+
+Notes:
+- E2E runs start a local Vite dev server automatically.
+- The smoke suite uses a test-only auth bypass so it can run without live AWS connectivity.
+
 ## Debugging
 - This is a client-only Vite app; use browser devtools for React component inspection and network/storage.
 - Local state is persisted in `localStorage` (see “Reset local state” in [TROUBLESHOOTING.md](TROUBLESHOOTING.md)).

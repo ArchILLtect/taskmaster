@@ -63,6 +63,16 @@ If `npm run dev` exits with code 1:
 2. If it’s a TypeScript error, try `npm run build` to get the full typecheck output.
 3. If it’s a dependency/Vite error, delete `node_modules` and reinstall: `npm install`.
 
+## Playwright E2E report keeps the process running
+
+If you run Playwright with the HTML reporter, it can start a report server (often on `http://localhost:9323`) and keep the process alive.
+
+Recommended workflow:
+- Run smoke in the terminal (exits when done): `npm run test:e2e`
+- If you want the HTML report:
+	- `npm run test:e2e:html`
+	- `npm run test:e2e:report`
+
 ## I can’t access the Admin console (`/admin`)
 The Admin console is intentionally restricted.
 
@@ -97,4 +107,4 @@ Updates events are appended after successful task mutations (create/update/delet
 The Add Task form uses the user’s local timezone when computing the minimum date.
 - See [src/components/AddTaskForm.tsx](../src/components/AddTaskForm.tsx)
 
-> TODO: Standardize how we store/format time across the app.
+Time-handling is centralized under [src/services/dateTime.ts](../src/services/dateTime.ts) (timezone detection + day-key helpers) to keep overdue/due-today logic consistent.

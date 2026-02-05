@@ -24,12 +24,12 @@ Actionable TODOs must use one of the following forms (do not include backticks):
 <a id="open-backlog"></a>
 ## Open Backlog (prioritized)
 
-<a id="p1"></a>
-### `TODO`(P1)
+<a id="continual"></a>
+### `TODO`(continual)
 
-- [ ] TODO(P1) Keep `/docs/README.md` up to date as new design docs are added
+- [ ] TODO(continual) Keep `/docs/README.md` up to date as new design docs are added
 
-- [ ] TODO(P1) Manual QA regression sweep (pre-showcase)
+- [ ] TODO(continual) Manual QA regression sweep (pre-showcase)
   - Auth + redirects:
     - Deep link to a protected page → confirm redirect to `/login?redirect=...` works and sanitization prevents external redirects
     - Sign out from a deep-linked page → confirm app returns to a safe public route (and no loops)
@@ -43,23 +43,49 @@ Actionable TODOs must use one of the following forms (do not include backticks):
     - Fail demo request (simulate by turning off network) → confirm demo session flag is cleared and error is visible
 
 
+<a id="p1"></a>
+### `TODO`(P1)
+
+
+- [ ] TODO(P1) Basic UX polish passes: keyboard navigation + focus states (accessibility), mobile/responsive review, and loading/error empty-state consistency across pages.
+  - Status (Feb 2026): most “no-layout-risk” a11y fixes shipped (focus-visible rings, skip-to-content, icon-button aria-labels, remove nested interactive header controls, form label/id/name hygiene).
+  - Tester script/checklist: `docs/TESTER_SCRIPT.md`
+  - [ ] MVP-critical manual validation (3 demo-critical flows)
+    - [ ] Flow 1: Sign in → Inbox triage → edit task
+      - Keyboard-only: tab order makes sense; focus is visible; no traps; Esc closes dialogs; Enter/Space activate buttons; toast notifications don’t steal focus.
+      - Screen-reader-name sniff test: icon-only buttons and collapsibles announce sensible names.
+      - Mobile viewport spot-check: no horizontal scroll; action buttons still reachable.
+    - [ ] Flow 2: Lists → open pane stack → navigate stack
+      - Keyboard-only: task rows are reachable; stack panes don’t create focus traps; Back/close behaviors are predictable.
+      - Responsive: base breakpoint doesn’t overflow; panes usable on small widths.
+    - [ ] Flow 3: Settings
+      - Keyboard-only: selects/switches operable; focus ring visible; no missing labels.
+      - Autofill sanity: inputs/selects have stable labels and names.
+  - [ ] Loading/error/empty-state audit (MVP)
+    - [x] Standardize primary routes’ error states + Retry (Today/Week/Month/Tasks/Updates/Lists/Favorites/Settings)
+    - Ensure every page has: loading (spinner), error (message + Retry), empty (clear text + next action when possible).
+    - Confirm no raw/un-styled error dumps (console-only errors are OK; UI should still show a friendly error block).
+  - [x] Stretch (optional, but great for employer confidence)
+    - [x] Add automated a11y checks (Playwright + axe) for the 3 flows’ key routes.
+    - [x] Add a small responsive smoke (Playwright setViewportSize + screenshot diff is optional).
+
+--[DONE]--
+
+- [x] `TODO`(P1) Manual sanity (demo-visible):
+  - Create 3 tasks: due yesterday, due today, due tomorrow → confirm Today badges/sections match expectations.
+  - Change a task’s due date via Edit Task → confirm it moves between Overdue/Due today immediately.
+  - Timezone drift check (Chrome DevTools → More tools → Sensors → Timezone override):
+    - Override to a negative offset (e.g. `Pacific/Honolulu`) then a positive offset (e.g. `Pacific/Kiritimati`) and refresh.
+    - Confirm the same task stays classified as overdue vs due-today vs future (no day shifting).
+  - Confirm “Someday/Anytime” tasks never appear in overdue/due-today counts.
+
 <a id="p2"></a>
 ### `TODO`(P2)
 
-- [x] TODO(P2) Harden owner-based GraphQL auth rules
-  - Prevent clients from reassigning the `owner` field on @model types
-  - Apply field-level auth or remove `owner` from client-writable inputs
-  - Ensure:
-    - owners can CRUD only their own records
-    - Admin group can read/write across users
-    - ownership cannot be transferred via mutation payloads
-  - Context:
-    - Amplify warning: “owners may reassign ownership”
-    - Deferred intentionally for MVP speed
-
-- [ ] TODO(P2) Performance: investigate bundle size + add route-level code splitting
+- [x] `TODO`(P2) Performance: investigate bundle size + add route-level code splitting
   - Vite warning: main JS chunk > 500 kB
   - Likely contributors: Chakra UI, AWS Amplify (Auth + API), large route components
+  - Status (Feb 2026): route-level code splitting added for the biggest pages + basic `manualChunks` vendor splitting; main `index` chunk is now much smaller, though Vite may still warn about a large vendor chunk.
   - Route-level `React.lazy()` (highest impact first):
     - ListDetailsPage / list task stack route
     - UpdatesPage
@@ -78,17 +104,16 @@ Actionable TODOs must use one of the following forms (do not include backticks):
     - Ensure the ErrorBoundary still wraps whatever renders the lazy route element so dynamic import failures and render errors surface consistently
   - Optional: consider `manualChunks` in `vite.config.ts` if needed
 
-- [ ] TODO(P2) Basic UX polish passes: keyboard navigation + focus states (accessibility), mobile/responsive review, and loading/error empty-state consistency across pages.
+- [x] `TODO`(P2) Minimal automated smoke coverage: even 1–2 Playwright tests (“sign in → seed → see Today/Inbox/Tasks render”) gives huge confidence for a showcase.
+  - Run: `npm run test:e2e`
+  - Optional HTML report: `npm run test:e2e:html` then `npm run test:e2e:report`
 
-
-- [ ] TODO(P2) Minimal automated smoke coverage: even 1–2 Playwright tests (“sign in → seed → see Today/Inbox/Tasks render”) gives huge confidence for a showcase.
-
-- [ ] TODO(P2) Talk about how the demo-mode "script" works, and:
-  - [ ] Is there still more work that needs to be done?
-  - [ ] How are you supposed to open it after closing to do a step?
-  - [ ] We either need to add more info about how to use demo mode including:
-    - [ ] How to clear demo-mode when done, etc.
-    - [ ] Use modal or create a demo page for this?
+- [x] `TODO`(P2) Talk about how the demo-mode "script" works, and:
+  - Is there still more work that needs to be done?
+  - How are you supposed to open it after closing to do a step?
+  - We either need to add more info about how to use demo mode including:
+    - How to clear demo-mode when done, etc.
+    - Use modal or create a demo page for this?
 
 - [x] `TODO`(P2) Normalize all time-related features by initializing and using the current time zone as the base for all times
   - [x] (foundation): `src/services/dateTime.ts` centralizes timezone detection (`getUserTimeZone`) + day-key helpers for comparisons/labels.
@@ -96,16 +121,21 @@ Actionable TODOs must use one of the following forms (do not include backticks):
   - [x] (consistency): removed remaining ad-hoc ISO/date conversions in UI and standardized due-date encoding/decoding.
     - Added `isoToDateInputValue()` and used day-key extraction (no timezone-dependent `Date` parsing for `dueAt`).
     - Made `normalizeDateInputToIso()` strict (reject invalid rollover dates) and consistently store `YYYY-MM-DDT00:00:00.000Z`.
-  - [ ] TODO(P2) Manual sanity (demo-visible):
-    - Create 3 tasks: due yesterday, due today, due tomorrow → confirm Today badges/sections match expectations.
-    - Change a task’s due date via Edit Task → confirm it moves between Overdue/Due today immediately.
-    - Timezone drift check (Chrome DevTools → More tools → Sensors → Timezone override):
-      - Override to a negative offset (e.g. `Pacific/Honolulu`) then a positive offset (e.g. `Pacific/Kiritimati`) and refresh.
-      - Confirm the same task stays classified as overdue vs due-today vs future (no day shifting).
-    - Confirm “Someday/Anytime” tasks never appear in overdue/due-today counts.
+
 
 - [x] `TODO`(P2) CI: enforce `npm run lint` + `npm run build` on PRs
   - Goal: keep the UI-layer API import restrictions enforced and prevent accidental regressions
+
+- [x] `TODO`(P2) Harden owner-based GraphQL auth rules
+  - Prevent clients from reassigning the `owner` field on @model types
+  - Apply field-level auth or remove `owner` from client-writable inputs
+  - Ensure:
+    - owners can CRUD only their own records
+    - Admin group can read/write across users
+    - ownership cannot be transferred via mutation payloads
+  - Context:
+    - Amplify warning: “owners may reassign ownership”
+    - Deferred intentionally for MVP speed
 
 <a id="p3"></a>
 ### `TODO`(P3)

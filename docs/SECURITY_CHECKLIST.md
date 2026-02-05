@@ -41,6 +41,11 @@ Audit notes (showcase-friendly):
 - [ ] Verify sign-out clears cached user display info (to avoid cross-user leakage on shared devices).
 - [ ] Document and enforce Cognito group names used by authorization rules (e.g. `Admin`).
 
+Test-only note:
+- The E2E smoke suite can bypass UI auth via a Vite flag (`VITE_E2E_BYPASS_AUTH=1`) to avoid requiring live AWS connectivity.
+	- Do not enable this flag for deployed builds/hosts.
+	- Treat it like a privileged debug backdoor: acceptable for local E2E, unacceptable in production.
+
 Recommended hardening (post-MVP):
 - [ ] Decide on MFA requirements and password policy.
 - [ ] Confirm whether self-signup is allowed and aligns with expectations.

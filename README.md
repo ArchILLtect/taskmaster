@@ -67,12 +67,42 @@ npm install
 npm run dev
 ```
 
+## ✅ MVP QA / confidence checks
+
+Manual tester checklist (shareable):
+- [docs/TESTER_SCRIPT.md](docs/TESTER_SCRIPT.md)
+
+Automated smoke + a11y (Playwright + axe):
+
+```bash
+# first time only
+npm run test:e2e:install
+
+# run smoke tests (desktop + mobile)
+npm run test:e2e
+
+# optional: generate/view HTML report
+npm run test:e2e:html
+npm run test:e2e:report
+```
+
+Note: E2E runs use a test-only auth bypass (`VITE_E2E_BYPASS_AUTH=1`) so the smoke suite does not require live AWS connectivity.
+Do not enable this flag in production builds/hosts.
+
 Quality checks:
 
 ```bash
 npm run lint
 npm run build
 ```
+
+Bundle analysis (treemap report):
+
+```bash
+npm run build:analyze
+```
+
+This writes `dist/bundle-report.html` (open it in a browser to inspect which dependencies contribute to each chunk).
 
 ## 🔐 Security / known issues (MVP)
 

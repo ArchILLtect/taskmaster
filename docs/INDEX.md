@@ -11,6 +11,7 @@ This directory contains **current architecture docs** and **intentional design d
 - New to the repo: [README.md](../README.md) → [SETUP.md](SETUP.md)
 - Want the “how it works” overview: [ARCHITECTURE.md](ARCHITECTURE.md)
 - Debugging weird state/caches: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Want the MVP test script: [TESTER_SCRIPT.md](TESTER_SCRIPT.md)
 
 These docs exist so work stays:
 - correct (matches current implementation)
@@ -57,6 +58,10 @@ If a feature feels “missing,” check here before assuming it was forgotten.
 - Getting Started: [README.md](../README.md)
 - Local setup: [SETUP.md](SETUP.md)
 - Contributing: [CONTRIBUTING.md](../CONTRIBUTING.md)
+
+### Testing / QA
+- Manual MVP tester checklist: [TESTER_SCRIPT.md](TESTER_SCRIPT.md)
+- E2E smoke + a11y (Playwright + axe): see [SETUP.md](SETUP.md)
 
 ### How-to guides
 - Troubleshooting & resets: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
