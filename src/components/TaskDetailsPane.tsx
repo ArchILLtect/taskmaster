@@ -201,8 +201,18 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
   // Add a spinner for loading state
   if (loading) {
     return (
-      <Flex align={"start"} gap={4} p={4} bg="white" rounded="md" minHeight="100%" borderWidth="1px" className="ListPageMain" w="max-content">
-        <Center width={"40vw"} height={"85vh"}>
+      <Flex
+        align={"start"}
+        gap={4}
+        p={4}
+        bg="white"
+        rounded="md"
+        minHeight="100%"
+        borderWidth="1px"
+        className="ListPageMain"
+        w={{ base: "100%", lg: "max-content" }}
+      >
+        <Center width={{ base: "100%", lg: "40vw" }} height={{ base: "240px", lg: "85vh" }}>
           <Spinner size={"xl"} />
         </Center>
       </Flex>
@@ -215,8 +225,8 @@ export const TaskDetailsPane = forwardRef<HTMLDivElement, TaskDetailsPaneProps>(
       rounded="md"
       ref={ref}
       p={4}
-      minH="84vh"
-      w="38.5vw"
+      minH={{ base: "auto", lg: "84vh" }}
+      w={{ base: "100%", lg: "38.5vw" }}
       flexShrink={0}
       animation={isPulsing ? `${pulse} 1s ease-out` : undefined}
     >

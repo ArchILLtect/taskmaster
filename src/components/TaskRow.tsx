@@ -85,6 +85,7 @@ export const TaskRow = ({ task, list, to, showLists, onToggleComplete, onDelete 
               <Box width="84px" height="68px" justifyItems="center" alignContent="center">
                 <Tooltip content="Revive task">
                   <Button
+                    aria-label="Reopen task"
                     bg="blue.100"
                     h="32px"
                     w="33px"
@@ -102,6 +103,7 @@ export const TaskRow = ({ task, list, to, showLists, onToggleComplete, onDelete 
               <Grid gap={1} templateColumns="repeat(2, 1fr)">
                 <Tooltip content="Mark as complete">
                   <Button
+                    aria-label="Mark task complete"
                     bg="green.100"
                     h="32px"
                     w="33px"
@@ -117,6 +119,7 @@ export const TaskRow = ({ task, list, to, showLists, onToggleComplete, onDelete 
 
                 <Tooltip content="Delete task">
                   <Button
+                    aria-label="Delete task"
                     bg="red.100"
                     h="32px"
                     w="33px"

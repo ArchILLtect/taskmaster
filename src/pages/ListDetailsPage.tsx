@@ -225,25 +225,64 @@ export function ListDetailsPage() {
   // Add a spinner for loading state
   if (loading) {
     return (
-      <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
-        <Center width={"40vw"} height={"75vh"}>
+      <Flex
+        align="start"
+        direction={{ base: "column", lg: "row" }}
+        gap={4}
+        p={4}
+        bg="white"
+        rounded="md"
+        minHeight="100%"
+        boxShadow="sm"
+        className="ListPageMain"
+        w={{ base: "100%", lg: "max-content" }}
+      >
+        <Center width={{ base: "100%", lg: "40vw" }} height={{ base: "240px", lg: "75vh" }}>
           <Spinner size={"xl"} />
         </Center>
-        <Box h="89.5vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
+        <Box h={{ base: "240px", lg: "89.5vh" }} bg="gray.200" rounded="md" flexShrink={0} w={{ base: "100%", lg: "38.5vw" }}>
           <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
         </Box>
       </Flex>
     );
   }
-  if (err) return <div>Failed to load list data.</div>;
+  if (err) {
+    return (
+      <VStack align="start" gap={3} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+        <Heading size="lg">List</Heading>
+        <Text color="red.700" fontWeight="600">
+          Failed to load list data.
+        </Text>
+        <HStack gap={2} flexWrap="wrap">
+          <Button size="sm" variant="outline" onClick={refresh}>
+            Retry
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => navigate("/lists")}>
+            Back to Lists
+          </Button>
+        </HStack>
+      </VStack>
+    );
+  }
 
   if (!listId) return <Navigate to="/lists" replace />;
   if (!currentList) return <Navigate to="/lists" replace />;
 
   return (
-    <Flex align="start" gap={4} p={4} bg="white" rounded="md" minHeight="100%" boxShadow="sm" className="ListPageMain" w="max-content">
+    <Flex
+      align="start"
+      direction={{ base: "column", lg: "row" }}
+      gap={4}
+      p={4}
+      bg="white"
+      rounded="md"
+      minHeight="100%"
+      boxShadow="sm"
+      className="ListPageMain"
+      w={{ base: "100%", lg: "max-content" }}
+    >
       {/* Left: list details */}
-        <VStack align="start" gap={2} w={"40vw"}>
+        <VStack align="start" gap={2} w={{ base: "100%", lg: "40vw" }}>
           <Flex flexDir={"column"} w={"100%"} mb={4} gap={2}>
             <Flex justify="space-between">
               <HStack align="center" gap={3} maxW={"60%"}>
@@ -408,7 +447,7 @@ export function ListDetailsPage() {
 
       {/* Right: task details */}
       {stack.length === 0 && (
-        <Box h="84vh" bg="gray.200" rounded="md" flexShrink={0} w="38.5vw">
+        <Box h={{ base: "240px", lg: "84vh" }} bg="gray.200" rounded="md" flexShrink={0} w={{ base: "100%", lg: "38.5vw" }}>
           <Center color="gray.600" mt={10} ml={4}>Select a task to view details.</Center>
         </Box>
       )}

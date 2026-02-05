@@ -220,7 +220,19 @@ export function InboxPage() {
 
   if (loading) return <BasicSpinner />;
 
-  if (err) return <div>Failed to load inbox data.</div>;
+  if (err) {
+    return (
+      <VStack align="start" gap={3} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+        <Heading size="2xl">Inbox</Heading>
+        <Text color="red.700" fontWeight="600">
+          Failed to load inbox data.
+        </Text>
+        <Button size="sm" variant="outline" onClick={refreshData}>
+          Retry
+        </Button>
+      </VStack>
+    );
+  }
 
   return (
     <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
@@ -235,8 +247,14 @@ export function InboxPage() {
             here too so you can decide what to do next.
           </Text>
         </VStack>
+        <HStack justify="end">
+          <Button size="sm" variant="outline" bg="green.200" onClick={openAddTaskDialog}>
+            Add New Task
+          </Button>
+        </HStack>
 
         <Button
+          size="sm"
           onClick={() => {
             if (triageIds.length === 0) {
               fireToast("info", "Done triaging", "No overdue or due-soon notifications to ignore.");
@@ -299,21 +317,6 @@ export function InboxPage() {
           defaultOpen={vm.inboxStagingTasks.length > 0}
           mt="0"
           mb="0"
-          headerCenter={
-            <Box
-              bg="green.200"
-              w="122px"
-              h="32px"
-              borderWidth="thin"
-              border="solid gray.200"
-              rounded="sm"
-              alignContent="center"
-              boxShadow="xs"
-              onClick={openAddTaskDialog}
-            >
-              Add New Task
-            </Box>
-          }
           title={
             <HStack gap={2} alignItems="center">
               <Icon as={FcPlus} />
@@ -325,11 +328,11 @@ export function InboxPage() {
           }
         >
           {vm.inboxStagingTasks.length === 0 ? (
-            <Text color="gray.600" mt={2}>
+            <Text color="gray.600">
               No tasks in your Inbox right now.
             </Text>
           ) : (
-            <VStack align="stretch" gap={2} mt={2}>
+            <VStack align="stretch" gap={2}>
               {vm.inboxStagingTasks.map((task) => {
                 const listForTask = listById.get(task.listId);
                 if (!listForTask) return null;

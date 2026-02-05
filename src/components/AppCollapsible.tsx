@@ -33,6 +33,7 @@ export function AppCollapsible({ title, headerCenter, fontSize = "lg", fontWeigh
           border="0"
           cursor="pointer"
           aria-label="Toggle section"
+          _focusVisible={{ outline: "2px solid", outlineColor: "blue.400", outlineOffset: "2px", borderRadius: "md" }}
         >
           <Grid
             p="1"

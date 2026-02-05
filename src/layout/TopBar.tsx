@@ -120,7 +120,7 @@ export function TopBar({ user, userUI }: TopBarProps) {
             <RouterLink to="/login">{() => <Button as="span" size="sm" variant="solid">Sign in</Button>}</RouterLink>
           )}
           {signedIn ? (
-            <RouterLink to={"/settings"}>
+            <RouterLink to={"/settings"} aria-label="Settings">
               {({ isActive }) => (
                 <Button
                   as="span"

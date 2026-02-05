@@ -82,6 +82,7 @@ export const SendTaskToInboxButton = ({ task, isActive, fromListName, disabled }
     />
     <Tooltip content={disabled ? "This task is already in the Inbox" : "Send task to Inbox"}>
       <Button
+        aria-label={disabled ? "Task already in Inbox" : "Send task to Inbox"}
         paddingX={"2"}
         size="2xs"
         fontSize={"sm"}
