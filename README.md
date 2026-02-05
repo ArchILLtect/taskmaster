@@ -42,8 +42,10 @@ The UI is **store-driven**:
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="docs/assets/inbox-page-screenshot.png" alt="Inbox page" width="48%" />
-  <img src="docs/assets/tasks-page-screenshot.png" alt="Tasks page" width="48%" />
+  <img src="docs/assets/welcome-screenshot.png" alt="Tasks page" width="48%" />
+  <img src="docs/assets/homepage-screenshot.png" alt="Inbox page" width="48%" />
+  <img src="docs/assets/inbox-page-screenshot.png" alt="Tasks page" width="48%" />
+  <img src="docs/assets/list-with-taskPane-screenshot.png" alt="Tasks page" width="48%" />
 </p>
 
 ---
