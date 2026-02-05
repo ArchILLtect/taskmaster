@@ -6,6 +6,9 @@ import { createDemoCredentials } from "../services/demoAuthService";
 import { clearDemoSessionActive, setDemoSessionActive } from "../services/demoSession";
 import { Tip } from "../components/ui/Tip";
 import { DemoConfirmDialog } from "../components/ui/DemoConfirmDialog";
+import { VisuallyHidden } from "@chakra-ui/react";
+import { TaskMasterLogo } from "../components/icons/TaskMasterLogo";
+import homeBannerSvg from "../assets/home-banner.svg?raw";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/today";
@@ -68,6 +71,16 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
         borderColor="gray.200"
       >
         <VStack align="start" gap={4}>
+          <Box
+            w="full"
+            h={{ base: "120px", md: "140px" }}
+            rounded="lg"
+            borderWidth="1px"
+            borderColor="gray.100"
+            overflow="hidden"
+            dangerouslySetInnerHTML={{ __html: homeBannerSvg }}
+          />
+
           <HStack gap={3} align="center">
             <Badge colorPalette="purple" variant="solid">
               Portfolio build
@@ -76,7 +89,13 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
             <Badge variant="outline">Zustand</Badge>
           </HStack>
 
-          <Heading size="2xl">TaskMaster</Heading>
+          <Box aria-hidden="true">
+            <TaskMasterLogo />
+          </Box>
+
+          <VisuallyHidden>
+            <h1>TaskMaster</h1>
+          </VisuallyHidden>
           <Tip storageKey="tip:home-deeplinks" title="Tip">
             Most pages support deep links. If someone shares a task or list URL, logging in will bring you right back to
             that context.
