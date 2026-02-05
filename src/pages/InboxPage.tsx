@@ -328,11 +328,6 @@ export function InboxPage() {
             </HStack>
           }
         >
-          <HStack justify="end" mt={2}>
-            <Button size="sm" variant="outline" bg="green.200" onClick={openAddTaskDialog}>
-              Add New Task
-            </Button>
-          </HStack>
           {vm.inboxStagingTasks.length === 0 ? (
             <Text color="gray.600" mt={2}>
               No tasks in your Inbox right now.
