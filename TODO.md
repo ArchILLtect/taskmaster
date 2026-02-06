@@ -184,6 +184,8 @@ Actionable TODOs must use one of the following forms (do not include backticks):
   - Verify DevPage "Clear all user caches" produces a clean, correct state
   - Status: validated Feb 2026
 
+- [ ] TODO(P3) Add a dark/light toggle mode
+
 <a id="p4"></a>
 ### `TODO`(P4)
 
