@@ -46,8 +46,13 @@ export function useAuthUser(): {
     // even before auth resolves on the next page load.
     setUserStorageScopeKey(authKey);
 
-    // Ensure we don't flash cross-user in-memory state when switching accounts.
-    resetUserSessionState();
+    // IMPORTANT:
+    // - On sign-in / scope switches, do NOT reset persisted user-scoped stores here.
+    //   Doing so can overwrite the newly-selected scope with defaults before rehydrate.
+    // - On sign-out, we do reset in-memory state so the UI doesn't retain authed data.
+    if (!authKey) {
+      resetUserSessionState();
+    }
 
     lastAppliedScopeKeyRef.current = authKey;
 

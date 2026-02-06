@@ -42,12 +42,10 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
   const demoTourDisabled = useDemoTourStore((s) => s.disabled);
   const resetDemoTourDisabled = useDemoTourStore((s) => s.resetDisabled);
 
-  const [dismissedThisSession, setDismissedThisSession] = useState(false);
   const [neverShowAgainChecked, setNeverShowAgainChecked] = useState(false);
   const [seenVersion, setSeenVersion] = useState(() => getWelcomeModalSeenVersion());
   const [openRequested, setOpenRequested] = useState(false);
   const [openReason, setOpenReason] = useState<WelcomeModalOpenReason>("manual");
-  const [lastShownAtMs, setLastShownAtMs] = useState(() => getWelcomeModalLastShownAtMs());
   const wasOpenRef = useRef(false);
 
   useEffect(() => {
@@ -57,17 +55,14 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
       if (cancelled) return;
 
       if (!signedIn) {
-        setDismissedThisSession(false);
         setNeverShowAgainChecked(false);
         setSeenVersion(0);
         setOpenRequested(false);
         setOpenReason("manual");
-        setLastShownAtMs(0);
         return;
       }
 
       setSeenVersion(getWelcomeModalSeenVersion());
-      setLastShownAtMs(getWelcomeModalLastShownAtMs());
     }, 0);
 
     const unsub = signedIn
@@ -95,11 +90,21 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
     return seenVersion >= WELCOME_MODAL_VERSION;
   }, [seenVersion]);
 
+  const open = useMemo(() => {
+    if (!signedIn) return false;
+
+    // Never show again applies to auto-opens (login/reminder), but manual opens should still work.
+    if (disabledByPreference && openReason !== "manual") return false;
+
+    return openRequested;
+  }, [disabledByPreference, openReason, openRequested, signedIn]);
+
   // Auto-open reminder: once per 24h while still signed in.
   useEffect(() => {
     if (!signedIn) return;
     if (disabledByPreference) return;
 
+    const lastShownAtMs = getWelcomeModalLastShownAtMs();
     const now = Date.now();
     const nextAt = lastShownAtMs ? lastShownAtMs + WELCOME_MODAL_REMIND_INTERVAL_MS : 0;
     if (!nextAt) return;
@@ -115,23 +120,13 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
     return () => {
       window.clearTimeout(t);
     };
-  }, [disabledByPreference, lastShownAtMs, signedIn]);
-
-  const open = useMemo(() => {
-    if (!signedIn) return false;
-
-    // Never show again applies to auto-opens (login/reminder), but manual opens should still work.
-    if (disabledByPreference && openReason !== "manual") return false;
-
-    return openRequested;
-  }, [disabledByPreference, dismissedThisSession, openReason, openRequested, signedIn]);
+  }, [disabledByPreference, open, signedIn]);
 
   // Mark as "shown" when it transitions to open (so refresh won't re-trigger it).
   useEffect(() => {
     if (!wasOpenRef.current && open) {
       const now = Date.now();
       setWelcomeModalLastShownAtMs(now);
-      setLastShownAtMs(now);
     }
     wasOpenRef.current = open;
   }, [open]);
@@ -188,7 +183,6 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
                   onClick={() => {
                     setDemoModeOptIn(true);
                     startDemoTour();
-                    setDismissedThisSession(true);
                   }}
                 >
                   Enable Demo Mode + Start tour
@@ -244,7 +238,6 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
         if (neverShowAgainChecked) {
           setWelcomeModalSeenVersion(WELCOME_MODAL_VERSION);
         }
-        setDismissedThisSession(true);
         setOpenRequested(false);
         setOpenReason("manual");
       }}
