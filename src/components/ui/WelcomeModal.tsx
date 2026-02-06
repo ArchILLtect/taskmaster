@@ -1,16 +1,23 @@
 import { Box, Button, Checkbox, Heading, HStack, Text, VStack } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { DialogModal } from "./DialogModal";
 import { useDemoMode } from "../../hooks/useDemoMode";
 import { useDemoTourStore } from "../../store/demoTourStore";
 import {
   getWelcomeModalSeenVersion,
-  onWelcomeModalOpenRequest,
   onWelcomeModalPrefChange,
+  onWelcomeModalOpenRequest,
   setWelcomeModalSeenVersion,
+  type WelcomeModalOpenReason,
 } from "../../services/welcomeModalPreference";
 import { setDemoModeOptIn } from "../../services/demoModeOptIn";
+import {
+  getWelcomeModalLastShownAtMs,
+  isWelcomeModalReminderDue,
+  setWelcomeModalLastShownAtMs,
+  WELCOME_MODAL_REMIND_INTERVAL_MS,
+} from "../../services/welcomeModalSchedule";
 
 const WELCOME_MODAL_VERSION = 1 as const;
 
@@ -39,6 +46,9 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
   const [neverShowAgainChecked, setNeverShowAgainChecked] = useState(false);
   const [seenVersion, setSeenVersion] = useState(() => getWelcomeModalSeenVersion());
   const [openRequested, setOpenRequested] = useState(false);
+  const [openReason, setOpenReason] = useState<WelcomeModalOpenReason>("manual");
+  const [lastShownAtMs, setLastShownAtMs] = useState(() => getWelcomeModalLastShownAtMs());
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,10 +61,13 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
         setNeverShowAgainChecked(false);
         setSeenVersion(0);
         setOpenRequested(false);
+        setOpenReason("manual");
+        setLastShownAtMs(0);
         return;
       }
 
       setSeenVersion(getWelcomeModalSeenVersion());
+      setLastShownAtMs(getWelcomeModalLastShownAtMs());
     }, 0);
 
     const unsub = signedIn
@@ -72,18 +85,56 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
 
   useEffect(() => {
     if (!signedIn) return;
-    return onWelcomeModalOpenRequest(() => {
+    return onWelcomeModalOpenRequest((reason) => {
+      setOpenReason(reason);
       setOpenRequested(true);
     });
   }, [signedIn]);
 
-  const shouldOffer = useMemo(() => {
-    if (!signedIn) return false;
-    if (dismissedThisSession) return false;
-    return seenVersion < WELCOME_MODAL_VERSION;
-  }, [dismissedThisSession, seenVersion, signedIn]);
+  const disabledByPreference = useMemo(() => {
+    return seenVersion >= WELCOME_MODAL_VERSION;
+  }, [seenVersion]);
 
-  const open = openRequested || shouldOffer;
+  // Auto-open reminder: once per 24h while still signed in.
+  useEffect(() => {
+    if (!signedIn) return;
+    if (disabledByPreference) return;
+
+    const now = Date.now();
+    const nextAt = lastShownAtMs ? lastShownAtMs + WELCOME_MODAL_REMIND_INTERVAL_MS : 0;
+    if (!nextAt) return;
+
+    const delay = Math.max(0, nextAt - now);
+    const t = window.setTimeout(() => {
+      // If the user is still signed in and the reminder is due, request an auto-open.
+      if (!isWelcomeModalReminderDue()) return;
+      setOpenReason("reminder");
+      setOpenRequested(true);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(t);
+    };
+  }, [disabledByPreference, lastShownAtMs, signedIn]);
+
+  const open = useMemo(() => {
+    if (!signedIn) return false;
+
+    // Never show again applies to auto-opens (login/reminder), but manual opens should still work.
+    if (disabledByPreference && openReason !== "manual") return false;
+
+    return openRequested;
+  }, [disabledByPreference, dismissedThisSession, openReason, openRequested, signedIn]);
+
+  // Mark as "shown" when it transitions to open (so refresh won't re-trigger it).
+  useEffect(() => {
+    if (!wasOpenRef.current && open) {
+      const now = Date.now();
+      setWelcomeModalLastShownAtMs(now);
+      setLastShownAtMs(now);
+    }
+    wasOpenRef.current = open;
+  }, [open]);
 
   const startDemoTour = () => {
     if (demoTourDisabled) {
@@ -195,6 +246,7 @@ export function WelcomeModal({ signedIn }: { signedIn: boolean }) {
         }
         setDismissedThisSession(true);
         setOpenRequested(false);
+        setOpenReason("manual");
       }}
       onCancel={() => {
         // no-op (close is the only action)

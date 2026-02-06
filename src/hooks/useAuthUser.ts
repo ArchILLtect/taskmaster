@@ -10,6 +10,7 @@ import { useInboxStore } from "../store/inboxStore";
 import { useUpdatesStore } from "../store/updatesStore";
 import { useUserUICacheStore } from "../services/userUICacheStore";
 import { clearDemoSessionActive } from "../services/demoSession";
+import { requestOpenWelcomeModal } from "../services/welcomeModalPreference";
 
 function isNotSignedInError(err: unknown): boolean {
   const name = typeof err === "object" && err !== null && "name" in err ? String((err as { name: unknown }).name) : "";
@@ -108,6 +109,7 @@ export function useAuthUser(): {
     const cancel = Hub.listen("auth", ({ payload }) => {
       const evt = String((payload as { event?: unknown } | undefined)?.event ?? "");
       if (evt === "signIn" || evt === "signedIn") {
+        requestOpenWelcomeModal("login");
         void refresh();
       }
       if (evt === "signOut" || evt === "signedOut") {

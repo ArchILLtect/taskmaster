@@ -4,6 +4,8 @@ export const WELCOME_MODAL_PREF_KEY = "welcomeModalSeenVersion" as const;
 export const WELCOME_MODAL_PREF_EVENT = "taskmaster:welcomeModalPrefChanged" as const;
 export const WELCOME_MODAL_OPEN_EVENT = "taskmaster:welcomeModalOpenRequested" as const;
 
+export type WelcomeModalOpenReason = "manual" | "login" | "reminder";
+
 function emitChange(): void {
   try {
     window.dispatchEvent(new Event(WELCOME_MODAL_PREF_EVENT));
@@ -55,16 +57,21 @@ export function onWelcomeModalPrefChange(cb: () => void): () => void {
   };
 }
 
-export function requestOpenWelcomeModal(): void {
+export function requestOpenWelcomeModal(reason: WelcomeModalOpenReason = "manual"): void {
   try {
-    window.dispatchEvent(new Event(WELCOME_MODAL_OPEN_EVENT));
+    window.dispatchEvent(new CustomEvent(WELCOME_MODAL_OPEN_EVENT, { detail: { reason } }));
   } catch {
     // ignore
   }
 }
 
-export function onWelcomeModalOpenRequest(cb: () => void): () => void {
-  const handler = () => cb();
+export function onWelcomeModalOpenRequest(cb: (reason: WelcomeModalOpenReason) => void): () => void {
+  const handler = (e: Event) => {
+    const ce = e as CustomEvent<{ reason?: unknown }>;
+    const raw = ce?.detail?.reason;
+    const reason: WelcomeModalOpenReason = raw === "login" || raw === "reminder" ? raw : "manual";
+    cb(reason);
+  };
   try {
     window.addEventListener(WELCOME_MODAL_OPEN_EVENT, handler);
   } catch {
