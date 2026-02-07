@@ -145,6 +145,24 @@ Actionable TODOs must use one of the following forms (do not include backticks):
   - Goal: keep a “nice” vendor split without chunk cycles (prefer broader buckets; keep UI positioning deps together).
   - Validate: `npm run build` + `npm run preview`, and confirm Netlify build/deploy succeeds.
 
+- [ ] TODO(P3) Mitigation (easy + pro) for deploy-time stale chunk failures
+  - Problem: with auto-deploy (dev → GitHub → Netlify), users can have an old HTML/JS referencing chunk filenames that no longer exist, causing navigation or lazy-route loads to fail (often as “Failed to fetch dynamically imported module”, “Loading chunk … failed”, or similar).
+  - UX goal: catch this globally and show a non-blocking toast: “A new version is available. Refresh to update.” + a button to refresh.
+  - Easy approach (no infra changes):
+    - Add a single global handler (likely in `src/main.tsx` or `src/App.tsx` bootstrap) for:
+      - `window.addEventListener('error', ...)` and `window.addEventListener('unhandledrejection', ...)`
+      - Vite-specific `window.addEventListener('vite:preloadError', ...)` (preload/dynamic import failures)
+    - Detect chunk-load-ish failures by message matching (case-insensitive):
+      - `Failed to fetch dynamically imported module`
+      - `Loading chunk` / `ChunkLoadError`
+      - `import()` failures
+    - Use Chakra’s toast system (via existing toast hook/util) and ensure it only fires once per session (dedupe flag) so users don’t get spammed.
+    - Refresh button behavior: `window.location.reload()` (optionally `location.reload(true)`-style cache-bust behavior by appending `?v=<timestamp>` to the current URL).
+  - Pro approach (more robust):
+    - Add an app “build version” marker (e.g., `VITE_APP_VERSION` injected from git SHA at build time, or a small `version.json` served from `public/`).
+    - On chunk-load failure, attempt to fetch the current version marker to confirm it changed, then prompt refresh.
+    - (Optional) Service worker / Workbox style “update available” flow for immediate + reliable update prompts, if/when you’re willing to adopt SW complexity.
+
 - [ ] TODO(P3) AdminPage: refactor filter controls to use shared UI patterns (tooltip labels + FormSelect) and remove raw HTML selects
 
 - [ ] TODO(P3) Settings persistence: versioned blob + migrations + validation
