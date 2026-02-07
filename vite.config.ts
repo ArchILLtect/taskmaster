@@ -22,39 +22,36 @@ export default defineConfig(({ mode }) => {
   return {
     plugins,
     build: {
+      chunkSizeWarningLimit: 700,
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (!id.includes('node_modules')) return;
+            if (!id.includes("node_modules")) return;
 
-            // Group heavyweight vendors so the main app chunk stays smaller.
-            // These chunks are highly cacheable across deploys if versions don't change.
+            // DO NOT isolate react/react-dom/scheduler
+            // Keep React in the general vendor chunk to avoid circular init issues.
+
+            if (id.includes("aws-amplify") || id.includes("@aws-amplify")) return "vendor-amplify";
+
             if (
-              id.includes('/react/') ||
-              id.includes('/react-dom/') ||
-              id.includes('/scheduler/')
-            ) {
-              return 'vendor-react';
-            }
+              id.includes("@aws-sdk") ||
+              id.includes("@smithy") ||
+              id.includes("@aws-crypto") ||
+              id.includes("amazon-cognito-identity-js")
+            ) return "vendor-aws";
 
-            if (id.includes('aws-amplify') || id.includes('@aws-amplify')) return 'vendor-amplify';
-            if (
-              id.includes('@aws-sdk') ||
-              id.includes('@smithy') ||
-              id.includes('@aws-crypto') ||
-              id.includes('amazon-cognito-identity-js')
-            ) {
-              return 'vendor-aws';
-            }
-            if (id.includes('@chakra-ui') || id.includes('@emotion') || id.includes('framer-motion')) return 'vendor-chakra';
-            if (id.includes('react-router')) return 'vendor-router';
-            if (id.includes('zustand')) return 'vendor-zustand';
-            if (id.includes('react-icons')) return 'vendor-icons';
+            if (id.includes("@chakra-ui") || id.includes("@emotion") || id.includes("framer-motion"))
+              return "vendor-ui";
 
-            return 'vendor';
-          },
+            if (id.includes("react-router")) return "vendor-router";
+            if (id.includes("zustand")) return "vendor-zustand";
+            if (id.includes("react-icons")) return "vendor-icons";
+
+            return "vendor";
+          }
         },
       },
     },
+    resolve: { dedupe: ["react", "react-dom"] },
   };
 })
