@@ -64,8 +64,12 @@ export function Sidebar() {
         <SidebarItem to="/lists" label="Lists" main />
         <Separator my={3} />
         <SidebarCollapse to="/favorites" label="Favorites" items={favoriteLinks} defaultOpen={false} />
-        <Separator my={3} />
-        <SidebarItem to="/dev" label="Dev" main />
+        {import.meta.env.DEV ? (
+          <>
+            <Separator my={3} />
+            <SidebarItem to="/dev" label="Dev" main />
+          </>
+        ) : null}
       </Box>
       <Box mt={6}>
         <SidebarItem to="/" label="Home" main />
