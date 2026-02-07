@@ -69,6 +69,24 @@ npm install
 npm run dev
 ```
 
+## 🌐 Deploy to Netlify (static hosting)
+
+TaskMaster can be hosted on Netlify (or any static host). AWS Amplify is used for backend services (Cognito/AppSync) and does not require Amplify Hosting.
+
+Netlify build settings:
+- Build command: `npm run build`
+- Publish directory: `dist`
+
+SPA routing (required):
+- This repo includes [public/_redirects](public/_redirects) so deep links like `/today` work on refresh.
+
+Cognito hosted UI redirects (required for auth):
+- In your Cognito App Client, add these to **Callback URLs** / **Sign-out URLs**:
+  - `https://taskmaster.nickhanson.me/`
+  - `http://localhost:5173/` (local dev)
+
+If sign-in “bounces” back to `/login` or fails after redirect, it’s almost always a missing/mismatched callback URL.
+
 ## ✅ MVP QA / confidence checks
 
 Manual tester checklist (shareable):
