@@ -145,23 +145,138 @@ Actionable TODOs must use one of the following forms (do not include backticks):
   - Goal: keep a “nice” vendor split without chunk cycles (prefer broader buckets; keep UI positioning deps together).
   - Validate: `npm run build` + `npm run preview`, and confirm Netlify build/deploy succeeds.
 
-- [ ] TODO(P3) Mitigation (easy + pro) for deploy-time stale chunk failures
-  - Problem: with auto-deploy (dev → GitHub → Netlify), users can have an old HTML/JS referencing chunk filenames that no longer exist, causing navigation or lazy-route loads to fail (often as “Failed to fetch dynamically imported module”, “Loading chunk … failed”, or similar).
-  - UX goal: catch this globally and show a non-blocking toast: “A new version is available. Refresh to update.” + a button to refresh.
-  - Easy approach (no infra changes):
-    - Add a single global handler (likely in `src/main.tsx` or `src/App.tsx` bootstrap) for:
-      - `window.addEventListener('error', ...)` and `window.addEventListener('unhandledrejection', ...)`
-      - Vite-specific `window.addEventListener('vite:preloadError', ...)` (preload/dynamic import failures)
-    - Detect chunk-load-ish failures by message matching (case-insensitive):
-      - `Failed to fetch dynamically imported module`
-      - `Loading chunk` / `ChunkLoadError`
-      - `import()` failures
-    - Use Chakra’s toast system (via existing toast hook/util) and ensure it only fires once per session (dedupe flag) so users don’t get spammed.
-    - Refresh button behavior: `window.location.reload()` (optionally `location.reload(true)`-style cache-bust behavior by appending `?v=<timestamp>` to the current URL).
-  - Pro approach (more robust):
-    - Add an app “build version” marker (e.g., `VITE_APP_VERSION` injected from git SHA at build time, or a small `version.json` served from `public/`).
-    - On chunk-load failure, attempt to fetch the current version marker to confirm it changed, then prompt refresh.
-    - (Optional) Service worker / Workbox style “update available” flow for immediate + reliable update prompts, if/when you’re willing to adopt SW complexity.
+- [ ] TODO(P3) Mitigation for deploy-time “stale chunk” failures (Netlify + Vite lazy routes)
+  - Problem:
+    - With CI/CD (GitHub → Netlify), a user can be running an older HTML/JS that references chunk filenames that no longer exist after a deploy.
+    - Symptoms: navigation or lazy-route loads crash with:
+      - “Failed to fetch dynamically imported module”
+      - “Loading chunk … failed” / “ChunkLoadError”
+      - “Importing a module script failed”
+      - Vite preload failures (vite:preloadError)
+  - UX goal:
+    - Catch this globally.
+    - Show a single non-spammy toast:
+      - “A new version of TaskMaster is available. Refresh to update.”
+      - Button: Refresh
+    - Optional “auto-recover once”: reload automatically a single time, then fall back to toast.
+
+  - Implementation (recommended “easy + solid”):
+    1) Add a global install function that:
+       - Listens to:
+         - window 'unhandledrejection'
+         - window 'error'
+         - window 'vite:preloadError' (Vite)
+       - Detects chunk-ish errors by message matching (case-insensitive)
+       - Dedupe so it only triggers once per session (sessionStorage flag)
+       - Optionally auto-reloads once, then shows the toast on subsequent failures
+
+    2) Install it once during app bootstrap (src/main.tsx is best).
+
+  - Example code:
+
+    - File: src/runtime/staleChunkGuard.ts
+      ```ts
+      type Notify = (opts: { title: string; description?: string; actionLabel?: string; onAction?: () => void }) => void;
+
+      const SESSION_KEY = "taskmaster:stale-chunk-guard-fired";
+      const AUTO_RELOAD_KEY = "taskmaster:stale-chunk-guard-auto-reloaded";
+
+      function normalizeMessage(err: unknown): string {
+        if (!err) return "";
+        if (typeof err === "string") return err;
+        const anyErr = err as any;
+        return String(anyErr?.message ?? anyErr?.reason ?? anyErr?.error ?? "");
+      }
+
+      function isStaleChunkError(err: unknown): boolean {
+        const msg = normalizeMessage(err).toLowerCase();
+        return (
+          msg.includes("failed to fetch dynamically imported module") ||
+          msg.includes("loading chunk") ||
+          msg.includes("chunkloaderror") ||
+          msg.includes("importing a module script failed") ||
+          msg.includes("failed to fetch") && msg.includes(".js") // last-resort heuristic
+        );
+      }
+
+      function didFireThisSession(): boolean {
+        return sessionStorage.getItem(SESSION_KEY) === "1";
+      }
+
+      function markFired(): void {
+        sessionStorage.setItem(SESSION_KEY, "1");
+      }
+
+      function autoReloadOnce(): boolean {
+        const already = sessionStorage.getItem(AUTO_RELOAD_KEY) === "1";
+        if (already) return false;
+        sessionStorage.setItem(AUTO_RELOAD_KEY, "1");
+        window.location.reload();
+        return true;
+      }
+
+      export function installStaleChunkGuard(notify: Notify, opts?: { autoReloadOnce?: boolean }) {
+        const autoReload = Boolean(opts?.autoReloadOnce);
+
+        const handle = (err: unknown) => {
+          if (!isStaleChunkError(err)) return;
+
+          // If we haven't attempted an auto-reload yet, do it once.
+          if (autoReload) {
+            const reloaded = autoReloadOnce();
+            if (reloaded) return;
+          }
+
+          // Otherwise: show a toast once per session.
+          if (didFireThisSession()) return;
+          markFired();
+
+          notify({
+            title: "Update available",
+            description: "A new version of TaskMaster is available. Refresh to update.",
+            actionLabel: "Refresh",
+            onAction: () => window.location.reload(),
+          });
+        };
+
+        window.addEventListener("unhandledrejection", (e) => handle((e as PromiseRejectionEvent).reason));
+        window.addEventListener("error", (e) => handle((e as ErrorEvent).error ?? (e as ErrorEvent).message));
+        window.addEventListener("vite:preloadError", (e) => handle(e));
+      }
+      ```
+
+    - Install location: src/main.tsx (preferred)
+      ```ts
+      import React from "react";
+      import ReactDOM from "react-dom/client";
+      import App from "./App";
+      import { installStaleChunkGuard } from "./runtime/staleChunkGuard";
+      import { toast } from "./components/ui/Toaster"; // use whatever you already export
+
+      // Adapt this to your Toaster API.
+      const notify = ({ title, description, actionLabel, onAction }: any) => {
+        toast({
+          title,
+          description,
+          action: actionLabel ? { label: actionLabel, onClick: onAction } : undefined,
+          // optional: duration, closable, etc.
+        });
+      };
+
+      installStaleChunkGuard(notify, { autoReloadOnce: true });
+
+      ReactDOM.createRoot(document.getElementById("root")!).render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+      ```
+
+  - “Pro” approach (defer unless this becomes a real multi-user app):
+    - Version marker (VITE_APP_VERSION from git SHA) + optional `version.json`.
+    - On chunk failure, fetch the marker to confirm a version change, then prompt refresh.
+    - Only consider SW/Workbox when you actually need offline or true update orchestration.
+
 
 - [ ] TODO(P3) AdminPage: refactor filter controls to use shared UI patterns (tooltip labels + FormSelect) and remove raw HTML selects
 
