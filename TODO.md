@@ -140,6 +140,11 @@ Actionable TODOs must use one of the following forms (do not include backticks):
 <a id="p3"></a>
 ### `TODO`(P3)
 
+- [ ] TODO(P3) Revisit Vite/Rollup `manualChunks` (safe vendor splitting)
+  - Context: hit Rollup error `Circular chunk: vendor-floating -> vendor -> vendor-floating` during deploy.
+  - Goal: keep a “nice” vendor split without chunk cycles (prefer broader buckets; keep UI positioning deps together).
+  - Validate: `npm run build` + `npm run preview`, and confirm Netlify build/deploy succeeds.
+
 - [ ] TODO(P3) AdminPage: refactor filter controls to use shared UI patterns (tooltip labels + FormSelect) and remove raw HTML selects
 
 - [ ] TODO(P3) Settings persistence: versioned blob + migrations + validation
