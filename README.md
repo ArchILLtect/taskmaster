@@ -11,6 +11,7 @@
   <a href="https://chakra-ui.com/"><img alt="Chakra UI" src="https://img.shields.io/badge/Chakra%20UI-3.x-319795?logo=chakraui&logoColor=white"></a>
   <a href="https://zustand-demo.pmnd.rs/"><img alt="Zustand" src="https://img.shields.io/badge/Zustand-5.x-000000"></a>
   <a href="https://docs.amplify.aws/"><img alt="AWS Amplify" src="https://img.shields.io/badge/AWS%20Amplify-Gen%201-FF9900?logo=amazonaws&logoColor=white"></a>
+  <a href="https://www.apollographql.com/docs/react/"><img alt="Apollo GraphQL" src="https://img.shields.io/badge/Apollo%20GraphQL-3.x-311C87?logo=apollographql&logoColor=white"></a>
 </p>
 
 # TaskMaster
