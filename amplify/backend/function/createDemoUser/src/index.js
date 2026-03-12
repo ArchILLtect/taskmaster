@@ -43,6 +43,8 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:5174",
   "https://taskmaster.nickhanson.me",
   "https://www.taskmaster.nickhanson.me",
+  "https://budgeteer.nickhanson.me",
+  "https://www.budgeteer.nickhanson.me",
   // "https://<your-netlify-domain>.netlify.app",
 ]);
 
