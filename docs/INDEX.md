@@ -65,6 +65,7 @@ If a feature feels “missing,” check here before assuming it was forgotten.
 
 ### How-to guides
 - Troubleshooting & resets: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Amplify/Cognito drift fix notes: see “User pool client does not exist” in [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 ### Admin
 - Admin console overview (current behavior + limitations): [ARCHITECTURE.md](ARCHITECTURE.md)
